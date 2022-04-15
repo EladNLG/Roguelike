@@ -1,0 +1,233 @@
+{
+    "Name": "TF|Roguelike",
+    "Version": "1.0.0",
+    "Description": "Turns the singleplayer campaign into a roguelike, making for a more interesting experience.",
+    "RequiredOnClient": true,
+    "LoadPriority": 2,
+    "Scripts": [
+
+
+        /////////////////////
+        ////// UTILITY //////
+        ////////////////////
+
+
+        // Debug Tool weapon 
+        {
+            "Path": "weapons/debug_tool.nut",
+            "RunOn": "CLIENT || SERVER"
+        },
+        // handles custom registration of singleplayer remote funcs, since the northstar one
+        // only works for multiplayer.
+        // (This is singleplayer.)
+        {
+            "Path": "sh_remote_functions_sp_custom.gnut",
+            "RunOn": "(CLIENT || SERVER) && SP",
+            "ServerCallback": {
+                "Before": "Roguelike_SetUpRemoteFuncs"
+            },
+            "ClientCallback": {
+                "Before": "Roguelike_SetUpRemoteFuncs"
+            }
+        },
+        {
+            "Path": "roguelike/shop/sh_shop_data.nut",
+            "RunOn": "CLIENT || SERVER",
+            "ClientCallback": {
+                "Before": "ShopPrices_Init"
+            },
+            "ServerCallback": {
+                "Before": "ShopPrices_Init"
+            }
+        },
+
+        {
+            "Path": "spmp_autoprecache.nut",
+            "RunOn": "SERVER",
+            "ServerCallback": {
+                "After": "PrecacheJack"
+            }
+        },
+        //////////////////////////////////////
+        ////// ROGUELIKE CUSTOM SCRIPTS //////
+        //////////////////////////////////////
+
+        // base script for all handling of roguelike mechanics.
+        {
+            "Path": "roguelike/sh_roguelike.nut",
+            "RunOn": "CLIENT || SERVER"
+        },
+
+        //////////
+        // SHOP //
+        //////////
+
+        // Handles shop prices
+        
+        // spawns the shop at the beginning of each level.
+        {
+            "Path": "roguelike/shop/shop_spawner.nut",
+            "RunOn": "SERVER",
+            "ServerCallback": {
+                "After": "Shop_Spawn"
+            }
+        },
+        // calls UI script to open the shop menu when the shop interact remote func is called.
+        {
+            "Path": "roguelike/shop/cl_shop.nut",
+            "RunOn": "CLIENT"
+        },
+        {
+            "Path": "roguelike/items/cl_item.nut",
+            "RunOn": "CLIENT",
+            "ClientCallback": {
+                "After": "ClItem_Init"
+            }
+        },
+        {
+            "Path": "roguelike/items/sh_items.nut",
+            "RunOn": "SERVER || CLIENT",
+            "ServerCallback": {
+                "After": "ShItems_Init"
+            },
+            "ClientCallback": {
+                "After": "ShItems_Init"
+            }
+        },
+        // item drop thing
+        {
+            "Path": "roguelike/items/item_drops.gnut",
+            "RunOn": "SERVER",
+            "ServerCallback": {
+                "After": "ItemDrops_Init"
+            }
+        },
+
+
+        //////////////////////
+        ////// UI STUFF //////
+        //////////////////////
+
+
+        {
+            "Path": "roguelike/shop/ui_shop.nut",
+            "RunOn": "UI"
+        },
+        // SHOP MENU
+        {
+            "Path": "ui/menu_shop_test.gnut",
+            "RunOn": "UI",
+            "UICallback":
+            {
+                "Before": "ShopTest_Init"
+            }
+        },
+        // MOD/UPGRADE SELECT
+        {
+            "Path": "ui/menu_mod_select.gnut",
+            "RunOn": "UI"
+        },
+        // UI DATA REQUEST HANDLING
+        {
+            "Path": "cl_calluiscript.gnut",
+            "RunOn": "CLIENT"
+        },
+        {
+            "Path": "roguelike/shop/_shop.nut",
+            "RunOn": "SERVER",
+            "ServerCallback": {
+                "After": "_Shop_Init"
+            }
+        },
+
+        ///////////
+        // ITEMS //
+        ///////////
+
+        {
+            "Path": "roguelike/items/ammo_pack.nut",
+            "RunOn": "SERVER",
+            "ServerCallback": {
+                "After": "AmmoPack_Init"
+            }
+        },
+        {
+            "Path": "roguelike/items/adrenaline_shot.nut",
+            "RunOn": "SERVER",
+            "ServerCallback": {
+                "After": "AdrenalineShot_Init"
+            }
+        },
+        {
+            "Path": "roguelike/items/fragile_bird.nut",
+            "RunOn": "SERVER",
+            "ServerCallback": {
+                "After": "FragileBird_Init"
+            }
+        },
+        {
+            "Path": "roguelike/items/emergency_soda.nut",
+            "RunOn": "SERVER",
+            "ServerCallback": {
+                "After": "EmergencySoda_Init"
+            }
+        },
+        {
+            "Path": "xorshift.nut",
+            "RunOn": "CLIENT || SERVER || UI",
+            "UICallback": {
+                "After": "TestForAverage"
+            }
+        }
+    ],
+    "ConVars": 
+    [
+        {
+            "Name": "roguelike_seed",
+            "DefaultValue": "0",
+            "Flags": 16388 // FCVAR_CHEAT | FCVAR_GAMEDLL
+        },
+        {
+            "Name": "test_convar",
+            "DefaultValue": "0",
+            "Flags": 16516 // FCVAR_CHEAT | FCVAR_GAMEDLL | FCVAR_ARCHIVE
+        },
+        // we support up to 4 players.
+        {
+            "Name": "player_1_name",
+            "DefaultValue": ""
+        },
+        {
+            "Name": "player_2_name",
+            "DefaultValue": ""
+        },
+        {
+            "Name": "player_3_name",
+            "DefaultValue": ""
+        },
+        {
+            "Name": "player_4_name",
+            "DefaultValue": ""
+        },
+        {
+            "Name": "player_1_items",
+            "DefaultValue": "",
+            "Flags": 16388
+        },
+        {
+            "Name": "player_2_items",
+            "DefaultValue": "",
+            "Flags": 16388
+        },
+        {
+            "Name": "player_3_items",
+            "DefaultValue": "",
+            "Flags": 16388
+        },
+        {
+            "Name": "player_4_items",
+            "DefaultValue": "",
+            "Flags": 16388
+        }
+    ]
+}

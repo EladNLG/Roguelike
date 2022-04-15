@@ -1,0 +1,209 @@
+untyped
+
+global function ItemDrops_Init
+
+global array<vector> roguelikeChatRarityColors = [
+    <0.8, 0.8, 0.8>, // common
+    <0.3, 0.9, 0.3>, // uncommon
+    <0.9, 0.3, 0.3>, // legendary
+    <0.3, 0.3, 0.9>, // umbral
+    <0.8, 0.4, 0.1> // titan
+]
+
+array<asset> itemModels = [
+    $"models/weapons/ammoboxes/mags_cluster.mdl", 
+    $"models/weapons/ammoboxes/backpack_single.mdl",
+    $"models/weapons/ammoboxes/ammobox_01.mdl",
+    $"models/weapons/ammoboxes/ammobox_bigbullet.mdl",
+    $"models/weapons/ammoboxes/ammobox_bigclip.mdl",
+    //$"models/weapons/ammoboxes/ammobox_missle.mdl"
+]
+
+int itemRollsLost = 0
+
+void function ItemDrops_Init()
+{
+	AddCallback_OnNPCKilled(  OnNPCKilled_DropItem )
+    AddSpawnCallback( "player", PlayerConnected )
+    AddClientCommandCallback( "give_item", GiveItem )
+    AddCallback_OnLevelEnd( OnLevelEnd )
+}
+
+bool function GiveItem( entity player, array<string> args )
+{
+    if (GetConVarInt("sv_cheats") != 1)
+        return false
+
+    if (args.len() < 1)
+        return false
+
+    try
+    {
+        int count = 1
+        string item = args[0]
+        if (args.len() > 1)
+            count = int(args[1])
+        Roguelike_GiveEntityItem( player, item, count )
+
+        int rarity = Roguelike_GetItemRarity( args[0] )
+        Chat_Impersonate( player, format(
+            "\x1b[38;2;150;150;150mUsed cheats to obtain %i %s%s\x1b[38;2;150;150;150m (%i)", 
+            count, ColorToEscapeCode(roguelikeChatRarityColors[rarity]), Roguelike_GetItemName( item ), Roguelike_GetItemCount(player, item)), false )
+    }
+    catch (ex)
+    {
+        printt(ex)   
+        //CodeWarning("Unknown Item.")
+        //return false
+    }
+    return true
+}
+
+void function OnLevelEnd( string mapName, LevelTransitionStruct trans )
+{
+    foreach ( index, player in GetPlayerArray())
+    {
+        if (index > 3) break
+        SetConVarString("player_" + (index + 1) + "_name", player.GetPlayerName() )
+    }
+}
+
+void function PlayerConnected( entity player )
+{
+    for (int i = 0; i < 4; i++)
+    {
+        if (GetConVarString("player_" + (i + 1) + "_name") == player.GetPlayerName() )
+            { SetItemsForPlayerFromString(player, GetConVarString("player_" + (i + 1) + "_items")); break; }
+    }
+    for (int i = 0; i < 4; i++)
+    {
+        if (GetConVarString("player_" + (i + 1) + "_name") == "")
+        {
+            SetConVarString("player_" + (i + 1) + "_name", player.GetPlayerName() )
+            //SetItemsForPlayerFromString(player, "")
+            break
+        }
+    }
+    PlayerRespawned( player )
+}
+
+void function PlayerRespawned( entity player )
+{
+    print("Pain")
+    foreach ( item in Roguelike_GetAllItems( player ) )
+    {
+        print(item)
+        foreach ( p in GetPlayerArray() )
+            Remote_CallFunction_NonReplay( p, "ServerCallback_SetItemAmount", p.GetEncodedEHandle(), Roguelike_GetItemNumericId( item ), Roguelike_GetItemCount( player, item ) )
+    }
+    SetConVarString("player_" + (player.GetPlayerIndex() + 1) + "_items", GetItemConVarValue( player ) )
+}
+
+void function OnNPCKilled_DropItem( entity npc, entity attacker, var damageInfo )
+{
+    if (!attacker.IsPlayer()) return
+    print("roling for item\nCHANCE: " + (5 + 2 * itemRollsLost) + "%")
+    if (RandomFloat(100.0) < 5 + 2 * itemRollsLost)
+    {
+        string item = Roguelike_GetRandomItem()
+        CreateItem( item, npc.GetOrigin(), npc.GetAngles() )
+        itemRollsLost = 0
+    }
+    else itemRollsLost++
+}
+
+entity function CreateItem( string item, vector origin, vector angles )
+{
+    entity prop_dynamic = CreateEntity( "prop_dynamic" )
+    int rarity = Roguelike_GetItemRarity( item )
+    asset model = itemModels[rarity]
+    origin += <RandomFloatRange( -5, 5 ), RandomFloatRange( -5, 5 ), 0>
+    angles += <0, RandomFloatRange( -180, 180 ), 0>
+	prop_dynamic.SetValueForModelKey( model )
+	prop_dynamic.kv.fadedist = 2000
+	prop_dynamic.kv.renderamt = 255
+	prop_dynamic.kv.rendercolor = "255 255 255"
+	prop_dynamic.kv.solid = 6
+
+    prop_dynamic.SetOrigin( origin )
+    prop_dynamic.SetAngles( angles )
+
+    DispatchSpawn(prop_dynamic)
+
+    prop_dynamic.SetOrigin( origin )
+    prop_dynamic.SetAngles( angles )
+
+    prop_dynamic.SetScriptName( "item_drop_" + rarity + "_" + item )
+
+	prop_dynamic.SetUsable()
+	//prop_dynamic.SetUsableByGroup( "pilot" )
+    //prop_dynamic.SetUsePrompts( "Hold %use% to pick up " + Roguelike_GetItemName( item ), "Press %use% to pick up " + Roguelike_GetItemName( item ) )
+
+    AddCallback_OnUseEntity( prop_dynamic, GrabItemCallback( item ) )
+    foreach (entity player in GetPlayerArray())
+    {
+        PlayerRespawned( player )
+    }
+
+    SetOutline( prop_dynamic, roguelikeRarityColors[rarity], 6.5 )
+
+    thread DestroyAfterDelay(prop_dynamic, 30)
+
+    return prop_dynamic
+}
+
+
+void function SetOutline( entity ent, vector color, float radius )
+{
+    Highlight_SetNeutralHighlight( ent, "roguelike_item" )
+    ent.Highlight_SetParam( 0, 0, color )
+    //ent.Highlight_SetNearFadeDist(700)
+    //ent.Highlight_SetFarFadeDist(1000)
+	//ent.Highlight_SetFlag( HIGHLIGHT_FLAG_ADS_FADE, highlight.adsFade )
+}
+
+function GrabItemCallback( string item ) 
+{
+    return function( itemObj, player ) : ( item ) {
+        expect entity( player )
+        expect entity( itemObj )
+        Roguelike_GiveEntityItem( player, item )
+        int rarity = Roguelike_GetItemRarity( item )
+        Chat_Impersonate( player, format(
+            "\x1b[38;2;150;150;150mPicked up %s%s\x1b[38;2;150;150;150m (%i)", 
+            ColorToEscapeCode(roguelikeChatRarityColors[rarity]), Roguelike_GetItemName( item ), Roguelike_GetItemCount(player, item)), false )
+        PlayerRespawned( player )
+
+        itemObj.Destroy()
+    }
+}
+
+string function ColorToEscapeCode( vector color )
+{
+    return "\x1b[38;2;" + int(color.x * 255) + ";" + int(color.y * 255) + ";" + int(color.z * 255) + "m"
+}
+
+string function GetItemConVarValue( entity player )
+{
+    string result = ""
+    int len = Roguelike_GetAllItems(player).len()
+    foreach ( index, item in Roguelike_GetAllItems(player))
+    {
+        int itemId = Roguelike_GetItemNumericId( item )
+        int amount = Roguelike_GetItemCount( player, item )
+        result += itemId + " " + amount
+        if (index < len - 1) result += " "
+    }
+    return result
+}
+
+void function SetItemsForPlayerFromString(entity player, string str)
+{
+    array<string> items = split( str, " ")
+    for ( int i = 0; i < items.len(); i += 2 )
+    {
+        string item = Roguelike_GetItemFromNumericId( items[i].tointeger() )
+        int amount = items[i + 1].tointeger()
+        Roguelike_GiveEntityItem( player, item, amount )
+    }
+}  

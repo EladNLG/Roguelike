@@ -1,0 +1,7 @@
+WeaponData
+{
+    "ammo_per_shot"     "100"
+    "ammo_min_to_fire"  "100"
+    "regen_ammo_refill_rate"        "1000"
+    "droppedmodel" "models/weapons/ammoboxes/backpack_single.mdl"
+}

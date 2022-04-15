@@ -1,0 +1,16 @@
+{
+    "Name": "Roguelike (UI)",
+    "Description": "The UI Part of the Roguelike mod, allowing you to start runs from the main menu without enabling the mod manually.",
+    "Version": "1.0.0",
+    "LoadPriority": 3,
+    "Scripts": [
+        {
+            "Path": "ui/menu_logbook.nut",
+            "RunOn": "UI",
+            "UICallback":
+            {
+                "Before": "AddLogbookMenu"
+            }
+        }
+    ]
+}
