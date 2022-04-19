@@ -33,59 +33,13 @@ array<string> youDiedMessages = [
     "There are only so many death messages. You're so bad I ran out."
 ]
 
-array<string> difficulties = [
-    "Easy",
-    "Normal",
-    "Hard",
-    "Very Hard",
-    "Master",
-    "Insane",
-    "Impossible",
-    "So, how's it going?",
-    "Wanna hear a song?",
-    "K, here goes!",
-    "Never gonna give",
-    "you up",
-    "Never gonna let",
-    "you down",
-    "Never gonna run",
-    "around and",
-    "desert you",
-    "Never gonna make",
-    "you cry",
-    "Never gonna say",
-    "goodbye",
-    "Never gonna tell",
-    "a lie",
-    "and hurt you."
-]
-
-array<vector> difficultyColors = [
-    <0.1, 0.9, 0.1>,
-    <0.4, 0.9, 0.1>,
-    <0.9, 0.9, 0.1>,
-    <0.9, 0.4, 0.1>,
-    <0.9, 0.1, 0.1>,
-    <0.9, 0.1, 0.4>,
-    <0.9, 0.1, 0.9>,
-    <0.4, 0.1, 0.9>,
-    <0.1, 0.1, 0.9>,
-    <0.1, 0.1, 0.4>,
-    <0.1, 0.1, 0.1>
-]
-
 struct 
 {
     entity curItem
     var flyoutRUI
     var drawbackRUI
     var moneyRUI
-    var timeRUI
-    var difficultyRUI
-    var difficultyLabelRUI
     BarTopoData& data
-    BarTopoData& difficultyBar
-    BarTopoData& bgBar
 } file
 
 void function ClItem_Init()
@@ -93,12 +47,19 @@ void function ClItem_Init()
     AddCallback_UseEntGainFocus( OnEntGainedFocus )
     AddCallback_UseEntLoseFocus( OnEntLostFocus )
     AddCallback_OnPlayerLifeStateChanged( OnPlayerLifeStateChanged )
+    AddCallback_EntitiesDidLoad( OnEntitiesDidLoad )
+
+    RegisterSignal( "ChestLostFocus" )
+}
+
+void function OnEntitiesDidLoad()
+{
     var rui = RuiCreate( RUI_TEXT_LEFT, clGlobal.topoCockpitHud, RUI_DRAW_COCKPIT, 0 )
     RuiSetInt( rui, "maxLines", 1 )
     RuiSetInt( rui, "lineNum", 0 )
     RuiSetFloat2( rui, "msgPos", <0.05, 0.1, 0> )
     RuiSetFloat3( rui, "msgColor", <0.9, 0.55, 0.0> )
-    RuiSetString( rui, "msgText", "200$" )
+    RuiSetString( rui, "msgText", "0$" )
     RuiSetFloat( rui, "msgFontSize", 90.0 )
     RuiSetFloat( rui, "msgAlpha", 0.9 )
     RuiSetFloat( rui, "thicken", 0.0 )
@@ -113,119 +74,31 @@ void function ClItem_Init()
     RuiSetFloat( rui, "msgAlpha", 0.9 )
     RuiSetFloat( rui, "thicken", 0.0 )
 
-    // TIME
-    rui = RuiCreate( RUI_TEXT_RIGHT, clGlobal.topoCockpitHud, RUI_DRAW_COCKPIT, 0 )
-    RuiSetInt( rui, "maxLines", 1 )
-    RuiSetInt( rui, "lineNum", 0 )
-    RuiSetFloat2( rui, "msgPos", <0.95, 0.225, 0> )
-    RuiSetFloat3( rui, "msgColor", <0.9, 0.1, 0.1> )
-    RuiSetString( rui, "msgText", "HARD" )
-    RuiSetFloat( rui, "msgFontSize", 90.0 )
-    RuiSetFloat( rui, "msgAlpha", 0.9 )
-    RuiSetFloat( rui, "thicken", 0.5 )
-    file.difficultyRUI = rui
-    //file.moneyRUI = rui
-    rui = RuiCreate( RUI_TEXT_RIGHT, clGlobal.topoCockpitHud, RUI_DRAW_COCKPIT, 0 )
-    RuiSetInt( rui, "maxLines", 1 )
-    RuiSetInt( rui, "lineNum", 0 )
-    RuiSetFloat2( rui, "msgPos", <0.95, 0.325, 0> )
-    RuiSetFloat3( rui, "msgColor", <0.9, 0.1, 0.1> )
-    RuiSetString( rui, "msgText", "DIFFICULTY" )
-    RuiSetFloat( rui, "msgFontSize", 45.0 )
-    RuiSetFloat( rui, "msgAlpha", 0.9 )
-    RuiSetFloat( rui, "thicken", 0.0 )
-    file.difficultyLabelRUI = rui
-    // DIFFICULTY
-    rui = RuiCreate( RUI_TEXT_RIGHT, clGlobal.topoCockpitHud, RUI_DRAW_COCKPIT, 0 )
-    RuiSetInt( rui, "maxLines", 1 )
-    RuiSetInt( rui, "lineNum", 0 )
-    RuiSetFloat2( rui, "msgPos", <0.95, 0.1, 0> )
-    RuiSetFloat3( rui, "msgColor", <0.55, 0.55, 0.55> )
-    RuiSetString( rui, "msgText", "01:35" )
-    RuiSetFloat( rui, "msgFontSize", 90.0 )
-    RuiSetFloat( rui, "msgAlpha", 0.9 )
-    RuiSetFloat( rui, "thicken", 0.5 )
-    file.timeRUI = rui
-    rui = RuiCreate( RUI_TEXT_RIGHT, clGlobal.topoCockpitHud, RUI_DRAW_COCKPIT, 0 )
-    RuiSetInt( rui, "maxLines", 1 )
-    RuiSetInt( rui, "lineNum", 0 )
-    RuiSetFloat2( rui, "msgPos", <0.95, 0.175, 0> )
-    RuiSetFloat3( rui, "msgColor", <0.55, 0.55, 0.55> )
-    RuiSetString( rui, "msgText", "TIME" )
-    RuiSetFloat( rui, "msgFontSize", 45.0 )
-    RuiSetFloat( rui, "msgAlpha", 0.9 )
-    RuiSetFloat( rui, "thicken", 0.0 )
-
-    BarTopoData bg = BasicImageBar_CreateRuiTopo( <0,0,0>, < 0.375, -0.185, 0>, 0.15, 0.01, eDirection.left, true, 1 )
-    file.difficultyBar = BasicImageBar_CreateRuiTopo( <0,0,0>, < 0.375, -0.185, 0>, 0.15, 0.01, eDirection.left, true, 1 )
-    BasicImageBar_UpdateSegmentCount( bg, 3, 0.05 )
-    BasicImageBar_UpdateSegmentCount( file.difficultyBar, 3, 0.05 )
-    foreach (var rui in file.difficultyBar.imageRuis )
-    {
-        RuiSetFloat3( rui, "basicImageColor", <0.9, 0.1, 0.1> )
-    }
-    foreach (var rui in bg.imageRuis )
-    {
-        RuiSetFloat3( rui, "basicImageColor", <0.0, 0.0, 0.0> )
-        RuiSetFloat( rui, "basicImageAlpha", 0.75 )
-    }
-    file.bgBar = bg
-    BasicImageBar_SetFillFrac( file.difficultyBar, 0.75 )
     file.data = BasicImageBar_CreateRuiTopo( <0,0,0>, < -0.055, -0.2, 0>, 1, 1, eDirection.right, false )
     thread MoneyRUI_Update()
 }
 
+float lastTimeCashChanged = 0
+int lastCashAmount = 0
+int curCashAmount = 0
 void function CashAmountChanged( entity player, int oldValue, int newValue, bool actuallyChanged )
 {
-    RuiSetString( file.moneyRUI, "msgText", newValue + "$")
+    if (curCashAmount == GetMoney( player )) return
+    if ( player != GetLocalViewPlayer() ) return
+    lastTimeCashChanged = Time()
+    lastCashAmount = curCashAmount
+    curCashAmount = GetMoney( player )
 }
 
-const float TIME_PER_DIFFICULTY = 180
 void function MoneyRUI_Update()
 {
+    if (IsLobby()) return
     if (!IsNewThread()) throw "MoneyRUI_Update() must be called from a new thread."
-
-    OnThreadEnd(
-        function () : (){
-            BasicImageBar_SetFillFrac( file.difficultyBar, 0.0 )
-            BasicImageBar_SetFillFrac( file.bgBar, 0.0 )
-            thread RestartUpdateWhenHUDOn()
-        }
-    )
-    bool calledEnd = false
 
     float lastTSLDC = 0
     while (true)
     {
-        if (!calledEnd && clGlobal.levelEnt != null)
-        {
-            clGlobal.levelEnt.EndSignal("MainHud_TurnOff")
-            calledEnd = true
-        }
-        
-        float seconds = Time() % 60
-        int minutes = int(Time()) / 60
-        int difficulty = int(Time() / TIME_PER_DIFFICULTY)
-        float difficultyFrac = Time() % TIME_PER_DIFFICULTY / TIME_PER_DIFFICULTY
-        float timeSinceLastDifChange = Time() % (TIME_PER_DIFFICULTY / 3)
-
-        RuiSetString( file.timeRUI, "msgText", format("%02i:%02i", minutes, int(seconds)) )
-        
-        BasicImageBar_SetFillFrac( file.difficultyBar, difficultyFrac )
-        vector curColor = difficultyColors[int(min(difficulty, difficultyColors.len() - 1))]
-        vector resultColor = <GraphCapped(timeSinceLastDifChange, 0, 3, 1, curColor.x),
-                                GraphCapped(timeSinceLastDifChange, 0, 3, 1, curColor.y),
-                                GraphCapped(timeSinceLastDifChange, 0, 3, 1, curColor.z)>
-
-        foreach (var rui in file.difficultyBar.imageRuis )
-        {
-            RuiSetFloat3( rui, "basicImageColor", resultColor )
-        }
-        RuiSetFloat3( file.difficultyRUI, "msgColor", resultColor )
-        RuiSetString( file.difficultyRUI, "msgText", difficulties[int(min(difficulty, difficulties.len() - 1))] )
-        RuiSetFloat3( file.difficultyLabelRUI, "msgColor", resultColor )
-        RuiSetFloat( file.difficultyRUI, "msgFontSize", 90.0 * min(1, 7.0 / difficulties[int(min(difficulty, difficulties.len() - 1))].len()) )
-
+        RuiSetString( file.moneyRUI, "msgText", int(GraphCapped(sqrt(Time()), sqrt(lastTimeCashChanged), sqrt(lastTimeCashChanged + 1), lastCashAmount, curCashAmount)) + "$")
         WaitFrame()
     }
 }
@@ -235,8 +108,6 @@ void function RestartUpdateWhenHUDOn()
     if (!IsNewThread()) throw "This needs be in new thread"
 
     clGlobal.levelEnt.WaitSignal( "MainHud_TurnOn" )
-
-    BasicImageBar_SetFillFrac( file.bgBar, 1.0 )
 
     thread MoneyRUI_Update()
 }
@@ -257,9 +128,34 @@ void function OnPlayerLifeStateChanged( entity player, int oldLifeState, int new
 
 void function OnEntGainedFocus( entity ent )
 {
-    if ( !StartsWith( ent.GetScriptName(), "item_drop_" ) )
-        return
+    if ( StartsWith( ent.GetScriptName(), "item_drop_" ) )
+        ItemDropGainedFocus( ent )
     
+    if ( ent.GetScriptName() == "roguelike_chest" )
+        thread ChestGainedFocus( ent )
+
+    //RuiSetResolutionToScreenSize( file.flyoutRUI )
+
+}
+
+void function ChestGainedFocus( entity ent )
+{
+    OnThreadEnd( function () : (){
+        RuiSetFloat3( file.moneyRUI, "msgColor", <0.9, 0.55, 0.0> )
+    } )
+
+    clGlobal.levelEnt.EndSignal( "ChestLostFocus" )
+
+    while (true)
+    {
+        float g = GraphCapped( sin(Time() * 4) / 2 + 0.5, 0, 1, 0.55, 0.1 )
+        RuiSetFloat3( file.moneyRUI, "msgColor", <0.9, g, 0.0> )
+        WaitFrame()
+    }
+}
+
+void function ItemDropGainedFocus( entity ent )
+{
     if (file.flyoutRUI != null)
     {
         RuiDestroyIfAlive(file.flyoutRUI)
@@ -354,13 +250,12 @@ void function OnEntGainedFocus( entity ent )
 
     RuiSetFloat3( file.drawbackRUI, "color", roguelikeRarityColors[2] )
     
-
-    //RuiSetResolutionToScreenSize( file.flyoutRUI )
-
 }
 
 void function OnEntLostFocus( entity ent )
 {
+    if (IsValid(ent) && ent.GetScriptName() == "roguelike_chest")
+        clGlobal.levelEnt.Signal( "ChestLostFocus" )
     if (file.curItem != ent)
         return
     
@@ -413,8 +308,8 @@ void function ServerCallback_SetItemAmount( int playerEHandle, int item, int amo
         file.drawbackRUI = null
     }
     string item = Roguelike_GetItemFromNumericId(item)
-    print( "SETTING ITEM AMOUNT: " + item + " amount: " + amount )
-    print( "CURRENT ITEM " + item + " AMOUNT: " + amount )
+    //print( "SETTING ITEM AMOUNT: " + item + " amount: " + amount )
+    //print( "CURRENT ITEM " + item + " AMOUNT: " + amount )
     Roguelike_GiveEntityItem( player, item, amount - Roguelike_GetItemCount( player, item ) )
 }
 
@@ -440,7 +335,7 @@ string function ReplaceWithSeries( string str, array<string> replace )
             i--
             continue
         }
-        print( "Replacing \"%cs\" with \"" + replace[i] + "\"")
+        //print( "Replacing \"%cs\" with \"" + replace[i] + "\"")
         newStr = newStr + str.slice(0, a) + replace[i]
         str = str.slice(a + 3, str.len())
     }

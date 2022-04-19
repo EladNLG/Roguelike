@@ -45,7 +45,7 @@ void function PilotHealthRegenThinkSP( entity player )
 		if ( player.GetHealth() == player.GetMaxHealth() )
 			continue
 
-		float healthRegenRate = 4.0
+		float healthRegenRate = 4.0 + 4.0 * Roguelike_GetItemCount( player, "heal_mod" ) * 0.15
 		float healthRegenStartDelay = GraphCapped( player.GetHealth(), 0, player.GetMaxHealth(), 3.0, 0.8 )
 
 		//printt( "recentDamage " + recentDamage + " delay " + healthRegenStartDelay + " rate " + healthRegenRate )

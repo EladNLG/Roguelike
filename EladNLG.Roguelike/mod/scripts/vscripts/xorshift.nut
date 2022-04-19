@@ -53,8 +53,8 @@ float function xorshift_range(float min, float max, int state = 0)
 int function xorshift_range_int(int min, int max, int state = 0)
 {
 	if (state == 0) state = GetRoguelikeSeed()
-	float choice = fabs(xorshift32f(state) % 1.0) * (max - min + 1)
-	print(choice)
+	float choice = fabs(xorshift32f(state) % 1.0) * (max - min)
+	//print(choice)
 	return min + int(choice);
 }
 

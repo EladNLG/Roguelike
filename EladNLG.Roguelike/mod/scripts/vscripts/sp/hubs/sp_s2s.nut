@@ -15750,10 +15750,20 @@ void function CreateCoreLightFX1()
 	file.coreGlowFX1 = StartParticleEffectOnEntityWithPos_ReturnEntity( core, fxID, FX_PATTACH_CUSTOMORIGIN_FOLLOW, -1, <0,0,0>, <0,0,0> )
 }
 
+void function LifeBoats_PodLoop( player, lifeboat )
+{
+	PickStartPoint( "sp_crashsite", "Waking_Up" )
+}
+
 void function LifeBoats_PodSetup()
 {
 	array<entity> pods = GetEntArrayByScriptName( "lifeboats_pods" )
-	foreach ( pod in pods )
+	pods[0].SetScriptName("roguelike_lifeboat")
+	pods[0].SetUsable()
+	pods[0].SetUsePrompts( "Hold %use% to loop.", "Press %use% to loop." )
+	AddCalback_OnUseEntity( pods[0], LifeBoats_PodLoop )
+	pods.remove(0)
+	foreach ( index, pod in pods )
 	{
 		pod.Solid()
 		pod.DisableHibernation()
@@ -16045,12 +16055,15 @@ void function LifeBoats_RunnerThink( entity guy, bool skipFirstRun )
 
 	if ( IsAlive( guy )	)
 		guy.SetInvulnerable()
+	
+	if (GetEntByScriptName("roguelike_lifeboat") == pod) guy.Destroy()
 
 	LifeBoats_LaunchPod( pod )
 }
 
 void function LifeBoats_LaunchPod( entity pod )
 {
+	if (GetEntByScriptName("roguelike_lifeboat") == pod) return
 	Assert( IsValid( pod ) )
 
 	if ( pod.HasKey( "start_delay" ) && float( pod.kv.start_delay ) > 0.0 )

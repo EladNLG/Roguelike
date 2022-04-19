@@ -1,0 +1,8 @@
+"lang"
+{
+    "Tokens"
+    {
+		"RESPAWNSELECT_PILOT"						"%[X_BUTTON|SPACE]% SKIP"
+        "MULTIPLAYER_LAUNCH"                "aaaaaaaaaaaa"
+    }
+}

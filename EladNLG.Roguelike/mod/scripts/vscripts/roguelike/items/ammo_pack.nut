@@ -8,11 +8,11 @@ void function AmmoPack_Init()
 
 void function AmmoPack_OnNPCKilled( entity npc, entity attacker, var damageInfo )
 {
-    print("npc killed, rolling ammo pack")
+    //print("npc killed, rolling ammo pack")
     if (!attacker.IsPlayer()) return
 
     entity weapon = DamageInfo_GetWeapon( damageInfo )
-    print(weapon)
+    //print(weapon)
     if (!IsValid(weapon)) 
     {
         entity projectile = DamageInfo_GetInflictor( damageInfo )
@@ -38,13 +38,18 @@ void function AmmoPack_OnNPCKilled( entity npc, entity attacker, var damageInfo 
         print("no weapon found")
         return
     }
-    print(weapon)
+    //print(weapon)
 
     // frags get this bonus too :)
     //if (weapon.IsWeaponOffhand()) return
     int stacks = Roguelike_GetItemCount( attacker, "ammo_pack" )
     int roll = Roguelike_RollStackingForChanceFunc(Roguelike_LinearChanceFunc(15, 15, 300), stacks)
     for (int i = 0; i < roll && i < 3; i++)
-        weapon.SetWeaponPrimaryClipCount( min( weapon.GetWeaponPrimaryClipCount() + max( weapon.GetWeaponPrimaryClipCountMax() / 10, 1 ),
-            weapon.GetWeaponPrimaryClipCountMax() ) )
+    {
+        if (weapon.GetWeaponPrimaryClipCountMax() > 0)
+            weapon.SetWeaponPrimaryClipCount( min( weapon.GetWeaponPrimaryClipCount() + max( weapon.GetWeaponPrimaryClipCountMax() / 10, 1 ),
+                weapon.GetWeaponPrimaryClipCountMax() ) )
+        else weapon.SetWeaponChargeFractionForced( max( 0, weapon.GetWeaponChargeFraction() - 0.1 ) )
+    }
+        
 }

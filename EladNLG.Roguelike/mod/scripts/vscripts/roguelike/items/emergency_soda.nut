@@ -30,11 +30,20 @@ void function OnDamageEvent( entity ent, var damageInfo )
         }
 
     }
-    if (isHeadShot && IsValid(weapon))
+
+    if (IsValid(weapon))
     {
-        if (Roguelike_RollForChanceFunc(Roguelike_LinearChanceFunc( 15, 15 ), Roguelike_GetItemCount( attacker, "send_back_rounds" )))
+        //thread ResetAttackTime( weapon )
+        if (weapon.GetNextAttackAllowedTime() > Time() + 0.5) print("???")
+        if (isHeadShot && Roguelike_RollForChanceFunc(Roguelike_LinearChanceFunc( 15, 15 ), Roguelike_GetItemCount( attacker, "send_back_rounds" )))
         {
             weapon.SetWeaponPrimaryClipCount( min( weapon.GetWeaponPrimaryClipCountMax(), weapon.GetWeaponPrimaryClipCount() + 1 ) )
+        }
+        if (weapon.GetWeaponPrimaryClipCount() <= 1)
+        {
+            int goldenShells = Roguelike_GetItemCount( attacker, "golden_shell" )
+
+            DamageInfo_ScaleDamage( damageInfo, 1.0 + goldenShells * 0.15 )
         }
     }
     
@@ -52,6 +61,16 @@ void function OnDamageEvent( entity ent, var damageInfo )
             "\x1b[38;2;150;150;150mUsed their %s%s\x1b[38;2;150;150;150m to save their life (%i remaining)", 
             ColorToEscapeCode(roguelikeChatRarityColors[RARITY_LEGENDARY]), Roguelike_GetItemName( "emergency_soda" ), Roguelike_GetItemCount(ent, "emergency_soda")), false )
         }
+    }
+}
+
+void function ResetAttackTime( entity weapon )
+{
+    float dur = Time() + 1.0
+    while (Time() < dur)
+    {
+        weapon.SetNextAttackAllowedTime( Time() + 0.01 )
+        WaitFrame()
     }
 }
 

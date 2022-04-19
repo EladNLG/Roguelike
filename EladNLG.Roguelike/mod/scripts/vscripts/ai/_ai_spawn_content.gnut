@@ -443,6 +443,8 @@ function CommonNPCOnSpawned( entity npc )
 	if ( GetMapName() == "sp_enemies" )
 		npc.DisableNPCFlag( NPC_ALLOW_PATROL | NPC_ALLOW_INVESTIGATE )
 	#endif
+
+	Difficulty_UpdateNPC( npc )
 }
 
 #if SERVER && SP
@@ -550,9 +552,9 @@ void function GenerateNPCMods( entity weapon, int index = -1 )
 		if (m == "extended_ammo") isExtended = true
 		if (m == "at_unlimited_ammo") isUnlimitedAmmo = true
 		if (isSilenced && isAmped) indexesToRemove.append(i)
-		if (isAmped && isS2S) indexesToRemove.append(i)
-		if (isExtended && isS2S) indexesToRemove.append(i)
-		if (isExtended && isUnlimitedAmmo) indexesToRemove.append(i)
+		else if (isAmped && isS2S) indexesToRemove.append(i)
+		else if (isExtended && isS2S) indexesToRemove.append(i)
+		else if (isExtended && isUnlimitedAmmo) indexesToRemove.append(i)
 	}
 	for (int i = 0; i < indexesToRemove.len(); i++)
 	{

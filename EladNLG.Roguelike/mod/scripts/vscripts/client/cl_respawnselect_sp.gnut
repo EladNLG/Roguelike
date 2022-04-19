@@ -1,0 +1,129 @@
+global function ShowRespawnSelect_SP
+global function ClRespawnselect_SP_Init
+global function DisableDeathBlur
+global function DisplayRespawnPrompt
+
+struct
+{
+	bool deathBlur = true
+	var respawnHintRui
+	var aspectRatioFixTopo
+} file
+
+
+void function ClRespawnselect_SP_Init()
+{
+	Assert( !IsMultiplayer() )
+
+	AddCallback_OnPlayerLifeStateChanged( Callback_PlayerLifestateChanged )
+	file.respawnHintRui = RuiCreate( $"ui/respawn_hint.rpak", clGlobal.topoFullScreen, RUI_DRAW_HUD, RUI_SORT_SCREENFADE + 100 )
+	RuiSetResolutionToScreenSize( file.respawnHintRui )
+
+	float right = (GetScreenSize()[1] / 9.0) * 16.0
+	float down = GetScreenSize()[1]
+	float xOffset = (GetScreenSize()[0] - right) / 2
+	print(GetScreenSize()[1])
+	print(right)
+	print(down)
+	print(xOffset)
+	file.aspectRatioFixTopo = RuiTopology_CreatePlane( <xOffset, 0, 0>, <right, 0, 0>, <0, down, 0>, false )
+
+	DisableDeathBlur()
+}
+
+void function Callback_PlayerLifestateChanged( entity player, int oldLifeState, int newLifeState )
+{
+	if ( player.GetPlayerSettings() == "spectator" )
+	{
+		if ( !IsTestMap() )
+		{
+			ScreenFade( GetLocalViewPlayer(), 0, 0, 0, 255, 0.5, 1.0, FFADE_IN )
+			//printt( "cl SCREENFADE: " + 0.5 + " " + 1.0 )
+		}
+		return
+	}
+
+	if ( oldLifeState == newLifeState )
+		return
+
+	if ( player != GetLocalViewPlayer() )
+		return
+
+	if ( newLifeState == LIFE_DEAD )
+		thread ShowRespawnSelect_SP()
+}
+
+void function DisableDeathBlur()
+{
+	file.deathBlur = false
+}
+
+void function ShowRespawnSelect_SP()
+{
+	if ( IsAlive( GetLocalViewPlayer() ) )
+		return
+
+	wait 1.5
+
+	if ( file.deathBlur )
+		SetScreenBlur( 1.0, 1.0, EASING_LINEAR)
+
+	wait 0.25
+	ScreenFade( GetLocalViewPlayer(), 0, 0, 0, 255, 0.8, 50, FFADE_OUT )
+}
+
+void function PlayerPressed_RespawnPilotSP( entity player )
+{
+	player.ClientCommand( "RespawnNowSP" )
+	RuiSetBool( file.respawnHintRui, "isVisible", false )
+}
+
+void function DisplayRespawnPrompt( string hint )
+{
+	thread AnimateRunOver( hint )
+}
+
+void function AnimateRunOver( string hint )
+{
+	float startTime = Time()
+	var deathMessage = RuiCreate( $"ui/cockpit_console_text_center.rpak", file.aspectRatioFixTopo, RUI_DRAW_HUD, RUI_SORT_SCREENFADE + 150 )
+	RuiSetInt( deathMessage, "maxLines", 2 )
+    RuiSetInt( deathMessage, "lineNum", 0 )
+    RuiSetFloat2( deathMessage, "msgPos", <0.0, 0.1, 0> )
+    RuiSetFloat3( deathMessage, "msgColor", <0.8, 0.8, 0.8> )
+    RuiSetString( deathMessage, "msgText", hint ) 
+    RuiSetFloat( deathMessage, "msgFontSize", 36.0 )
+    RuiSetFloat( deathMessage, "msgAlpha", 0.0 )
+    RuiSetFloat( deathMessage, "thicken", 0.0 )
+	var runOverRUI = RuiCreate( $"ui/cockpit_console_text_center.rpak", file.aspectRatioFixTopo, RUI_DRAW_HUD, RUI_SORT_SCREENFADE + 150 )
+	RuiSetInt( runOverRUI, "maxLines", 2 )
+    RuiSetInt( runOverRUI, "lineNum", 0 )
+    RuiSetFloat2( runOverRUI, "msgPos", <0.0, 0.1, 0> )
+    RuiSetFloat3( runOverRUI, "msgColor", <0.9, 0.05, 0.05> )
+    RuiSetString( runOverRUI, "msgText", "GAME OVER" ) 
+    RuiSetFloat( runOverRUI, "msgFontSize", 72.0 )
+    RuiSetFloat( runOverRUI, "msgAlpha", 0.0 )
+    RuiSetFloat( runOverRUI, "thicken", 0.0 )
+
+	float duration = 1.5
+	while ( Time() - startTime <= duration )
+	{
+		RuiSetFloat2( deathMessage, "msgPos", <0, GraphCapped( AttackDecay(2, 0, (Time() - startTime) / duration), 0, 1, -0.1, -0.125 ), 0> )
+		RuiSetFloat( deathMessage, "msgAlpha", GraphCapped( AttackDecay(2, 0, (Time() - startTime) / duration), 0, 1, 0.0, 0.9 ) )
+		RuiSetFloat( runOverRUI, "msgAlpha", GraphCapped( AttackDecay(2, 0, (Time() - startTime) / duration), 0, 1, 0.0, 0.9 ) )
+		RuiSetFloat( deathMessage, "msgFontSize", GraphCapped( AttackDecay(2, 0, (Time() - startTime) / duration), 0, 1, 0.0, 36 ) )
+		RuiSetFloat( runOverRUI, "msgFontSize", GraphCapped( AttackDecay(2, 0, (Time() - startTime) / duration), 0, 1, 0.0, 72 ) )
+		RuiSetFloat2( runOverRUI, "msgPos", <0, GraphCapped( AttackDecay(2, 0, (Time() - startTime) / duration), 0, 1, -0.1, -0.075 ), 0> )
+		WaitFrame()
+	}
+
+	thread DelaySkipPrompt( 1.5 )
+}
+
+void function DelaySkipPrompt( float delay )
+{
+	wait delay
+	RegisterButtonPressedCallback( KEY_SPACE,		PlayerPressed_RespawnPilotSP )
+	RegisterButtonPressedCallback( BUTTON_X,		PlayerPressed_RespawnPilotSP )
+	RuiSetBool( file.respawnHintRui, "isVisible", true )
+}

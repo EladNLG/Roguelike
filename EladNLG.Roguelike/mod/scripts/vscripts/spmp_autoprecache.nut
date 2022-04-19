@@ -65,7 +65,7 @@ void function PrecacheJack()
 	PrecacheWeapon( "mp_weapon_rspn101_csgo" )
 	foreach ( string weaponName in allowedWeapons )
 	{
-		print(weaponName)
+		//print(weaponName)
 		if (!WeaponIsPrecached(weaponName))
 			PrecacheWeapon(weaponName);
 	}

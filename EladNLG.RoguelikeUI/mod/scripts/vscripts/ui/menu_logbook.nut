@@ -47,8 +47,10 @@ void function InitLogbook()
     AddLogbookEntry( "Adrenaline Shot", "Per kill, 70% speed boost for 0.5s (+0.25s per stack).", 
     "[DELIVERY 64175]\n\nManagement has noted your recent addiction to...certain materials, so I've been asked to send you a...less potent version. Sorry." )
     AddLogbookEntry( "Overclock Mechanism", "10% chance to refresh abilities and ammo.", "[TRANSCRIPTION - 2586-5-31]\n\nMechanic: Are you sure you want to do this? If the Titan goes unstable, he could explode, killing you in the process...\n\n???: Yes. I'm gonna die in battle either way, no?\n\nMechanic: I guess..." )
-    AddLogbookEntry( "Fragile Bird", "test", "test" )
-    AddLogbookEntry( "Leeching Hands", "test", "test" )
+    AddLogbookEntry( "Leeching Hands", "Heal for 20HP/s when wallrunning.", "[TRANSCRIPTION - 2552-7-3]\n\nShopkeeper: Are we closing?\n\nManager: Yup. You're free to go.\n\nThe shopkeeper rises up from his chair, grabs his stuff and walks towards the exit.\n\nThen, [REDACTED] enters the shop.\n\nThe rest of this transcription has been removed.\nReason: puked in bucket. also technically classified but mostly cause puked in bucket." )
+    AddLogbookEntry( "Fragile Bird", "+50%% Air Acceleration. Take 20HP/s of damage whilst wallrunning.", "" )
+	AddLogbookEntry( "Golden Shell", "The last bullet (or 2 with projectile weapons) deals 15% more damage.", "")
+	AddLogbookEntry( "Emergency Soda", "When taking lethal damage (does not include OoB damage), heal to full instead. Consumes upon use.", "-------------------------------\n\nthis is a transcription of what happened please don't touch I beg you please\n\n-------------------------------\n\nSoldier 1: Why are you taking your soda again?\n\nSoldier 2: I get lucky when I'm drunk.\n\nSoldier 1: THAT CONTAINS ALCOHOL?!\n\nSoldier 2: uhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
 	// Nuke weird rui on filter switch :D
 	//RuiSetString( Hud_GetRui( Hud_GetChild( file.menu, "SwtBtnShowFilter")), "buttonText", "")
 
@@ -91,7 +93,7 @@ void function OnLogbookButtonFocused( var button )
 	
 	RuiSetGameTime( rui, "startTime", -99999.99 ) // make sure it skips the whole animation for showing this
 	RuiSetString( rui, "headerText", entry.name )
-    RuiSetString( rui, "messageText", entry.description + "\n\nLOGBOOK ENTRY:\n\n" + entry.logbookEntry )
+    RuiSetString( rui, "messageText", entry.description + "\n\n" + (entry.logbookEntry == "" ? "" : "LOGBOOK ENTRY:\n\n" + entry.logbookEntry) )
 }
 
 void function SearchBarUpdate()

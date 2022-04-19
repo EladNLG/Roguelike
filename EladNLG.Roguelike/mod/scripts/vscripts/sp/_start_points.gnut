@@ -254,6 +254,16 @@ void function PickStartPoint_NoFadeOut_NoPilotWeaponCarryover( string mapName, s
 void function PlayerTransitionsToLevel( entity player, string mapName, string startPointEnum, LevelTransitionStruct trans )
 {
 	trans.startPointIndex = GetStartPointIndexFromName( mapName, startPointEnum )
+	switch (mapName)
+	{
+		case "sp_boomtown_start":
+			//int index = xorshift_range_int(0, 2, GetRoguelikeSeed() + 1)
+			//mapName = [ "sp_sewers1", "sp_boomtown_start" ][index]
+			mapName = "sp_hub_timeshift"
+			trans.startPointIndex = 0
+			startPointEnum = GetStartPointNameFromIndex( mapName, trans.startPointIndex )
+			break
+	}
 	trans.difficulty = GetConVarInt( "sp_difficulty" )
 	trans.titan_unlocksBitfield = GetBTLoadoutsUnlockedBitfield()
 	trans.levelID = GetSPLevelEnumForMapname( GetMapName() )

@@ -120,6 +120,11 @@ void function ShItems_Init()
     func1 = Roguelike_LinearChanceFunc( 10, 10 )
     Roguelike_AddItemStat( "heal_mod", "Regen Rate", func1, "`2%+.0f`0%%%%" )
 
+    Roguelike_RegisterItem( "golden_shell", "Golden Shell", "Last bullet deals `215`0%% (+`215`0%% per stack) more damage", RARITY_COMMON )
+    
+    func1 = Roguelike_LinearChanceFunc( 15, 15 )
+    Roguelike_AddItemStat( "golden_shell", "Bonus Damage", func1, "`2%+.0f`0%%%%" )
+
     Roguelike_RegisterItem( "emergency_soda", "Emergency Soda", "Upon taking lethal damage:\n\nHeal to full health. Consume 1 stack of this item. This will `1NOT`0 work on OoB zones.", RARITY_LEGENDARY )
 
     // adrenaline shot
@@ -131,6 +136,14 @@ void function ShItems_Init()
     func1 = Roguelike_LinearChanceFunc( 5, 5 )
     Roguelike_RegisterItem( "send_back_rounds", "Send-Back Rounds", "Upon hitting an headshot:\n`215`0%% (`2+15`0%% per stack) chance to restore a bullet.", RARITY_UNCOMMON )
     index = Roguelike_AddItemStat( "send_back_rounds", "Chance to Refill Mag", func1, "`2%.0f`0%%" )
+
+    func1 = Roguelike_HyperbolicChanceFunc( 8 )
+    float reduction = func1(1)
+    float reduction2nd = func1(2) - reduction
+    string res = format("%.1f`0%%%% (-`2%.1f`0%%%% per stack, hyperbolic)", reduction, reduction2nd)
+    Roguelike_RegisterItem( "blast_proc", "Blast Protection IV", "-`2" + res + " explosive damage.", RARITY_UNCOMMON )
+    index = Roguelike_AddItemStat( "blast_proc", "Damage Reduction", func1, "`2%.0f`0%%" )
+
 
     // Leeching Hands
     // +20Hp/s when wallrunning
@@ -149,7 +162,7 @@ void function ShItems_Init()
 
     // 
     
-    float amplifier = 50
+    float amplifier = 25
     string chance = format("%.1f", Roguelike_HyperbolicChanceFunc( amplifier )(1) )
 
     Roguelike_RegisterItem( "overclock_mechanism", "Overclock Mechanism", "Upon killing a titan as BT:\n`2" + chance

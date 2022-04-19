@@ -3,7 +3,7 @@
     "Version": "1.0.0",
     "Description": "Turns the singleplayer campaign into a roguelike, making for a more interesting experience.",
     "RequiredOnClient": true,
-    "LoadPriority": 2,
+    "LoadPriority": 5,
     "Scripts": [
 
 
@@ -78,13 +78,6 @@
             "RunOn": "CLIENT"
         },
         {
-            "Path": "roguelike/items/cl_item.nut",
-            "RunOn": "CLIENT",
-            "ClientCallback": {
-                "After": "ClItem_Init"
-            }
-        },
-        {
             "Path": "roguelike/items/sh_items.nut",
             "RunOn": "SERVER || CLIENT",
             "ServerCallback": {
@@ -139,6 +132,49 @@
                 "After": "_Shop_Init"
             }
         },
+        {
+            "Path": "roguelike/_difficulty.nut",
+            "RunOn": "SERVER",
+            "ServerCallback": {
+                "After": "Difficulty_Init"
+            }
+        },
+        {
+            "Path": "hud_revamp.nut",
+            "RunOn": "UI || CLIENT || SERVER"
+        },
+        {
+            "Path": "client/backup_basic_image_bar.nut",
+            "RunOn": "CLIENT"
+        },
+        {
+            "Path": "roguelike/cl_difficulty.nut",
+            "RunOn": "CLIENT",
+            "ClientCallback": {
+                "After": "Difficulty_Init"
+            }
+        },
+        {
+            "Path": "roguelike/_levels.nut",
+            "RunOn": "SERVER",
+            "ServerCallback": {
+                "Before": "Levels_Init"
+            }
+        },
+        {
+            "Path": "roguelike/cl_levels.nut",
+            "RunOn": "CLIENT",
+            "ClientCallback": {
+                "After": "Levels_Init"
+            }
+        },
+        {
+            "Path": "roguelike/items/cl_item.nut",
+            "RunOn": "CLIENT",
+            "ClientCallback": {
+                "After": "ClItem_Init"
+            }
+        },
 
         ///////////
         // ITEMS //
@@ -170,6 +206,13 @@
             "RunOn": "SERVER",
             "ServerCallback": {
                 "After": "EmergencySoda_Init"
+            }
+        },
+        {
+            "Path": "roguelike/items/blast_protection_armor.nut",
+            "RunOn": "SERVER",
+            "ServerCallback": {
+                "After": "BlastProtection_Init"
             }
         },
         {
@@ -228,6 +271,24 @@
             "Name": "player_4_items",
             "DefaultValue": "",
             "Flags": 16388
+        },
+        {
+            "Name": "roguelike_time",
+            "DefaultValue": "0",
+            "Flags": 16388
+        },
+        {
+            "Name": "player_xp",
+            "DefaultValue": "0",
+            "Flags": 16388
+        },
+        {
+            "Name": "player_level",
+            "DefaultValue": "0",
+            "Flags": 16388
         }
-    ]
+    ],
+    "Localisation": [
+		"resource/localization_roguelike_%language%.txt"
+	]
 }

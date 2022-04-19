@@ -1,6 +1,7 @@
 untyped
 
 global function ItemDrops_Init
+global function CreateItem
 
 global array<vector> roguelikeChatRarityColors = [
     <0.8, 0.8, 0.8>, // common
@@ -66,6 +67,7 @@ void function OnLevelEnd( string mapName, LevelTransitionStruct trans )
         if (index > 3) break
         SetConVarString("player_" + (index + 1) + "_name", player.GetPlayerName() )
     }
+    SetConVarInt("roguelike_time", int(Time() - GetGlobalNetTime("difficultyStartTime")))
 }
 
 void function PlayerConnected( entity player )
@@ -84,6 +86,11 @@ void function PlayerConnected( entity player )
             break
         }
     }
+    float startTime = Time()
+    if (GetMapName() == "sp_crashsite")
+        startTime += 30
+    if (player.GetPlayerIndex() == 0)
+        SetGlobalNetTime("difficultyStartTime", startTime - GetConVarInt("roguelike_time"))
     PlayerRespawned( player )
 }
 
@@ -101,7 +108,7 @@ void function PlayerRespawned( entity player )
 
 void function OnNPCKilled_DropItem( entity npc, entity attacker, var damageInfo )
 {
-    if (!attacker.IsPlayer()) return
+    /*if (!attacker.IsPlayer()) return
     print("roling for item\nCHANCE: " + (5 + 2 * itemRollsLost) + "%")
     if (RandomFloat(100.0) < 5 + 2 * itemRollsLost)
     {
@@ -109,7 +116,7 @@ void function OnNPCKilled_DropItem( entity npc, entity attacker, var damageInfo 
         CreateItem( item, npc.GetOrigin(), npc.GetAngles() )
         itemRollsLost = 0
     }
-    else itemRollsLost++
+    else itemRollsLost++*/
 }
 
 entity function CreateItem( string item, vector origin, vector angles )
@@ -151,7 +158,6 @@ entity function CreateItem( string item, vector origin, vector angles )
 
     return prop_dynamic
 }
-
 
 void function SetOutline( entity ent, vector color, float radius )
 {

@@ -214,12 +214,6 @@ void function CodeCallback_DamagePlayerOrNPC( entity ent, var damageInfo )
 		}
 	}
 
-	foreach ( callbackFunc in file.onDamageCallbacks )
-	{
-		callbackFunc( ent, damageInfo )
-		if (DamageInfo_GetDamage( damageInfo ) <= 0) return
-	}
-
 	RunClassDamageCallbacks( ent, damageInfo )
 	#if VERBOSE_DAMAGE_PRINTOUTS
 		printt( "    after class damage callbacks:", DamageInfo_GetDamage( damageInfo ) )
@@ -282,6 +276,15 @@ void function CodeCallback_DamagePlayerOrNPC( entity ent, var damageInfo )
 		return
 
 	RunClassDamageFinalCallbacks( ent, damageInfo )
+
+	foreach ( callbackFunc in file.onDamageCallbacks )
+	{
+		callbackFunc( ent, damageInfo )
+		if (DamageInfo_GetDamage( damageInfo ) <= 0) return
+	}
+
+	ScaleDamageWithEntityLevel( ent, damageInfo )
+
 	#if VERBOSE_DAMAGE_PRINTOUTS
 		printt( "    after class damage final callbacks:", DamageInfo_GetDamage( damageInfo ) )
 	#endif

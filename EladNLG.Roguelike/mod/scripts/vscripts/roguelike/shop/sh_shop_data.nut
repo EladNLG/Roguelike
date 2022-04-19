@@ -75,3 +75,8 @@ void function ShopPrices_AddMod(string name, string displayName, int value)
 
     file.mods.append(data)
 }
+
+int function GetMoney( entity player )
+{
+    return player.GetPlayerNetInt( "roguelikeCash" ) + player.GetPlayerNetInt( "roguelikeCashStacks" ) * 1024
+}

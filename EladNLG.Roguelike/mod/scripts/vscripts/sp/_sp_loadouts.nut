@@ -593,7 +593,7 @@ PilotLoadoutDef function GetPilotLoadoutForCurrentMapSP()
 							   "mp_weapon_rspn101_og", "mp_weapon_smr", "mp_weapon_softball"]
 	// fuck
 	// select primary 
-	int primaryIndex = xorshift_range_int( 0, RemoveNonPrecached(primaries).len() - 1 )
+	int primaryIndex = xorshift_range_int( 0, RemoveNonPrecached(primaries).len())
 	print("PRIMARY INDEX: " + primaryIndex)
 	print("PRIMARY: " + RemoveNonPrecached(primaries).len())
 	string primary = RemoveNonPrecached(primaries)[primaryIndex]
@@ -634,14 +634,14 @@ PilotLoadoutDef function GetPilotLoadoutForCurrentMapSP()
 		}
 	}
 
-	int attachmentId = xorshift_range_int(0, attachments.len() - 1)
+	int attachmentId = xorshift_range_int(0, attachments.len())
 	if (attachments.len() > 0) pilotLoadout.primaryAttachment = attachments[attachmentId]
 
 	// Secondaries - edit here!!!
 	array<string> secondaries = ["mp_weapon_alternator_smg", "mp_weapon_autopistol", "mp_weapon_semipistol",
 								"mp_weapon_shotgun_pistol", "mp_weapon_wingman", "mp_weapon_smart_pistol"]
 	// select secondary
-	int secondaryIndex = xorshift_range_int( 0, RemoveNonPrecached(secondaries).len() - 1 )
+	int secondaryIndex = xorshift_range_int( 0, RemoveNonPrecached(secondaries).len())
 	print("SECONDARY INDEX: " + secondaryIndex)
 	print("SECONDARY: " + RemoveNonPrecached(secondaries).len())
 	string secondary = RemoveNonPrecached(secondaries)[secondaryIndex]
@@ -680,7 +680,7 @@ PilotLoadoutDef function GetPilotLoadoutForCurrentMapSP()
 
 	array<string> meleeListRand
 	meleeListRand = ["melee_pilot_emptyhanded","melee_pilot_arena","melee_pilot_sword"]
-	pilotLoadout.melee = RemoveNonPrecached(meleeListRand)[xorshift_range_int(0, RemoveNonPrecached(meleeListRand).len() - 1)]
+	pilotLoadout.melee = RemoveNonPrecached(meleeListRand)[xorshift_range_int(0, RemoveNonPrecached(meleeListRand).len())]
 
 	array<string> ordnanceListRand
 	ordnanceListRand = ["mp_weapon_frag_grenade","mp_weapon_frag_drone","mp_weapon_grenade_gravity","mp_weapon_grenade_electric_smoke","mp_weapon_grenade_emp","mp_weapon_thermite_grenade","mp_weapon_satchel"]
@@ -690,7 +690,7 @@ PilotLoadoutDef function GetPilotLoadoutForCurrentMapSP()
 	specialListRand = ["mp_ability_cloak","mp_weapon_hard_cover","mp_weapon_grenade_sonar","mp_ability_grapple","mp_ability_heal","mp_ability_holopilot","mp_ability_shifter"]
 	if (RemoveNonPrecached(specialListRand).len() > 0)
 	{
-		int special = xorshift_range_int(0, RemoveNonPrecached(specialListRand).len() - 1)
+		int special = xorshift_range_int(0, RemoveNonPrecached(specialListRand).len())
 		
 		pilotLoadout.special = RemoveNonPrecached(specialListRand)[special]
 	}
