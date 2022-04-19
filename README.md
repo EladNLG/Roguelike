@@ -3,17 +3,9 @@ An ambitious mod for Titanfall 2's campaign. You're welcome to contribute &amp; 
 # Contributing
 You're welcome to contribute to this mod by making a Pull Request. Wether it is a new item, or a gameplay mechanic, but it may get denied, even if the implementation is perfect. However, some things are still missing from the mod and I will very much appreiciate any help in the following things:
 
-## Looping
+## Items
 
-One of the drop pods in the draconis should be interactable. This drop pod should send you back to BT-7274, but skip the beginning of the stage (see start point Battery2_Path)
-
-## Chest Items
-
-Chests should spawn items. Please use the pre-existing function `Roguelike_GetRandomItem()`.
-
-## Difficulty
-
-Difficulty should increase over time and make enemies stronger. UI is already made in `cl_item.nut`, though there is no server side code at the moment to make enemies stronger.
+MAKE MORE ITEMS! Anything you wish! Just add them in!
 
 ## Tutorial
 
