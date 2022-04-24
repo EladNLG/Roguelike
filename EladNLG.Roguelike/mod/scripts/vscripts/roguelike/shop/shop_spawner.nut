@@ -1,6 +1,7 @@
 untyped
 global function Shop_Spawn
 global function RandomlyPlaceShop
+global function Roguelike_GetStartPoint
 
 global entity s2s_mover = null
 
@@ -17,6 +18,17 @@ struct
     entity shop
 } file
 
+int function Roguelike_GetStartPoint()
+{
+    LevelTransitionStruct ornull trans = GetLevelTransitionStruct()
+    if (trans != null)
+    {
+        expect LevelTransitionStruct( trans )
+        return trans.startPointIndex
+    }
+    return GetConVarInt("sp_startpoint")
+}
+
 vector function GetShopSpawnLocation()
 {
     switch (GetMapName())
@@ -25,15 +37,7 @@ vector function GetShopSpawnLocation()
             // chapter 2 completed flag.
             // we set buy menu interactable to inside the control room instead, to give the player access as usual.
             #if SP
-            int startPointIndex = 0
-            LevelTransitionStruct ornull trans = GetLevelTransitionStruct()
-            if (trans != null)
-            {
-                expect LevelTransitionStruct( trans )
-                startPointIndex = trans.startPointIndex
-            }
-            else startPointIndex = GetConVarInt("sp_startpoint")
-            if (startPointIndex > 1)
+            if (Roguelike_GetStartPoint() > 1)
             {
                 return <12714.5, -2154.05, 84.0313>
             }
@@ -66,17 +70,7 @@ vector function GetShopSpawnAngles()
         case "sp_beacon":
             // chapter 2 completed flag.
             #if SP
-            int startPointIndex = 0
-            // i don't know why isn't _start_points set up before this.
-            // so I'll just emulate the startpoint index.
-            LevelTransitionStruct ornull trans = GetLevelTransitionStruct()
-            if (trans != null)
-            {
-                expect LevelTransitionStruct( trans )
-                startPointIndex = trans.startPointIndex
-            }
-            else startPointIndex = GetConVarInt("sp_startpoint")
-            if (startPointIndex > 1)
+            if (Roguelike_GetStartPoint() > 1)
             {
                 return <0,-90,0>
             }
@@ -182,8 +176,6 @@ void function Shop_Spawn()
                 i++
         }
     }
-
-    print("\n\n\n\n\n\n\n\nOUT OF " + attempts + " ATTEMPTS - " + shopsPlaced + " SHOPS PLACED OUT OF 250 WANTED\n\n\n\n\n\n\n" )
 }
 
 bool function Give( entity player, array<string> args)
@@ -329,7 +321,7 @@ bool function RandomlyPlaceShop(int s = 0, entity forceParent = null)
     shop.SetUsable()
     shop.SetScriptName("roguelike_chest")
     //shop.SetUsableByGroup( "pilot" )
-    shop.SetUsePrompts( "Hold %use% to open chest (200$)", "Press %use% to open chest (200$)" )
+    shop.SetUsePrompts( "Hold %use% to open chest (" + GetChestCost() + "$)", "Press %use% to open chest (" + GetChestCost() + "$)" )
     //DispatchSpawn( shop )
     Highlight_SetNeutralHighlight( shop, "roguelike_chest" )
 
@@ -341,12 +333,12 @@ function OpenChest( chest, player )
 {
     expect entity( player )
     expect entity( chest )
-    if (GetMoney( player ) < 200)
+    if (GetMoney( player ) < GetChestCost())
     { 
         EmitSoundOnEntity( player, "coop_sentrygun_deploymentdeniedbeep" )
         return
     }
-    RemoveMoney( player, 200 )
+    RemoveMoney( player, GetChestCost() )
     EmitSoundOnEntity( player, "Timeshift_Scr_StalkerPodOpen" )
     chest.UnsetUsable()
     //player.SetModel( CHEST_INTERACTABLE_MODEL_OPEN )
@@ -410,7 +402,7 @@ array<vector> function GetChestSpawnBanBounds()
 {
     switch (GetMapName())
     {
-        case "sp_timeshift_hub":
+        case "sp_hub_timeshift":
         case "sp_timeshift_spoke02":
             return [ < -MAX_WORLD_COORD,  -MAX_WORLD_COORD, 1000>, < MAX_WORLD_COORD, MAX_WORLD_COORD, 6000 >,
             < -MAX_WORLD_COORD,  -MAX_WORLD_COORD, 13000>, < MAX_WORLD_COORD, MAX_WORLD_COORD, 16000 >,

@@ -1,4 +1,8 @@
 global function Difficulty_Init
+global function ServerCallback_FreezeTimer
+global function ServerCallback_UnfreezeTimer
+global function ServerCallback_HideTimer
+global function ServerCallback_ShowTimer
 
 const RUI_TEXT_RIGHT = $"ui/cockpit_console_text_top_right.rpak"
 const RUI_TEXT_LEFT = $"ui/cockpit_console_text_top_left.rpak"
@@ -6,6 +10,7 @@ const RUI_TEXT_LEFT = $"ui/cockpit_console_text_top_left.rpak"
 struct 
 {
     var timeRUI
+    var timeLabelRUI
     var difficultyRUI
     var difficultyLabelRUI
     BarTopoData& difficultyBar
@@ -13,30 +18,30 @@ struct
 } file
 
 array<string> difficulties = [
-    "Easy",
-    "Normal",
-    "Hard",
-    "Very Hard",
-    "Master",
-    "Insane",
-    "Impossible",
-    "So, how's it going?",
-    "Wanna hear a song?",
-    "K, here goes!",
-    "Never gonna give",
-    "you up",
-    "Never gonna let",
-    "you down",
-    "Never gonna run",
-    "around and",
-    "desert you",
-    "Never gonna make",
-    "you cry",
-    "Never gonna say",
-    "goodbye",
-    "Never gonna tell",
-    "a lie",
-    "and hurt you."
+    "Easy", // 0
+    "Normal", // 3
+    "Hard",// 6
+    "Very Hard", // 9
+    "Master", // 12
+    "Insane", // 15
+    "Impossible", // 18
+    "So, how's it going?", // 21
+    "Wanna hear a song?", // 24
+    "K, here goes!", // 27
+    "Never gonna give",// 30
+    "you up",// 33
+    "Never gonna let",// 36
+    "you down", // 39
+    "Never gonna run", // 42
+    "around and", //    45
+    "desert you", // 48
+    "Never gonna make", // 51
+    "you cry", // 54
+    "Never gonna say", // 57
+    "goodbye", // 60
+    "Never gonna tell", // 63
+    "a lie", // 66
+    "and hurt you." // 69 * 100 / 60 = 345
 ]
 
 array<vector> difficultyColors = [
@@ -55,6 +60,7 @@ array<vector> difficultyColors = [
 
 void function Difficulty_Init()
 {
+    RegisterSignal( "RoguelikeTimerOff" )
     AddCallback_EntitiesDidLoad( EntitiesDidLoad )
 }
 
@@ -102,6 +108,7 @@ void function EntitiesDidLoad()
     RuiSetFloat( rui, "msgFontSize", 45.0 )
     RuiSetFloat( rui, "msgAlpha", 0.9 )
     RuiSetFloat( rui, "thicken", 0.0 )
+    file.timeLabelRUI = rui
     rui = RuiCreate( RUI_TEXT_RIGHT, clGlobal.topoCockpitHud, RUI_DRAW_COCKPIT, 0 )
     RuiSetInt( rui, "maxLines", 1 )
     RuiSetInt( rui, "lineNum", 0 )
@@ -112,9 +119,10 @@ void function EntitiesDidLoad()
     RuiSetFloat( rui, "msgAlpha", 0.5 )
     RuiSetFloat( rui, "thicken", 0.0 )
 
-    BarTopoData bg = BasicImageBar_CreateRuiTopo( <0,0,0>, < 0.375, -0.185, 0>, 0.15, 0.01, eDirection.left, true, 1 )
+    float vertMultiplier = COCKPIT_RUI_WIDTH / COCKPIT_RUI_HEIGHT
+    BarTopoData bg = BasicImageBar_CreateRuiTopo( <0,0,0>, < 0.375, -0.185, 0>, 0.15 + 0.005, 0.01 + 0.005 * vertMultiplier, eDirection.left, true )
     file.difficultyBar = BasicImageBar_CreateRuiTopo( <0,0,0>, < 0.375, -0.185, 0>, 0.15, 0.01, eDirection.left, true, 1 )
-    BasicImageBar_UpdateSegmentCount( bg, 3, 0.05 )
+    //BasicImageBar_UpdateSegmentCount( bg, 3, 0.05 )
     BasicImageBar_UpdateSegmentCount( file.difficultyBar, 3, 0.05 )
     foreach (var rui in file.difficultyBar.imageRuis )
     {
@@ -141,6 +149,7 @@ void function RestartUpdateWhenHUDOn()
     thread DifficultyRUI_Update()
 }
 
+bool signalledHideTimer = false
 const float TIME_PER_DIFFICULTY = 300
 void function DifficultyRUI_Update()
 {
@@ -149,6 +158,7 @@ void function DifficultyRUI_Update()
 
     OnThreadEnd(
         function () : (){
+            if (signalledHideTimer) return
             BasicImageBar_SetFillFrac( file.difficultyBar, 0.0 )
             BasicImageBar_SetFillFrac( file.bgBar, 0.0 )
             thread RestartUpdateWhenHUDOn()
@@ -162,12 +172,13 @@ void function DifficultyRUI_Update()
         if (!calledEnd && clGlobal.levelEnt != null)
         {
             clGlobal.levelEnt.EndSignal("MainHud_TurnOff")
+            clGlobal.levelEnt.EndSignal("RoguelikeTimerOff")
             calledEnd = true
         }
         float time = Time() - GetGlobalNetTime("difficultyStartTime")
         float seconds = time % 60
         int minutes = int(time) / 60
-        int difficulty = int(time / TIME_PER_DIFFICULTY)
+        int difficulty = int(min(time * 3 / TIME_PER_DIFFICULTY, 99) / 3)
         float difficultyFrac = time % TIME_PER_DIFFICULTY / TIME_PER_DIFFICULTY
         float timeSinceLastDifChange = time % (TIME_PER_DIFFICULTY / 3)
 
@@ -190,4 +201,49 @@ void function DifficultyRUI_Update()
 
         WaitFrame()
     }
+}
+
+void function ServerCallback_FreezeTimer()
+{
+    signalledHideTimer = true
+    clGlobal.levelEnt.Signal("RoguelikeTimerOff")
+}
+
+void function ServerCallback_UnfreezeTimer()
+{
+    thread DifficultyRUI_Update()
+}
+
+void function ServerCallback_HideTimer()
+{
+    thread ServerCallback_HideTimer_Thread()
+}
+
+void function ServerCallback_HideTimer_Thread()
+{
+    while (file.bgBar.topoData.len() <= 0) 
+        WaitFrame()
+    print("\n\n\n\nAAAAAAAAAAAAA")
+    signalledHideTimer = true
+    clGlobal.levelEnt.Signal("RoguelikeTimerOff")
+
+    BasicImageBar_SetFillFrac( file.bgBar, 0.0 )
+    BasicImageBar_SetFillFrac( file.difficultyBar, 0.0 )
+
+    RuiSetFloat( file.timeRUI, "msgAlpha", 0.0 )
+    RuiSetFloat( file.timeLabelRUI, "msgAlpha", 0.0 )
+    RuiSetFloat( file.difficultyRUI, "msgAlpha", 0.0 )
+    RuiSetFloat( file.difficultyLabelRUI, "msgAlpha", 0.0 )
+}
+
+void function ServerCallback_ShowTimer()
+{
+    BasicImageBar_SetFillFrac( file.bgBar, 1.0 )
+
+    RuiSetFloat( file.timeRUI, "msgAlpha", 0.9 )
+    RuiSetFloat( file.timeLabelRUI, "msgAlpha", 0.9 )
+    RuiSetFloat( file.difficultyRUI, "msgAlpha", 0.9 )
+    RuiSetFloat( file.difficultyLabelRUI, "msgAlpha", 0.9 )
+
+    thread DifficultyRUI_Update()
 }

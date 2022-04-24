@@ -100,17 +100,17 @@ void function ShItems_Init()
 
     // Ammo Pack
     Roguelike_RegisterItem( "ammo_pack", "Ammo Pack", "Upon kill:\n`215`0%% (`2+15`0%% per stack) chance to restore 10% of the magazine", RARITY_COMMON )
-    float functionref( int ) func1 = Roguelike_LinearChanceFunc( 15, 15, 100 )
-    float functionref( int ) func2 = Roguelike_LinearChanceFunc( 15, 15, 100, -100 )
+    float functionref( int ) func1 = Roguelike_LinearChanceFunc( 20, 20, 100 )
+    float functionref( int ) func2 = Roguelike_LinearChanceFunc( 20, 20, 100, -100 )
 
-    float functionref( int ) func3 = Roguelike_LinearChanceFunc( 15, 15, 100, -200 )
-    int index = Roguelike_AddItemStat( "ammo_pack", "Chance to Restore 10%% Ammo", func1, "`2%.0f`0%%%%" )
+    float functionref( int ) func3 = Roguelike_LinearChanceFunc( 20, 20, 100, -200 )
+    int index = Roguelike_AddItemStat( "ammo_pack", "Chance to Restore 20%% Ammo", func1, "`2%.0f`0%%%%" )
     Roguelike_SetStatObsoleteFunc( "ammo_pack", index, Roguelike_Obsolete_IsGuranteed( func2 ) )
 
-    index = Roguelike_AddItemStat( "ammo_pack", "Chance to Restore 20%% Ammo", func2, "`2%.0f`0%%%%" )
+    index = Roguelike_AddItemStat( "ammo_pack", "Chance to Restore 40%% Ammo", func2, "`2%.0f`0%%%%" )
     Roguelike_SetStatObsoleteFunc( "ammo_pack", index, Roguelike_Obsolete_Or( Roguelike_Obsolete_IsGuranteed( func3 ), Roguelike_Obsolete_WithinRange( func1, -1, 100 ) ) )
     
-    index = Roguelike_AddItemStat( "ammo_pack", "Chance to Restore a 30%% Ammo", func3, "`2%.0f`0%%%%" )
+    index = Roguelike_AddItemStat( "ammo_pack", "Chance to Restore a 60%% Ammo", func3, "`2%.0f`0%%%%" )
     Roguelike_SetStatObsoleteFunc( "ammo_pack", index,  Roguelike_Obsolete_WithinRange( func2, -1, 100 ) )
 
     // Health Generator
@@ -133,9 +133,9 @@ void function ShItems_Init()
     index = Roguelike_AddItemStat( "adrenaline_shot", "Boost Duration", func1, "`2%.2f`0s" )
 
     // send-back rounds
-    func1 = Roguelike_LinearChanceFunc( 5, 5 )
+    func1 = Roguelike_LinearChanceFunc( 15, 15 )
     Roguelike_RegisterItem( "send_back_rounds", "Send-Back Rounds", "Upon hitting an headshot:\n`215`0%% (`2+15`0%% per stack) chance to restore a bullet.", RARITY_UNCOMMON )
-    index = Roguelike_AddItemStat( "send_back_rounds", "Chance to Refill Mag", func1, "`2%.0f`0%%" )
+    index = Roguelike_AddItemStat( "send_back_rounds", "Chance", func1, "`2%.0f`0%%" )
 
     func1 = Roguelike_HyperbolicChanceFunc( 8 )
     float reduction = func1(1)
@@ -322,11 +322,11 @@ void function Roguelike_PrintPlayerInventory( entity player )
     if ( !(player in file.inventories) )
         return // player hasn't grabbed any item yet
 
-    print( "Player " + player.GetPlayerName() + " has the following items:" )
-    foreach ( item, count in file.inventories[player].items )
-    {
-        print( item + ": " + count )
-    }
+    //print( "Player " + player.GetPlayerName() + " has the following items:" )
+    //foreach ( item, count in file.inventories[player].items )
+    //{
+    //    print( item + ": " + count )
+    //}
 }
 
 // NUMERIC IDS

@@ -2,6 +2,8 @@ untyped
 
 global function ItemDrops_Init
 global function CreateItem
+global function RemoveFromTimer
+global function RestartTimer
 
 global array<vector> roguelikeChatRarityColors = [
     <0.8, 0.8, 0.8>, // common
@@ -21,6 +23,18 @@ array<asset> itemModels = [
 ]
 
 int itemRollsLost = 0
+
+void function RestartTimer()
+{
+    SetGlobalNetTime( "difficultyStartTime", Time() - GetConVarInt( "roguelike_time") )
+    ForceDifficultyCallbacks()
+}
+
+void function RemoveFromTimer( float amount )
+{
+    SetGlobalNetTime( "difficultyStartTime", GetGlobalNetTime( "difficultyStartTime" ) + amount )
+    ForceDifficultyCallbacks()
+}
 
 void function ItemDrops_Init()
 {
@@ -87,10 +101,24 @@ void function PlayerConnected( entity player )
         }
     }
     float startTime = Time()
-    if (GetMapName() == "sp_crashsite")
-        startTime += 30
+    //if (GetMapName() == "sp_crashsite")
+    //    startTime += 30 // no longer needed since we pause timer when player is in FirstPersonSequence
     if (player.GetPlayerIndex() == 0)
-        SetGlobalNetTime("difficultyStartTime", startTime - GetConVarInt("roguelike_time"))
+    {
+        int startPointMax = 0
+        switch (GetMapName())
+        {
+            case "sp_s2s":
+                startPointMax = 7
+                break
+            case "sp_hub_timeshift":
+                startPointMax = 3
+                break
+        } 
+        if (Roguelike_GetStartPoint() >= startPointMax)
+            SetGlobalNetTime("difficultyStartTime", startTime - GetConVarInt("roguelike_time"))
+    }
+
     PlayerRespawned( player )
 }
 

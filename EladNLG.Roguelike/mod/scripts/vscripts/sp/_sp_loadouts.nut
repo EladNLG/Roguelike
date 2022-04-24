@@ -594,8 +594,6 @@ PilotLoadoutDef function GetPilotLoadoutForCurrentMapSP()
 	// fuck
 	// select primary 
 	int primaryIndex = xorshift_range_int( 0, RemoveNonPrecached(primaries).len())
-	print("PRIMARY INDEX: " + primaryIndex)
-	print("PRIMARY: " + RemoveNonPrecached(primaries).len())
 	string primary = RemoveNonPrecached(primaries)[primaryIndex]
 	pilotLoadout.primary = primary
 	// primary mods (the juice of this code)
@@ -642,8 +640,6 @@ PilotLoadoutDef function GetPilotLoadoutForCurrentMapSP()
 								"mp_weapon_shotgun_pistol", "mp_weapon_wingman", "mp_weapon_smart_pistol"]
 	// select secondary
 	int secondaryIndex = xorshift_range_int( 0, RemoveNonPrecached(secondaries).len())
-	print("SECONDARY INDEX: " + secondaryIndex)
-	print("SECONDARY: " + RemoveNonPrecached(secondaries).len())
 	string secondary = RemoveNonPrecached(secondaries)[secondaryIndex]
 	pilotLoadout.secondary = secondary
 
@@ -706,7 +702,6 @@ PilotLoadoutDef function GetPilotLoadoutForCurrentMapSP()
 			pilotLoadout.setFile = "pilot_solo_training"
 			break
 	}
-	print("\n\n\n\n\n" + pilotLoadout.setFile + "\n\n\n\n\n")
 	return pilotLoadout
 }
 

@@ -43,11 +43,11 @@ void function AmmoPack_OnNPCKilled( entity npc, entity attacker, var damageInfo 
     // frags get this bonus too :)
     //if (weapon.IsWeaponOffhand()) return
     int stacks = Roguelike_GetItemCount( attacker, "ammo_pack" )
-    int roll = Roguelike_RollStackingForChanceFunc(Roguelike_LinearChanceFunc(15, 15, 300), stacks)
+    int roll = Roguelike_RollStackingForChanceFunc(Roguelike_LinearChanceFunc(20, 20, 300), stacks)
     for (int i = 0; i < roll && i < 3; i++)
     {
         if (weapon.GetWeaponPrimaryClipCountMax() > 0)
-            weapon.SetWeaponPrimaryClipCount( min( weapon.GetWeaponPrimaryClipCount() + max( weapon.GetWeaponPrimaryClipCountMax() / 10, 1 ),
+            weapon.SetWeaponPrimaryClipCount( min( weapon.GetWeaponPrimaryClipCount() + max( weapon.GetWeaponPrimaryClipCountMax() / 5, 1 ),
                 weapon.GetWeaponPrimaryClipCountMax() ) )
         else weapon.SetWeaponChargeFractionForced( max( 0, weapon.GetWeaponChargeFraction() - 0.1 ) )
     }

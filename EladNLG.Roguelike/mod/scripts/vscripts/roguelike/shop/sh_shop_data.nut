@@ -78,5 +78,5 @@ void function ShopPrices_AddMod(string name, string displayName, int value)
 
 int function GetMoney( entity player )
 {
-    return player.GetPlayerNetInt( "roguelikeCash" ) + player.GetPlayerNetInt( "roguelikeCashStacks" ) * 1024
+    return player.GetPlayerNetInt( "roguelikeCash" ) + player.GetPlayerNetInt( "roguelikeCashStacks" ) * 1024 + player.GetPlayerNetInt( "roguelikeCashStacksStacks" ) * 1024 * 1024
 }

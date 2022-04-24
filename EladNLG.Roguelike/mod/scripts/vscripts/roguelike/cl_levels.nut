@@ -27,7 +27,8 @@ void function Levels_Init()
     RuiSetFloat( rui, "thicken", 0.5 )
     file.levelRUI = rui
 
-    file.levelBgBar = BasicImageBar_CreateRuiTopo( <0,0,0>, < -0.375, -0.185, 0>, 0.15, 0.01, eDirection.left, true, 1 )
+	float vertMultiplier = COCKPIT_RUI_WIDTH / COCKPIT_RUI_HEIGHT
+    file.levelBgBar = BasicImageBar_CreateRuiTopo( <0,0,0>, < -0.375, -0.185, 0>, 0.15 + 0.005, 0.01 + 0.005 * vertMultiplier, eDirection.left, true )
     file.levelBar = BasicImageBar_CreateRuiTopo( <0,0,0>, < -0.375, -0.185, 0>, 0.15, 0.01, eDirection.right, true, 1 )
     //BasicImageBar_UpdateSegmentCount( bg, 3, 0.05 )
     //BasicImageBar_UpdateSegmentCount( file.difficultyBar, 3, 0.05 )

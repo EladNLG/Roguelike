@@ -257,9 +257,10 @@ void function PlayerTransitionsToLevel( entity player, string mapName, string st
 	switch (mapName)
 	{
 		case "sp_boomtown_start":
+			if (startPointEnum != "LECTURE HALLS") break
 			//int index = xorshift_range_int(0, 2, GetRoguelikeSeed() + 1)
 			//mapName = [ "sp_sewers1", "sp_boomtown_start" ][index]
-			mapName = "sp_hub_timeshift"
+			mapName = "sp_timeshift_spoke02"
 			trans.startPointIndex = 0
 			startPointEnum = GetStartPointNameFromIndex( mapName, trans.startPointIndex )
 			break

@@ -34,7 +34,6 @@ void function OnDamageEvent( entity ent, var damageInfo )
     if (IsValid(weapon))
     {
         //thread ResetAttackTime( weapon )
-        if (weapon.GetNextAttackAllowedTime() > Time() + 0.5) print("???")
         if (isHeadShot && Roguelike_RollForChanceFunc(Roguelike_LinearChanceFunc( 15, 15 ), Roguelike_GetItemCount( attacker, "send_back_rounds" )))
         {
             weapon.SetWeaponPrimaryClipCount( min( weapon.GetWeaponPrimaryClipCountMax(), weapon.GetWeaponPrimaryClipCount() + 1 ) )

@@ -3,7 +3,7 @@ global function AddXP
 global function GetLevel
 
 const int BASE_XP_PER_LEVEL = 250
-const float XP_PER_LEVEL_MULTIPLIER = 1.1
+const float XP_PER_LEVEL_MULTIPLIER = 1.2
 
 int xp = 0
 int level = 0
@@ -31,7 +31,7 @@ void function UpdateLevels()
 
     foreach ( entity player in GetPlayerArray() )
     {
-        Remote_CallFunction_NonReplay( player, "ServerCallback_SetXP", xp, level )
+        Remote_CallFunction_NonReplay( player, "ServerCallback_SetXP", xp, level, XP_PER_LEVEL_MULTIPLIER, BASE_XP_PER_LEVEL )
     }
 }
 
@@ -42,7 +42,7 @@ void function Levels_Update()
         foreach (entity player in GetPlayerArray())
             if (IsAlive( player ) && player.GetMaxHealth() != CalculatePlayerMaxHP( player ))
             {
-                Remote_CallFunction_Replay( player, "ServerCallback_SetXP", xp, level )
+                Remote_CallFunction_Replay( player, "ServerCallback_SetXP", xp, level, XP_PER_LEVEL_MULTIPLIER, BASE_XP_PER_LEVEL )
                 OnLevelUp()
             }
         WaitFrame()
@@ -51,6 +51,23 @@ void function Levels_Update()
 void function ClientConnected( entity player )
 {
     Remote_CallFunction_Replay( player, "ServerCallback_SetXP", xp, level, XP_PER_LEVEL_MULTIPLIER, BASE_XP_PER_LEVEL )
+    
+    int startPointMax = 0
+    switch (GetMapName())
+    {
+        case "sp_s2s":
+            startPointMax = 7
+            break
+        case "sp_hub_timeshift":
+            startPointMax = 3
+            break
+    } 
+    if (Roguelike_GetStartPoint() < startPointMax)
+    {
+        print("\n\nhello there.\nSTART POINT: " + Roguelike_GetStartPoint())
+        Remote_CallFunction_NonReplay( player, "ServerCallback_HideTimer" )
+    }
+
     OnLevelUp()
 }
 
@@ -67,7 +84,7 @@ int function GetLevel()
 void function AddXP( int amount )
 {
     xp += amount
-    if( xp >= CalculateXPForLevel( level ) )
+    while ( xp >= CalculateXPForLevel( level ) )
     {
         level += 1
         xp -= CalculateXPForLevel( level - 1 )
@@ -75,7 +92,7 @@ void function AddXP( int amount )
 
     foreach (player in GetPlayerArray())
     {
-        Remote_CallFunction_Replay( player, "ServerCallback_SetXP", xp, level )
+        Remote_CallFunction_Replay( player, "ServerCallback_SetXP", xp, level, XP_PER_LEVEL_MULTIPLIER, BASE_XP_PER_LEVEL )
     }
 }
 
@@ -88,7 +105,7 @@ int function CalculatePlayerMaxHP( entity player )
             baseHP /= 5
     }
 
-    return baseHP + int(0.2 * baseHP) * level
+    return baseHP + int(0.3 * baseHP) * level
 }
 
 void function OnLevelUp()

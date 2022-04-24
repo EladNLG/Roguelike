@@ -1,3 +1,4 @@
+untyped
 global function gf 			// get file
 global function killall 	// kill all enemies
 global function DeckTitanFallsOffEdge
@@ -6528,6 +6529,10 @@ void function MaltaBay_StartVO( entity player )
 	if ( Flag( "maltaIntroGoToRacksFlag" ) )
 		return
 	FlagEnd( "maltaIntroGoToRacksFlag" )
+
+	RestartTimer()
+	foreach (entity p in GetPlayerArray())
+		Remote_CallFunction_Replay( p, "ServerCallback_ShowTimer" )
 
 	//“Nice jump!”
 	PlayDialogue( "diag_sp_maltaDrone_STS204_01_01_mcor_davis", player )
@@ -15750,7 +15755,7 @@ void function CreateCoreLightFX1()
 	file.coreGlowFX1 = StartParticleEffectOnEntityWithPos_ReturnEntity( core, fxID, FX_PATTACH_CUSTOMORIGIN_FOLLOW, -1, <0,0,0>, <0,0,0> )
 }
 
-void function LifeBoats_PodLoop( player, lifeboat )
+function LifeBoats_PodLoop( player, lifeboat )
 {
 	PickStartPoint( "sp_crashsite", "Waking_Up" )
 }
@@ -15761,7 +15766,7 @@ void function LifeBoats_PodSetup()
 	pods[0].SetScriptName("roguelike_lifeboat")
 	pods[0].SetUsable()
 	pods[0].SetUsePrompts( "Hold %use% to loop.", "Press %use% to loop." )
-	AddCalback_OnUseEntity( pods[0], LifeBoats_PodLoop )
+	AddCallback_OnUseEntity( pods[0], LifeBoats_PodLoop )
 	pods.remove(0)
 	foreach ( index, pod in pods )
 	{

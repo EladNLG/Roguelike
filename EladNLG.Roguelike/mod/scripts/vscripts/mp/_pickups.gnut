@@ -147,8 +147,10 @@ bool function IsWeaponOffhand(string weapon)
 		nonOffhandWeapons.append(weapon)
 	}
 
-	if (IsValid(oldWeapon))
+	if (IsValid(oldWeapon) && IsValid(dummy))
 		dummy.GiveExistingOffhandWeapon(oldWeapon, 0)
+	else if (IsValid(oldWeapon))
+		oldWeapon.Destroy()
 	
 	return false
 }
