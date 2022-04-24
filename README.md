@@ -16,6 +16,8 @@ A basic tutorial should be made in the gauntlet to explain how Roguelike is play
 Please make sure things stay moddable. Other people should be able to make additional content for this without overriding a single file. Also, please document your things. I will soon do so myself, but I wasn't expecting to make development of this project public. 
 
 # Notes
-## Dependencies
+## Dependencies (REQUIRED TO PLAY)
+ModSettings (latest version)
 
-As of now, HUDRevamp (along with it's dependencies) is required for this mod to function. This is because we use `BasicImageBar` to create some parts of the HUD. Eventually, I would like to move basic_image_bar.gnut to the Roguelike mod, but as of now this is impossible because registering a custom script twice causes an engine error. This will, however later be done.
+## VERY RECOMMENDED (experience will be impacted badly if not used)
+HUDRevamp (latest version)
