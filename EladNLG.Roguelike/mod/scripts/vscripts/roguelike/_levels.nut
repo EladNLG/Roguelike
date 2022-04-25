@@ -124,4 +124,5 @@ void function OnLevelEnd( string mapName, LevelTransitionStruct trans )
 {
     SetConVarInt( "player_xp", xp )
     SetConVarInt( "player_level", level )
+    SetConVarInt( "roguelike_seed", GetRoguelikeSeed() + xorshift32(GetRoguelikeSeed() + 2))
 }

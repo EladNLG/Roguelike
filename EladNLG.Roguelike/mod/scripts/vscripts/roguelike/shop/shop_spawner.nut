@@ -338,6 +338,12 @@ function OpenChest( chest, player )
         EmitSoundOnEntity( player, "coop_sentrygun_deploymentdeniedbeep" )
         return
     }
+    print(chest.GetForwardVector())
+    bool shouldReverseChest = DotProduct( player.GetViewForward(), AnglesToRight( chest.GetAngles() ) * -1 ) > 0
+    if (shouldReverseChest)
+    {
+        chest.SetAngles( chest.GetAngles() + <0, 180, 0> )
+    }
     RemoveMoney( player, GetChestCost() )
     EmitSoundOnEntity( player, "Timeshift_Scr_StalkerPodOpen" )
     chest.UnsetUsable()

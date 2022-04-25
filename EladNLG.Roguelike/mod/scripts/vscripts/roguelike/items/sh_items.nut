@@ -82,7 +82,7 @@ struct RoguelikeInventory
 struct
 {
     table<string, RoguelikeItem> items
-    array<float> rarityWeights = [35.0, 25.0, 5.0, 20, 12.5]
+    array<float> rarityWeights = [35.0, 25.0, 5.0, 0.0, 12.5]
     table<entity, RoguelikeInventory> inventories
 } file
 
@@ -126,6 +126,11 @@ void function ShItems_Init()
     Roguelike_AddItemStat( "golden_shell", "Bonus Damage", func1, "`2%+.0f`0%%%%" )
 
     Roguelike_RegisterItem( "emergency_soda", "Emergency Soda", "Upon taking lethal damage:\n\nHeal to full health. Consume 1 stack of this item. This will `1NOT`0 work on OoB zones.", RARITY_LEGENDARY )
+
+    //
+
+    // Blood Scavenger
+    Roguelike_RegisterItem( "blood_scavenger", "Blood Scavenger", "Upon taking damage:\nAdd cash equivalent to `250`0%% (`2+50`0%% per stack) of the damage taken.", RARITY_UNCOMMON )
 
     // adrenaline shot
     func1 = Roguelike_LinearChanceFunc( 0.5, 0.25 )
@@ -244,7 +249,7 @@ string function Roguelike_GetRandomItem( int rarity = -1 )
     }
     if ( items.len() == 0 )
         throw "No items exist for rarity " + rarity
-    return items[GetRandomIndexFromWeightedItemArray( items )].id
+    return items[xorshift_range_int( 0, items.len(), GetRoguelikeSeed() + 3 )].id
 }
 
 

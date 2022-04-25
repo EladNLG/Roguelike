@@ -62,6 +62,9 @@ int function GetRoguelikeSeed()
 {
 	int seed = GetConVarInt("roguelike_seed")
 	if (backupSeed == 0) TestForAverage()
-	if (seed == 0) return backupSeed
+	if (seed == 0) {
+		SetConVarInt("roguelike_seed", backupSeed)
+		return backupSeed
+	}
 	return seed
 }
