@@ -1,0 +1,10 @@
+{
+    "name": "Roguelike",
+    "description": "A mod for the campaign that adds many interesting twists.",
+    "website_url": "https://github.com/EladNLG/Roguelike",
+    "dependencies": [
+        "EladNLG-ModSettings-1.1.2",
+        "EladNLG-HUDRevamp-1.2.4"
+    ],
+    "version_number": "0.2.0"
+}

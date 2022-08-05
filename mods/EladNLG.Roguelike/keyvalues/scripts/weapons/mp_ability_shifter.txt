@@ -1,0 +1,8 @@
+WeaponData
+{
+    "droppedmodel" "models/weapons/ammoboxes/backpack_single.mdl"
+    SP_BASE
+	{
+		"enable_highlight_networking_on_creation" "1"
+	}
+}

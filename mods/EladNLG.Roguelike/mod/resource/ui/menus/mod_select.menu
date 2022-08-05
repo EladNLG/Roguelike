@@ -1,0 +1,62 @@
+"resource/ui/menus/mode_select.menu"
+{
+	"menu"
+	{
+		"ControlName"						"Frame"
+		"xpos"								"0"
+		"ypos"								"0"
+		"zpos"								"3"
+		"wide"								"f0"
+		"tall"								"f0"
+		"autoResize"						"0"
+		"pinCorner"							"0"
+		"visible"							"1"
+		"enabled"							"1"
+		"PaintBackgroundType"				"0"
+		"infocus_bgcolor_override"			"0 0 0 0"
+		"outoffocus_bgcolor_override"		"0 0 0 0"
+		"MenuCommon"
+		{
+			"ControlName"				"CNestedPanel"
+			"xpos"						"0"
+			"ypos"						"0"
+			"wide"						"f0"
+			"tall"						"f0"
+			"visible"					"1"
+			"controlSettingsFile"		"resource/ui/menus/panels/menu_common.res"
+		}
+		"MenuTitle"
+		{
+			"ControlName"			"Label"
+			"InheritProperties"		"MenuTitle"
+			"labelText"				"Mod Select"
+		}
+		"GridPanel"
+		{
+			"ControlName"				"CNestedPanel"
+			"xpos"						"96"
+			"ypos"						"160"
+			"wide"						"1800"
+			"tall"						"400"
+			"visible"					"1"
+			"tabPosition"				"1"
+			"controlSettingsFile"		"resource/ui/menus/panels/mod_select_grid.res"
+		}
+		// //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		"ButtonTooltip"
+		{
+			"ControlName"			"CNestedPanel"
+			"InheritProperties"		"ButtonTooltip"
+		}
+		"FooterButtons"
+		{
+			"ControlName"				"CNestedPanel"
+			"xpos"						"0"
+			"ypos"						"r119"
+			"wide"						"f0"
+			"tall"						"36"
+			"visible"					"1"
+			"controlSettingsFile"		"resource/ui/menus/panels/footer_buttons.res"
+		}
+	}
+}
