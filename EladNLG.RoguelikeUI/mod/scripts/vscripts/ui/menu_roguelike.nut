@@ -5,40 +5,6 @@ global bool allowSP = true
 
 array<var> function AddRoguelikeMenu( ComboStruct comboStruct )
 {
-    // check for the player if he has toggled the roguelike mod during this session,
-    // and wether it is off or on right now.
-    //
-    // if so, we have 
-    #if PLAYER_HAS_ROGUELIKE_MOD
-    switch (GetConVarInt("was_roguelike_on"))
-    {
-        // roguelike was off previously and we toggled it on.
-        case 0:
-        case 2:
-            thread OpenFuckedUp_Thread()
-            break
-        // roguelike was on for the entirety of this session.
-        case -1:
-        case 1:
-            allowMP = false
-            SetConVarInt("was_roguelike_on", 1)
-    }
-    #else
-    switch (GetConVarInt("was_roguelike_on"))
-    {
-        // roguelike was off for the entirety of this session.
-        case 1:
-        case 2:
-            thread OpenFuckedUp_Thread()
-            break
-        // roguelike was on previously and we toggled it off.
-        case -1:
-        case 0:
-            allowSP = false
-            SetConVarInt("was_roguelike_on", 0)
-            break
-    }
-    #endif
     AddComboButtonHeader( comboStruct, 0, "ROGUELIKE" )
     array<var> result = []
     result.append(AddComboButton( comboStruct, 0, 0, "New Run" ))
