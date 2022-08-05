@@ -1,0 +1,10 @@
+#base "_base_sniper.txt"
+#base "_base_projectile.txt"
+"WeaponData"
+{
+	//"regen_ammo_refill_start_delay"					"0.0"
+	//"regen_ammo_refill_rate"						"1.0"
+	//"regen_ammo_stockpile_max_fraction"				"0.1"
+	//"regen_ammo_stockpile_drain_rate_when_charging"	"0.0"
+
+}

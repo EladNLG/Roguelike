@@ -1,0 +1,6 @@
+#base "_base_assault_rifle.txt"
+
+WeaponData
+{
+    
+}

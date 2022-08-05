@@ -1,0 +1,22 @@
+#base "_base_shotgun.txt"
+#base "_base_projectile.txt"
+WeaponData
+{
+    Mods
+    {
+        knockback
+        {
+	        "impulse_force"   								"7500"
+        }
+
+        doom_shotgun
+        {
+            "ammo_per_shot"             "++1"
+            "ammo_clip_size"            "1"
+	        //"ammo_size_segmented_reload"					"++1"
+	"low_ammo_sound_name_1"							""
+            //"reloadempty_time"          "*0.7"
+            "fire_rate"             "*4"
+        }
+    }
+}

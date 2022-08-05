@@ -201,7 +201,7 @@ void function SPButton_Click( var button, int elemNum )
 	file.selectedLevel = data.levelBsp
 	file.selectedStartPoint = data.startPoint
 	file.playIntro = false
-	print("\nLEVEL MAP: " + file.selectedLevel + "\nSTART POINT: " + file.selectedStartPoint )
+	print("\nLEVEL MAP: " + file.selectedLevel + "\nSTART POINT: " + file.selectedStartPoint + "\nSTART POINT INDEX: " + GetStartPointIndexFromName( file.selectedLevel, file.selectedStartPoint ) )
 
 	if ( DevStartPoints() )
 	{
@@ -640,7 +640,7 @@ void function LoadLevelPart( int levelNum, int levelPart )
 	SPLevelStartStruct data = parts[ levelPart ]
 	file.selectedLevel = data.levelBsp
 	file.selectedStartPoint = data.startPoint
-	print("\nLEVEL MAP: " + file.selectedLevel + "\nSTART POINT: " + file.selectedStartPoint )
+	print("\nLEVEL MAP: " + file.selectedLevel + "\nSTART POINT: " + file.selectedStartPoint + "\nSTART POINT INDEX: " + GetStartPointIndexFromName( file.selectedLevel, file.selectedStartPoint ) )
 
 	DifficultyMenuPopUp()
 }

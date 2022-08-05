@@ -1,0 +1,15 @@
+"WeaponData"
+{
+    Mods
+    {
+        knockback
+        {
+            "explosion_damage"								"5"
+            "explosion_damage_heavy_armor"					"50"
+            "explosion_damages_owner"						"1"
+            "explosion_inner_radius"						"50"
+            "explosionradius" 								"50"
+	        "impulse_force"   								"5000"
+        }
+    }
+}

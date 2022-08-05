@@ -12,7 +12,7 @@
         ////////////////////
 
 
-        // Debug Tool weapon 
+        // Debug Tool weapon
         {
             "Path": "weapons/debug_tool.nut",
             "RunOn": "CLIENT || SERVER"
@@ -32,11 +32,14 @@
         },
         {
             "Path": "roguelike/shop/sh_shop_data.nut",
-            "RunOn": "CLIENT || SERVER",
+            "RunOn": "CLIENT || SERVER || UI",
             "ClientCallback": {
                 "Before": "ShopPrices_Init"
             },
             "ServerCallback": {
+                "Before": "ShopPrices_Init"
+            },
+            "UICallback":{
                 "Before": "ShopPrices_Init"
             }
         },
@@ -63,7 +66,7 @@
         //////////
 
         // Handles shop prices
-        
+
         // spawns the shop at the beginning of each level.
         {
             "Path": "roguelike/shop/shop_spawner.nut",
@@ -79,11 +82,14 @@
         },
         {
             "Path": "roguelike/items/sh_items.nut",
-            "RunOn": "SERVER || CLIENT",
+            "RunOn": "SERVER || CLIENT || UI",
             "ServerCallback": {
                 "After": "ShItems_Init"
             },
             "ClientCallback": {
+                "After": "ShItems_Init"
+            },
+            "UICallback": {
                 "After": "ShItems_Init"
             }
         },
@@ -92,6 +98,7 @@
             "Path": "roguelike/items/item_drops.gnut",
             "RunOn": "SERVER",
             "ServerCallback": {
+                "Before": "AddWeaponCallback",
                 "After": "ItemDrops_Init"
             }
         },
@@ -140,10 +147,6 @@
             }
         },
         {
-            "Path": "hud_revamp.nut",
-            "RunOn": "UI || CLIENT || SERVER"
-        },
-        {
             "Path": "client/backup_basic_image_bar.nut",
             "RunOn": "CLIENT"
         },
@@ -173,6 +176,13 @@
             "RunOn": "CLIENT",
             "ClientCallback": {
                 "After": "ClItem_Init"
+            }
+        },
+        {
+            "Path": "client/cl_weapon_display.nut",
+            "RunOn": "CLIENT",
+            "ClientCallback": {
+                "After": "WeaponDisplay_Init"
             }
         },
 
@@ -221,19 +231,58 @@
             "UICallback": {
                 "After": "TestForAverage"
             }
+        },
+
+        //////////////////
+        // Achievements // kill me
+        //////////////////
+        {
+            "Path": "roguelike/achievements/sh_achievements.gnut",
+            "RunOn": "SERVER || CLIENT",
+            "ServerCallback": {
+                "After": "RAchievements_Init"
+            },
+            "ClientCallback": {
+                "After": "RAchievements_Init"
+            }
+        },
+        {
+            "Path": "roguelike/achievements/cl_achievements.gnut",
+            "RunOn": "CLIENT"
+        },
+        {
+            "Path": "roguelike/achievements/_achievements.gnut",
+            "RunOn": "SERVER",
+            "ServerCallback": {
+                "After": "_RAchievements_Init"
+            }
+        },
+        {
+            "Path": "roguelike/items/jumpkit_parts.nut",
+            "RunOn":"SERVER",
+            "ServerCallback": {
+                "After": "JumpKitParts_Init"
+            }
+        },
+        {
+            "Path": "roguelike/_upgrades.nut",
+            "RunOn":"SERVER",
+            "ServerCallback": {
+                "After": "Upgrades_Init"
+            }
         }
     ],
-    "ConVars": 
+    "ConVars":
     [
-        {
-            "Name": "roguelike_seed",
-            "DefaultValue": "0",
-            "Flags": 16388 // FCVAR_CHEAT | FCVAR_GAMEDLL
-        },
         {
             "Name": "test_convar",
             "DefaultValue": "0",
             "Flags": 16516 // FCVAR_CHEAT | FCVAR_GAMEDLL | FCVAR_ARCHIVE
+        },
+        {
+            "Name": "roguelike_difficulty",
+            "DefaultValue": "0",
+            "Flags": 16384 // FCVAR_CHEAT | FCVAR_GAMEDLL | FCVAR_ARCHIVE
         },
         // we support up to 4 players.
         {
@@ -290,5 +339,8 @@
     ],
     "Localisation": [
 		"resource/localization_roguelike_%language%.txt"
-	]
+	],
+    "Dependencies": {
+        "PLAYER_HAS_HUD_REVAMP": "HUD Revamp"
+    }
 }

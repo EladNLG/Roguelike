@@ -1,12 +1,46 @@
+untyped
 global function Levels_Init
 global function AddXP
 global function GetLevel
+global function CalculateXPForLevel
 
 const int BASE_XP_PER_LEVEL = 250
-const float XP_PER_LEVEL_MULTIPLIER = 1.2
+const float XP_PER_LEVEL_MULTIPLIER = 1.1
 
 int xp = 0
 int level = 0
+
+bool xpot = false
+
+bool function OnXpot( entity player, array<string> args )
+{
+    if (!GetConVarBool("sv_cheats"))
+        return false
+    xpot = !xpot
+    return true
+}
+
+bool function OnTele( entity player, array<string> args )
+{
+    if (!GetConVarBool("sv_cheats"))
+        return false
+    
+    try
+    {
+        vector pos = <float(args[0]), float(args[1]), float(args[2])>
+        vector ang = <float(args[3]), float(args[4]), float(args[5])>
+        vector vel = <float(args[6]), float(args[7]), float(args[8])>
+
+        player.SetOrigin(pos)
+        player.SetAngles(ang)
+        player.SetVelocity(vel)
+    }
+    catch (ex)
+    {
+        
+    }
+    return true
+}
 
 void function Levels_Init()
 {
@@ -14,9 +48,13 @@ void function Levels_Init()
     level = GetConVarInt( "player_level" )
     print("\nXP: " + xp + "\nLEVEL: " + level)
 
+    #if SP
     AddCallback_OnLevelEnd( OnLevelEnd )
-    AddCallback_OnPlayerRespawned( ClientConnected )
     AddCallback_OnLoadSaveGame( OnLoadSaveGame )
+    #endif
+    AddClientCommandCallback( "xpot", OnXpot )
+    AddClientCommandCallback( "tele", OnTele )
+    AddCallback_OnPlayerRespawned( ClientConnected )
     thread Levels_Update()
 }
 
@@ -45,6 +83,7 @@ void function Levels_Update()
                 Remote_CallFunction_Replay( player, "ServerCallback_SetXP", xp, level, XP_PER_LEVEL_MULTIPLIER, BASE_XP_PER_LEVEL )
                 OnLevelUp()
             }
+        if (xpot) AddXP( 3 )
         WaitFrame()
     }
 }
@@ -73,7 +112,7 @@ void function ClientConnected( entity player )
 
 int function CalculateXPForLevel( int level )
 {
-    return int(BASE_XP_PER_LEVEL * pow( XP_PER_LEVEL_MULTIPLIER, level ))
+    return int(BASE_XP_PER_LEVEL * /*pow( XP_PER_LEVEL_MULTIPLIER, level )*/ (1.0 + (level * (XP_PER_LEVEL_MULTIPLIER - 1.0))))
 }
 
 int function GetLevel()
@@ -99,13 +138,16 @@ void function AddXP( int amount )
 int function CalculatePlayerMaxHP( entity player )
 {
     int baseHP = int(player.GetPlayerModHealth())
+
+    baseHP = int(RoundToNearestInt(baseHP * (1.0 - Roguelike_GetItemCount( player, "fatigue" ) * 0.2)))
+
     if (player.IsTitan())
     {
         if (player.GetTitanSoul().IsDoomed())
             baseHP /= 5
     }
 
-    return baseHP + int(0.3 * baseHP) * level
+    return int(baseHP + 0.3 * baseHP * level)
 }
 
 void function OnLevelUp()
@@ -114,9 +156,14 @@ void function OnLevelUp()
     {
         if (!IsAlive( player )) continue
         int baseHP = CalculatePlayerMaxHP(player)
+        if (baseHP <= 0)
+            player.Die()
         float healthFrac = float(player.GetHealth()) / player.GetMaxHealth()
+        if (baseHP > 524287)
+            player.s.divisor <- float(baseHP) / 524287
+        baseHP = int(min(baseHP, 524287))
         player.SetMaxHealth(baseHP)
-        player.SetHealth( int(min(baseHP, baseHP * healthFrac + 20)) )
+        player.SetHealth( int(min(baseHP, baseHP * healthFrac)) )
     }
 }
 

@@ -1,0 +1,16 @@
+"WeaponData"
+{
+    Mods
+    {
+        condensed_gunpowder
+        {
+            "projectile_launch_speed"       "*1.2"
+            "damage_far_value"              "*1.2"
+            "damage_near_value"              "*1.2"
+            "damage_very_far_value"              "*1.2"
+
+	        "viewkick_yaw_random" 							"*2"
+	        "viewkick_pitch_random" 						"*2"
+        }
+    }
+}

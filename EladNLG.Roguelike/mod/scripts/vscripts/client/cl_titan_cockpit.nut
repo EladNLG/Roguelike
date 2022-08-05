@@ -1423,7 +1423,7 @@ function PlayCockpitSparkFX_Internal( cockpit, string tagName )
 
 	int fxID = GetParticleSystemIndex( $"xo_cockpit_spark_01" )
 	int fxInstID = PlayFXOnTag( cockpit, fxID, attachID )
-
+	
 	EffectSetIsWithCockpit( fxInstID, true )
 }
 

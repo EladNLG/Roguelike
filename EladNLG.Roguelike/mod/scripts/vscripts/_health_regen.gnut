@@ -27,9 +27,14 @@ void function PilotHealthRegenThinkSP( entity player )
 {
 	player.EndSignal( "OnDestroy" )
 
+	float healthToRegen = 0.0
+	float deltaTime = 0.0
+	float startTime = 0.0
 	while ( IsValid( player ) )
 	{
-		wait( HEALTH_REGEN_TICK_TIME )
+		startTime = Time()
+		wait 0.0001
+		deltaTime = Time() - startTime
 
 		if ( !IsAlive( player ) )
 			continue
@@ -45,17 +50,22 @@ void function PilotHealthRegenThinkSP( entity player )
 		if ( player.GetHealth() == player.GetMaxHealth() )
 			continue
 
-		float healthRegenRate = 4.0 + 4.0 * Roguelike_GetItemCount( player, "heal_mod" ) * 0.15
-		float healthRegenStartDelay = GraphCapped( player.GetHealth(), 0, player.GetMaxHealth(), 3.0, 0.8 )
+		float healthRegenRate = 5.0 * (1.0 + Roguelike_GetItemCount( player, "heal_mod" ) * 0.25)
+		float healthRegenStartDelay = 0.0//GraphCapped( player.GetHealth(), 0, player.GetMaxHealth(), 3.0, 0.8 )
 
 		//printt( "recentDamage " + recentDamage + " delay " + healthRegenStartDelay + " rate " + healthRegenRate )
 
-		if ( Time() - player.p.lastDamageTime < healthRegenStartDelay )
-		{
-			continue
-		}
+		//if ( Time() - player.p.lastDamageTime < healthRegenStartDelay )
+		//{
+		//	continue
+		//}
 
-		player.SetHealth( min( player.GetMaxHealth(), player.GetHealth() + healthRegenRate ) )
+		healthToRegen += healthRegenRate * HEALTH_REGEN_TICK_TIME
+		//print(healthToRegen)
+		int healthToAdd = int(healthToRegen)
+		healthToRegen -= float(healthToAdd)
+
+		player.SetHealth( min( player.GetMaxHealth(), player.GetHealth() + healthToAdd ) )
 	}
 }
 
@@ -88,7 +98,7 @@ void function PilotHealthRegenThinkMP( entity player )
 		if ( shGlobal.proto_pilotHealthRegenDisabled )
 			continue
 
-		float healthRegenRate = file.healthRegenRate 	// health regen per tick
+		float healthRegenRate = file.healthRegenRate + file.healthRegenRate * Roguelike_GetItemCount( player, "heal_mod" ) * 0.25 	// health regen per tick
 
 		if ( player.GetHealth() == player.GetMaxHealth() )
 			continue

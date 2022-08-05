@@ -1,5 +1,15 @@
 globalize_all_functions
 
+struct 
+{
+	array<TitanLoadoutDef> customLoadouts
+} file
+
+void function Roguelike_AddCustomTitanLoadout(TitanLoadoutDef loadout)
+{
+	file.customLoadouts.append(loadout)
+}
+
 array<string> function GetWeaponsFromPilotLoadout( PilotLoadoutDef loadout )
 {
 	array<string> weapons
@@ -124,6 +134,8 @@ array<TitanLoadoutDef> function GetAllowedTitanLoadouts()
 		loadouts.append( GetTitanLoadoutForRow( dataTable, r ) )
 	}
 
+	loadouts.extend( file.customLoadouts )
+
 	return loadouts
 }
 
@@ -146,11 +158,29 @@ TitanLoadoutDef ornull function GetTitanLoadoutForColumn( string findCol, string
 	int column = GetDataTableColumnByName( dataTable, findCol )
 	int row = GetDataTableRowMatchingStringValue( dataTable, column, findStr )
 	if ( row == -1 )
+	{
 		return null
+	}
 
 	return GetTitanLoadoutForRow( dataTable, row )
 }
 
+string function GetLoadoutProperty( TitanLoadoutDef loadout, string property )
+{
+	switch ( property )
+	{
+		case "name":
+			return loadout.name;
+		case "primary":
+			return loadout.primary;
+		case "setFile":
+			return loadout.setFile
+		case "titanClass":
+			return loadout.titanClass
+	}
+
+	return ""
+}
 
 void function OverwriteLoadoutWithDefaultsForSetFile_ExceptSpecialAndAntiRodeo( TitanLoadoutDef loadout, entity player = null )
 {
@@ -630,8 +660,6 @@ void function Loadout_RemoveDupes( PilotLoadoutDef pilotLoadout )
 
 void function GivePilotLoadout( entity player, PilotLoadoutDef loadout )
 {
-	if (loadout.setFile != "civilian_solo" && GetMapName() == "sp_crashsite")
-		throw "????"
 	//PrintPilotLoadout( loadout )
 	bool dupesAllowed = GetConVarBool( "weapon_pickup_allow_dupes" )
 	if ( !dupesAllowed )
@@ -656,7 +684,8 @@ void function GivePilotLoadout( entity player, PilotLoadoutDef loadout )
 
 	if ( loadout.primary != "" )
 	{
-		entity weapon = player.GiveWeapon( loadout.primary, primaryMods )
+		entity weapon = player.GiveWeapon( loadout.primary )
+		SetModsUntilItWorks( weapon, primaryMods )
 		player.SetActiveWeaponByName( loadout.primary )
 		#if MP
 		weapon.SetProScreenOwner( player )
@@ -683,7 +712,8 @@ void function GivePilotLoadout( entity player, PilotLoadoutDef loadout )
 
 	if ( loadout.secondary != "" )
 	{
-		entity weapon = player.GiveWeapon( loadout.secondary, secondaryMods )
+		entity weapon = player.GiveWeapon( loadout.secondary )
+		SetModsUntilItWorks( weapon, secondaryMods )
 		#if MP
 		weapon.SetProScreenOwner( player )
 		if ( weapon.HasMod( "pro_screen" ) )
@@ -709,7 +739,8 @@ void function GivePilotLoadout( entity player, PilotLoadoutDef loadout )
 
 	if ( loadout.weapon3 != "" )
 	{
-		entity weapon = player.GiveWeapon( loadout.weapon3, weapon3Mods )
+		entity weapon = player.GiveWeapon( loadout.weapon3 )
+		SetModsUntilItWorks( weapon, weapon3Mods )
 		#if MP
 			weapon.SetProScreenOwner( player )
 			if ( weapon.HasMod( "pro_screen" ) )
@@ -746,6 +777,7 @@ void function GivePilotLoadout( entity player, PilotLoadoutDef loadout )
 	if ( loadout.special != "" )
 	{
 		player.GiveOffhandWeapon( loadout.special, OFFHAND_SPECIAL, loadout.specialMods )
+		player.GetOffhandWeapon( OFFHAND_SPECIAL ).Highlight_SetCurrentContext( 0 )
 	}
 
 	if ( loadout.melee != "" )

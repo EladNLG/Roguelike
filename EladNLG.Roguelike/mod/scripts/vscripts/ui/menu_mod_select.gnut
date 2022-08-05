@@ -15,7 +15,7 @@ global table< int, array<int> > modRarityColors = {}
 void function ModSelectMenuInit()
 {
     
-    print("fuck oh shit fuckfuckfuck")
+    //print("fuck oh shit fuckfuckfuck")
     var menu = GetMenu( "ModSelect" )
 	file.menu = menu
     modRarityColors[0] <- [210, 210, 210, 255]

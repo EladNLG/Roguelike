@@ -33,6 +33,7 @@ global const array<string> allowedWeapons = [
 	// shotguns
 	"mp_weapon_shotgun",
 	"mp_weapon_mastiff",
+	//"mp_weapon_peacekraber",
 	// ???
 	"mp_weapon_arc_launcher",
 	// PISTOL
@@ -41,7 +42,7 @@ global const array<string> allowedWeapons = [
 	"mp_weapon_shotgun_pistol",
 	"mp_weapon_semipistol",
 	"mp_weapon_autopistol",
-	"mp_weapon_40mm",
+	//"mp_weapon_40mm",
 	// grenades
 	"mp_weapon_frag_grenade",
 	"mp_weapon_thermite_grenade",
@@ -54,15 +55,17 @@ global const array<string> allowedWeapons = [
 	"mp_ability_cloak",
 	"mp_ability_heal",
 	"mp_ability_shifter",
-	"mp_ability_holopilot",
-	"mp_weapon_deployable_cover"
+	"mp_ability_grapple",
+	// at
+	"mp_weapon_defender"
+	//"mp_ability_holopilot",
 ]
 
 void function PrecacheJack()
 {
-	PrecacheWeapon( "mp_weapon_40mm" )
+	//PrecacheWeapon( "mp_weapon_40mm" )
 	//PrecacheWeapon( "mp_weapon_lstar_csgo" )
-	PrecacheWeapon( "mp_weapon_rspn101_csgo" )
+	//PrecacheWeapon( "mp_weapon_rspn101_csgo" )
 	foreach ( string weaponName in allowedWeapons )
 	{
 		//print(weaponName)

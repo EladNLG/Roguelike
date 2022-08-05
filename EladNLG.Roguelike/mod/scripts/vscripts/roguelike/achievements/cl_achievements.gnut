@@ -1,0 +1,226 @@
+global function ServerCallback_UnlockAchievement
+global function Roguelike_OnAchievementsSetUp
+global function Roguelike_IsAchievementNumUnlocked
+
+struct 
+{
+    array<bool> unlocked
+
+    var topo
+    var topoBg
+
+    #if MP
+    var aspectRatioFixTopo
+    #endif
+
+    array<string> queue
+} file
+
+void function ServerCallback_UnlockAchievement( int numericId )
+{
+    if (file.unlocked[numericId]) return
+
+    file.unlocked[numericId] = true
+
+    thread AchievementObtained_Animate( Roguelike_AchievementNumToId( numericId ) )
+    Roguelike_WriteAchievementConVar()
+}
+
+void function Roguelike_OnAchievementsSetUp( int count )
+{
+    file.topo = RuiTopology_CreatePlane( <(GetScreenSize()[0] / 2.0 - 250),200,0>, <500,0,0>, <0,200,0>, true )
+    file.topoBg = RuiTopology_CreatePlane( <(GetScreenSize()[0] / 2.0 - 250),200,0>, <500,0,0>, <0,200,0>, true )
+
+    for (int i = 0; i < count; i++)
+    {
+        file.unlocked.append(false)
+    }
+
+    string achStr = GetConVarString( "roguelike_achievements" )
+    array<string> achs = split( achStr, "," )
+
+    foreach ( j, s in achs )
+    {
+        if (s == "") continue
+        int offset = j * 32
+        int chunkData = s.tointeger()
+
+        for (int i = 0; i < 32; i++)
+        {
+            int bit = (chunkData >> i) & 1
+            if (bit == 1)
+            {
+                file.unlocked[offset + i] = true
+            }
+        }
+    }
+    AddCallback_EntitiesDidLoad( void function() : () {
+        GetLocalClientPlayer().ClientCommand( "achievements_updated " + GetConVarString( "roguelike_achievements" ) )
+    })
+}
+
+// Though I'd prefer a base128 version, this will do and probably scale up to, idk, like, 1300 achievements
+void function Roguelike_WriteAchievementConVar()
+{
+    array<int> chunks = []
+    int curChunkValue = 0
+
+    foreach ( i, b in file.unlocked )
+    {
+        int chunk = i / 32
+        bool isLastInChunk = i % 32 == 31 || i == file.unlocked.len() - 1 // either last in loop or we're at the end of the chunk
+
+        if (b)
+            curChunkValue = curChunkValue | (1 << (i % 32))
+        
+        if (isLastInChunk)
+        {
+            chunks.append(curChunkValue)
+            curChunkValue = 0
+        }
+    }
+
+    string result = ""
+    foreach ( c in chunks )
+    {
+        result += c + ","
+    }
+
+    SetConVarString( "roguelike_achievements", result )
+
+    GetLocalClientPlayer().ClientCommand( "achievements_updated " + result )
+}
+
+#if MP
+var function GetAspectRatioFixTopo()
+{
+    if (file.aspectRatioFixTopo == null)
+    {
+        float right = (GetScreenSize()[1] / 9.0) * 16.0
+        float down = GetScreenSize()[1]
+        float xOffset = (GetScreenSize()[0] - right) / 2
+        file.aspectRatioFixTopo = RuiTopology_CreatePlane( <xOffset, 0, 0>, <right, 0, 0>, <0, down, 0>, false )
+    }
+	return file.aspectRatioFixTopo
+}
+#endif
+
+bool function Roguelike_IsAchievementNumUnlocked( int numericId )
+{
+    return file.unlocked[numericId]
+}
+
+const RUI_TEXT_CENTER = $"ui/cockpit_console_text_center.rpak"
+const RUI_TEXT_LEFT = $"ui/cockpit_console_text_top_left.rpak"
+const RUI_TEXT_RIGHT = $"ui/cockpit_console_text_top_right.rpak"
+
+void function AchievementObtained_Animate( string id, bool force = false )
+{
+    file.queue.append( id )
+    if (file.queue.len() > 1 && !force)
+    {
+        return
+    }
+    var bgColorRui = RuiCreate( $"ui/basic_image.rpak", file.topo, RUI_DRAW_HUD, 1 )
+
+    var bgWhiteRui = RuiCreate( $"ui/basic_image.rpak", file.topoBg, RUI_DRAW_HUD, 0 )
+    RuiSetFloat3( bgColorRui, "basicImageColor", Roguelike_GetAchievementColor( id ) )
+    //RuiSetImage( bgWhiteRui, "basicImage", $"rui/hud/aaaaaaaaaaaaaaaaaaa" )
+    int highestLen = 0
+    foreach (str in split(Roguelike_GetAchievementDesc( id ), "\n"))
+    {
+        if (str.len() > highestLen)
+        {
+            highestLen = str.len()
+        }
+    }
+    float baseWidth = float(Roguelike_GetAchievementName( id ).len())
+    baseWidth = max( 0.5 * highestLen, baseWidth )
+    baseWidth *= 32
+
+    float yOffset = GetScreenSize()[1] * 0.2
+
+    // level up sound :D
+    EmitSoundOnEntity( GetLocalClientPlayer(), "HUD_level_up_pilot_1P" )
+
+    float startTime = Time()
+    float duration = 1.0
+    while (true)
+    {
+        float frac = min(Time() - startTime, duration) / duration
+        float width = (1 - pow(1 - frac, 2)) * baseWidth
+        float bgWidth = (1 - pow(1 - min(frac * 1.1, 1), 2)) * baseWidth
+        RuiTopology_UpdatePos( file.topo, <(GetScreenSize()[0] / 2.0 - (width / 2)),yOffset,0>, <width,0,0>, <0,yOffset,0> )
+        RuiTopology_UpdatePos( file.topoBg, <(GetScreenSize()[0] / 2.0 - (bgWidth / 2)),yOffset,0>, <bgWidth,0,0>, <0,yOffset,0> )
+        //RuiTopology_CreatePlane( <(GetScreenSize()[0] / 2.0 - 250),200,0>, <500,0,0>, <0,200,0>, true )
+        if ((Time() - startTime) / duration > 1.0) break
+        WaitFrame()
+    }
+
+    wait 0.5
+
+    // FADE IN TEXT
+
+    var text = RuiCreate( RUI_TEXT_CENTER, GetAspectRatioFixTopo(), RUI_DRAW_HUD, 3 )
+    RuiSetInt( text, "maxLines", 1 )
+    RuiSetInt( text, "lineNum", 1 )
+    RuiSetFloat2( text, "msgPos", <0, -0.3, 0> )
+    RuiSetFloat3( text, "msgColor", <1.0, 0.55, 0.0> )
+    RuiSetString( text, "msgText", Roguelike_GetAchievementName( id ) )
+    RuiSetFloat( text, "msgFontSize", 48.0 )
+    RuiSetFloat( text, "msgAlpha", 0.0 )
+    RuiSetFloat( text, "thicken", 0.0 )
+    var text2 = RuiCreate( RUI_TEXT_CENTER, GetAspectRatioFixTopo(), RUI_DRAW_HUD, 3 )
+    RuiSetInt( text2, "maxLines", 1 )
+    RuiSetInt( text2, "lineNum", 1 )
+    RuiSetFloat2( text2, "msgPos", <0, -0.225, 0> )
+    RuiSetFloat3( text2, "msgColor", <1.0, 1.0, 1.0> )
+    RuiSetString( text2, "msgText", Roguelike_GetAchievementDesc( id ) )
+    RuiSetFloat( text2, "msgFontSize", 24.0 )
+    RuiSetFloat( text2, "msgAlpha", 0.0 )
+    RuiSetFloat( text2, "thicken", 0.0 )
+
+    startTime = Time()
+    duration = 0.25
+
+    while (true)
+    {
+        float frac = min(Time() - startTime, duration) / duration
+        float alpha = 1 - pow(1 - min(frac * 1.1, 1), 2)
+        RuiSetFloat( text, "msgAlpha", alpha )
+        RuiSetFloat( text2, "msgAlpha", alpha )
+        if ((Time() - startTime) / duration > 1.0) break
+        WaitFrame()
+    }
+
+    wait 5.75
+
+    startTime = Time()
+    duration = 0.75
+
+    while (true)
+    {
+        float frac = min(Time() - startTime, duration) / duration
+        float width = pow(1 - min(frac * 1.1, 1), 2) * baseWidth
+        float bgWidth = pow(1 - frac, 2) * baseWidth
+        float alpha = pow(1 - min(frac * 1.5, 1), 2)
+        RuiSetFloat( text, "msgAlpha", alpha )
+        RuiSetFloat( text2, "msgAlpha", alpha )
+        RuiTopology_UpdatePos( file.topo, <(GetScreenSize()[0] / 2.0 - (width / 2)),200,0>, <width,0,0>, <0,yOffset,0> )
+        RuiTopology_UpdatePos( file.topoBg, <(GetScreenSize()[0] / 2.0 - (bgWidth / 2)),200,0>, <bgWidth,0,0>, <0,yOffset,0> )
+        //RuiTopology_CreatePlane( <(GetScreenSize()[0] / 2.0 - 250),200,0>, <500,0,0>, <0,200,0>, true )
+        if ((Time() - startTime) / duration > 1.0) break
+        WaitFrame()
+    }
+
+    RuiDestroy( bgColorRui )
+    RuiDestroy( bgWhiteRui )
+    RuiDestroy( text )
+    RuiDestroy( text2 )
+
+    file.queue.remove(0)
+    if (file.queue.len() > 0) 
+    {
+        thread AchievementObtained_Animate( file.queue.pop(), true )
+    }
+}

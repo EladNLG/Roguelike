@@ -39,6 +39,7 @@ void function StartPoint_Init()
 		AddCallback_EntitiesDidLoad( StartPoints_EntitiesDidLoad )
 
 	FlagInit( "ShowAlternateMissionLog" )
+	RegisterSignal( "PlayerDoneSelecting" )
 }
 
 string function GetCurrentStartPoint()
@@ -67,7 +68,7 @@ void function UpdateCurrentStartPoint( string map )
 	}
 	else
 	{
-		if ( DevStartPoints() && Dev_CommandLineHasParm( STARTPOINT_DEV_STRING ) )
+		if ( true )
 		{
 			printt( "    #################    " )
 			printt( "  #####################  " )
@@ -80,15 +81,12 @@ void function UpdateCurrentStartPoint( string map )
 			}
 			printt( "#" )
 
-			string commandLineValue = Dev_CommandLineParmValue( STARTPOINT_DEV_STRING )
-			if ( commandLineValue != "" )
+			
+			int startPointIndex = GetConVarInt( "sp_startpoint" )
+			if ( startPointIndex >= 0 && startPointIndex < startPointsForMap.len() )
 			{
-				int startPointIndex = commandLineValue.tointeger()
-				if ( startPointIndex >= 0 && startPointIndex < startPointsForMap.len() )
-				{
-					startPointName = startPointsForMap[ startPointIndex ].name
-					printt( "#  Using Start Point: (" + startPointIndex.tostring() + ") " + startPointName )
-				}
+				startPointName = startPointsForMap[ startPointIndex ].name
+				printt( "#  Using Start Point: (" + startPointIndex.tostring() + ") " + startPointName )
 			}
 			printt( "#########################" )
 			printt( "  #####################  " )
@@ -209,7 +207,7 @@ void function PickStartPoint( string mapName, string startPointEnum, LevelTransi
 
 	foreach ( entity player in players )
 	{
-		ScreenFade( player, 0, 0, 1, 255, SP_LEVEL_TRANSITION_FADETIME, (SP_LEVEL_TRANSITION_HOLDTIME + 1), FFADE_OUT | FFADE_PURGE )
+		ScreenFade( player, 0, 0, 1, 255, SP_LEVEL_TRANSITION_FADETIME, 999, FFADE_OUT | FFADE_PURGE )
 		MuteAll( player, 4 )
 	}
 
@@ -229,7 +227,7 @@ void function PickStartPoint( string mapName, string startPointEnum, LevelTransi
 	expect LevelTransitionStruct( trans )
 
 	PopulateLevelTransWithLoadouts( player, trans )
-	PlayerTransitionsToLevel( player, mapName, startPointEnum, trans )
+	thread PlayerTransitionsToLevel( player, mapName, startPointEnum, trans )
 }
 
 void function PickStartPoint_NoFadeOut_NoPilotWeaponCarryover( string mapName, string startPointEnum, LevelTransitionStruct ornull trans = null )
@@ -248,7 +246,7 @@ void function PickStartPoint_NoFadeOut_NoPilotWeaponCarryover( string mapName, s
 
 	expect LevelTransitionStruct( trans )
 
-	PlayerTransitionsToLevel( player, mapName, startPointEnum, trans )
+	thread PlayerTransitionsToLevel( player, mapName, startPointEnum, trans )
 }
 
 void function PlayerTransitionsToLevel( entity player, string mapName, string startPointEnum, LevelTransitionStruct trans )
@@ -257,18 +255,23 @@ void function PlayerTransitionsToLevel( entity player, string mapName, string st
 	switch (mapName)
 	{
 		case "sp_boomtown_start":
-			if (startPointEnum != "LECTURE HALLS") break
+			//if (startPointEnum != "LECTURE HALLS") break
 			//int index = xorshift_range_int(0, 2, GetRoguelikeSeed() + 1)
 			//mapName = [ "sp_sewers1", "sp_boomtown_start" ][index]
 			mapName = "sp_timeshift_spoke02"
 			trans.startPointIndex = 0
 			startPointEnum = GetStartPointNameFromIndex( mapName, trans.startPointIndex )
 			break
+		case "sp_beacon":
+			if (trans.startPointIndex > 0)
+				break
+			mapName = "sp_beacon_spoke0"
+			startPointEnum = GetStartPointNameFromIndex( mapName, trans.startPointIndex )
+			break
 	}
-	trans.difficulty = GetConVarInt( "sp_difficulty" )
-	trans.titan_unlocksBitfield = GetBTLoadoutsUnlockedBitfield()
-	trans.levelID = GetSPLevelEnumForMapname( GetMapName() )
 
+	trans.difficulty = GetConVarInt( "sp_difficulty" )
+	trans.levelID = GetSPLevelEnumForMapname( GetMapName() )
 	// can't carry battery to the next level, only across mid-level transitions.
 	if ( StartPointHasDetente( mapName, startPointEnum ) )
 		trans.pilotHasBattery = false
@@ -280,9 +283,20 @@ void function PlayerTransitionsToLevel( entity player, string mapName, string st
 	ExecuteLoadingClientCommands_SetStartPoint( mapName, trans.startPointIndex )
 
 	printt( "ChangeLevel " + mapName + " " + startPointEnum )
+
+	
+	OnThreadEnd( function() : ( mapName, trans )
+	{
+		trans.titan_unlocksBitfield = GetBTLoadoutsUnlockedBitfield()
+		ChangeLevel( mapName, trans )
+	})
+	
+	player.EndSignal("PlayerDoneSelecting")
 	foreach (void functionref( string, LevelTransitionStruct ) callback in levelEndCallbacks)
 		callback( mapName, trans )
-	ChangeLevel( mapName, trans )
+
+	player.SetInvulnerable()
+	WaitForever()
 }
 
 array<void functionref( string, LevelTransitionStruct )> levelEndCallbacks = []

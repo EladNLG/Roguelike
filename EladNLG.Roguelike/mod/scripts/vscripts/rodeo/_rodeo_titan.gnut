@@ -193,7 +193,7 @@ void function Rodeo_HealthDecayThinkInternal( entity soul ) //Remove if we don't
 				StopSoundOnEntity( titan, "titan_energyshield_down" )
 			}
 		}
-		WaitFrame()
+		wait 0.1
 	}
 }
 
@@ -1704,7 +1704,7 @@ void function Rodeo_ApplyBatteryToTitan( entity battery, entity titan )
 
 	int healingAmount
 	if ( IsSingleplayer() )
-		healingAmount = 2000 + 400 * GetLevel()
+		healingAmount = int(2000 + 600 * GetLevel() / expect float(("divisor" in titan.s) ? titan.s.divisor : 1.0))
 	else
 		healingAmount = GetSegmentHealthForTitan( titan )
 

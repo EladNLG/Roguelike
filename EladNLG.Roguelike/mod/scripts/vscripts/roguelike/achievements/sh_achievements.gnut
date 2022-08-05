@@ -1,0 +1,180 @@
+global function AddCallback_RegisteringRoguelikeAchievements
+global function RAchievements_Init
+global function Roguelike_UnlockAchievement
+global function Roguelike_IsAchievementUnlocked
+global function Roguelike_AchievementNumToId
+global function Roguelike_GetAchievementName
+global function Roguelike_GetAchievementDesc
+global function Roguelike_GetAchievementColor
+global function Roguelike_SetItemAchievement
+global function Roguelike_IsItemLocked
+
+global array<vector> roguelikeChatRarityColors = [
+    <0.8, 0.8, 0.8>, // common
+    <0.3, 0.9, 0.3>, // uncommon
+    <0.9, 0.3, 0.3>, // legendary
+    <0.3, 0.3, 0.9>, // umbral
+    <0.8, 0.4, 0.1>, // titan
+    <0.2, 0.2, 0.2>
+]
+
+
+struct AchievementData
+{
+    string id
+    string name
+    string desc
+    vector color
+}
+
+struct {
+    array<AchievementData> achievements
+    array<void functionref()> callbacks
+    table<string, string> itemAchievements
+} file
+
+bool function Roguelike_IsItemLocked( string id )
+{
+    if (id in file.itemAchievements)
+        return !Roguelike_IsAchievementUnlocked( file.itemAchievements[id] )
+
+    return false
+}
+
+void function Roguelike_SetItemAchievement( string item, string achievement )
+{
+    file.itemAchievements[item] <- achievement
+}
+
+void function AddCallback_RegisteringRoguelikeAchievements( void functionref() callback )
+{
+
+}
+
+void function RAchievements_Init()
+{
+    // whilst I'd like to have mods add custom achievements - it would cause problems with the save convar.
+
+    // ACHIEVEMENT COLORS
+    // GRAY - basic achievement
+    // GREEN - adds an item to the loot pool
+    // RED - easter egg achievement
+    // YELLOW - easter egg achievement, adds an item to the loot pool
+    Roguelike_RegisterAchievement( "dashed", "WEEEEEEEEEE", "Dash for the first time." )
+    Roguelike_RegisterAchievement( "pickup", "First Stack of Many", "Pick up an item.", <0.1, 0.1, 0.1> )
+    Roguelike_RegisterAchievement( "pickup_legendary", "Legend Come True", "Pick up a legendary item.\n(The bank calls...)", <0.1, 0.9, 0.1> )
+    Roguelike_RegisterAchievement( "gauntlet_leaderboard", "Fastest in the west", "Get 1st in The Gauntlet.\n(A bunch of jumpkit parts fall from the sky...)", <0.9, 0.1, 0.1> )
+    Roguelike_RegisterAchievement( "loop", "[Insert mandatory back to the future joke]", "Loop.\nNo, the jokes are NOT gonna get better.\n(an item has been added to the loot pool...)", <0.1, 0.9, 0.1> )
+    Roguelike_RegisterAchievement( "nessie", "omg it's so cute", "TmV2ZXJHb25uYSBHaXZlIFlvdVVw\nTmV2ZXJHb25ubmFMZXRZb3VEb3du i wanna scream\n(an item has been added to the loot pool...)", <0.9, 0.9, 0.1> )
+    Roguelike_RegisterAchievement( "holyfuckingshit", "nice", "69420 hahahahahahahahahahahahaha i laugh", <0.9, 0.9, 0.1> ) // holy fuckingshit
+    Roguelike_RegisterAchievement( "dead", "broken.", "Die.\n(This achievement is sponsored by The Emergency Soda!)", <0.1, 0.9, 0.1> ) // holy fuckingshit
+
+
+    Roguelike_OnAchievementsSetUp( file.achievements.len() )
+}
+
+void function Roguelike_RegisterAchievement( string id, string name, string desc, vector ornull color = null )
+{
+    if (color == null)
+        color = <0.1, 0.1, 0.1>
+    
+    expect vector( color )
+
+    AchievementData data
+    data.id = id
+    data.name = name
+    data.desc = desc
+    data.color = color
+    file.achievements.append( data )
+}
+
+#if SERVER
+void function Roguelike_UnlockAchievement( entity player, string id )
+{
+    foreach ( i, a in file.achievements )
+    {
+        if (a.id != id) continue
+
+        print("UNLOCKING ACHIEVEMENT ID: " + id)
+        print("ACHIEVEMENT: " + a.name)
+
+        Remote_CallFunction_NonReplay( player, "ServerCallback_UnlockAchievement", i )
+    }
+}
+#else
+void function Roguelike_UnlockAchievement( string id )
+{
+    foreach ( i, a in file.achievements )
+    {
+        if (a.id != id) continue
+
+        print("UNLOCKING ACHIEVEMENT ID: " + id)
+        print("ACHIEVEMENT: " + a.name)
+
+        ServerCallback_UnlockAchievement( i )
+    }
+}
+#endif 
+
+#if SERVER
+bool function Roguelike_IsAchievementUnlocked( string id, bool strict = false, entity player = null )
+{
+    foreach ( i, a in file.achievements )
+    {
+        if (a.id != id) continue
+
+        return Roguelike_IsAchievementNumUnlocked( i, strict, player )
+    }
+
+    unreachable
+}
+#else
+bool function Roguelike_IsAchievementUnlocked( string id )
+{
+    foreach ( i, a in file.achievements )
+    {
+        if (a.id != id) continue
+
+        return Roguelike_IsAchievementNumUnlocked( i )
+    }
+    unreachable
+}
+#endif
+
+string function Roguelike_AchievementNumToId( int num )
+{
+    return file.achievements[num].id
+}
+
+string function Roguelike_GetAchievementName( string id )
+{
+    foreach ( i, a in file.achievements )
+    {
+        if (a.id != id) continue
+
+        return a.name
+    }
+    unreachable
+}
+
+string function Roguelike_GetAchievementDesc( string id )
+{
+    foreach ( i, a in file.achievements )
+    {
+        if (a.id != id) continue
+
+        return a.desc
+    }
+    unreachable
+}
+
+vector function Roguelike_GetAchievementColor( string id )
+{
+    foreach ( i, a in file.achievements )
+    {
+        if (a.id != id) continue
+
+        return a.color
+    }
+    unreachable
+}

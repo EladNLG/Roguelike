@@ -30,7 +30,7 @@
 		{
 			"ControlName"			"Label"
 			"InheritProperties"		"MenuTitle"
-			"labelText"				"Weapon Shop"
+			"labelText"				"Item Shop"
 		}
 		"ButtonRowAnchor"
 		{

@@ -1,0 +1,16 @@
+"WeaponData"
+{
+    Mods
+    {
+        heavy_mag
+        {
+            "ammo_clip_size"    "*1.5"
+        }
+        belt_fed
+        {
+            "ammo_clip_size"    "*0.0"
+            "ammo_stockpile_max"    "++100"
+            "ammo_default_total"    "++100"
+        }
+    }
+}

@@ -1,0 +1,68 @@
+globalize_all_functions
+
+struct {
+    table< entity, array<bool> > unlocked
+    table< string, string > itemAchievements
+    int achievementCount
+} file
+
+void function _RAchievements_Init()
+{
+    AddClientCommandCallback( "achievements_updated", RUpdatedAchievements )
+}
+
+bool function Roguelike_IsAchievementNumUnlocked( int id, bool strict = false, entity player = null )
+{
+    printt("Roguelike_IsAchievementNumUnlocked:", id, "strict:", strict, "player:", player)
+    if (player != null)
+        return (player in file.unlocked) && file.unlocked[player][id]
+    
+    foreach (entity p in GetPlayerArray())
+    {
+        if (p in file.unlocked) 
+            printt("Roguelike_IsAchievementNumUnlocked: Achievement ", id, "-", file.unlocked[p][id])
+        if (p in file.unlocked && file.unlocked[p][id] && !strict)
+            return true
+        if (!(p in file.unlocked && file.unlocked[p][id]) && strict)
+            return false
+    }
+    return strict
+}
+
+bool function RUpdatedAchievements( entity player, array<string> args )
+{
+    printt("RUpdatedAchievements:", player, args[0])
+    if (!(player in file.unlocked))
+    {
+        file.unlocked[player] <- []
+        for (int i = 0; i < file.achievementCount; i++)
+        {
+            file.unlocked[player].append(false)
+        }
+    }
+    string achStr = args[0]
+    array<string> achs = split( achStr, "," )
+
+    foreach ( j, s in achs )
+    {
+        if (s == "") continue
+        int offset = j * 32
+        int chunkData = s.tointeger()
+        print(chunkData)
+
+        for (int i = 0; i < 32; i++)
+        {
+            int bit = chunkData & (1 << i)
+            if (offset + i >= file.achievementCount && bit != 0) throw "CLIENT HAS MORE ACHIEVEMENTS THAN SERVER?"
+
+            if (bit != 0)
+                file.unlocked[player][offset + i] = bit != 0
+        }
+    }
+    return true
+}
+
+void function Roguelike_OnAchievementsSetUp( int count )
+{
+    file.achievementCount = count
+}

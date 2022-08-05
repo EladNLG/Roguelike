@@ -1,3 +1,4 @@
+untyped
 global function AddCallback_OnDifficultyIncreased
 global function Difficulty_Init
 global function Difficulty_UpdateNPC
@@ -14,16 +15,19 @@ struct
 
 void function Difficulty_Init()
 {
+    if (IsLobby()) return
     AddCallback_OnDifficultyIncreased( DifficultyIncreased )
     //AddCallback_OnDamageEvent( DamageEvent )
     AddCallback_EntitiesDidLoad( Difficulty_Update )
     AddCallback_EntitiesDidLoad( PreventTimerOnCutscene )
 }
 
+
 void function ForceDifficultyCallbacks()
 {
     float time = Time() - GetGlobalNetTime("difficultyStartTime")
-    roguelikeDifficulty = int(min(99, time * 3 / TIME_PER_DIFFICULTY))
+    float timePerDifficulty = TIME_PER_DIFFICULTY / pow(GetLevelCountMultiplier(), GetConVarInt( "level_count" ))
+    roguelikeDifficulty = int(time * 3 / timePerDifficulty)
     foreach (void functionref( int, int ) callback in file.difficultyCallbacks)
         callback( roguelikeDifficulty, roguelikeDifficulty / 3 )
 }
@@ -31,26 +35,43 @@ void function ForceDifficultyCallbacks()
 void function ScaleDamageWithEntityLevel( entity ent, var damageInfo )
 {
     entity attacker = DamageInfo_GetAttacker( damageInfo )
-    
-    int level = attacker.GetTeam() == TEAM_IMC ? roguelikeDifficulty : GetLevel()
-    float damageScale = 1 + 0.2 * level
-    float baseDamage = DamageInfo_GetDamage( damageInfo )
-    //print( "MAX DAMAGE LEVEL: " + (524287 / baseDamage) )
-    if (baseDamage * damageScale > 524287)
+    float damage = DamageInfo_GetDamage( damageInfo )
+
+    if (DamageInfo_GetForceKill( damageInfo ))
+        return
+
+    if (attacker != ent && attacker.GetClassName() != "trigger_hurt")
     {
-        CodeWarning( "OVER MAX DAMAGE!" )
-        DamageInfo_SetDamage( damageInfo, 524287 )
+        int level = !attacker.IsPlayer() ? roguelikeDifficulty : GetLevel()
+        float damageScale = 1 + 0.2 * max(-4, level)
+        if ("divisor" in ent.s)
+            damageScale /= expect float( ent.s.divisor )
+        float baseDamage = DamageInfo_GetDamage( damageInfo )
+        //print( "MAX DAMAGE LEVEL: " + (524287 / baseDamage) )
+        if (baseDamage * damageScale > 524287)
+        {
+            CodeWarning( "OVER MAX DAMAGE!" )
+            DamageInfo_SetDamage( damageInfo, 524287 )
+        }
+        else DamageInfo_ScaleDamage( damageInfo, damageScale )
     }
-    else DamageInfo_ScaleDamage( damageInfo, damageScale )
+    else
+    {
+        printt("DAMAGE", damage, ent.GetMaxHealth())
+        if (damage * float(ent.GetMaxHealth()) / 100.0 > 524287)
+            DamageInfo_SetDamage( damageInfo, 524287 )
+        else DamageInfo_ScaleDamage( damageInfo, float(ent.GetMaxHealth()) / 100.0)
+    }
 }
 
-int function GetChestCost()
+int function GetChestCost(float multiplier = 1.0)
 {
-    int initialDifficulty = GetConVarInt("roguelike_time") * 3 / int(TIME_PER_DIFFICULTY)
-    return int(100 * pow(1.1, min(initialDifficulty, 99)))
+    float timePerDifficulty = TIME_PER_DIFFICULTY / pow(GetLevelCountMultiplier(), GetConVarInt( "level_count" ))
+    int initialDifficulty = int(GetConVarInt("roguelike_time") * 3 / timePerDifficulty)
+    //print(50 * (1 + 0.2 * initialDifficulty) * multiplier)
+    return int(50 * (1 + 0.2 * initialDifficulty) * multiplier)
 }
 
-const float TIME_PER_DIFFICULTY = 300
 void function Difficulty_Update()
 {
     if (!IsNewThread())
@@ -62,7 +83,9 @@ void function Difficulty_Update()
     while (true)
     {
         float time = Time() - GetGlobalNetTime("difficultyStartTime")
-        roguelikeDifficulty = int(min(99, time * 3 / TIME_PER_DIFFICULTY))
+        float timePerDifficulty = TIME_PER_DIFFICULTY / pow(GetLevelCountMultiplier(), GetConVarInt( "level_count" ))
+        roguelikeDifficulty = int(time * 3 / timePerDifficulty)
+        //print(roguelikeDifficulty)
         while (lastDifficulty < roguelikeDifficulty)
         {
             foreach (void functionref( int, int ) callback in file.difficultyCallbacks)
@@ -79,7 +102,7 @@ void function PreventTimerOnCutscene()
 
     if (!IsNewThread())
         thread PreventTimerOnCutscene()
-    
+
     while (true)
     {
         if (!IsValid(player))
@@ -125,7 +148,22 @@ void function Difficulty_UpdateNPC( entity npc )
 
     int baseHealth = expect int( npc.Dev_GetAISettingByKeyField( "Health" ) )
 
-    baseHealth = baseHealth + int(0.3 * baseHealth) * roguelikeDifficulty
+    //printt("BASE HEALTH:", baseHealth)
+    //printt("NEW BASE HEALTH:", baseHealth)
+    //printt("HEALTH PER LEVEL:", int(0.3 * baseHealth))
+    //printt("ROGUELIKE_DIFFICULTY:", roguelikeDifficulty)
+    //printt("HEALTH FROM LEVELS:", int(0.3 * baseHealth) * roguelikeDifficulty)
+    int newBaseHealth = baseHealth + int(0.3 * baseHealth) * roguelikeDifficulty
+    //printt("NEW HEALTH:", newBaseHealth)
+    baseHealth = int(clamp( newBaseHealth, 1, 524287))
+
+    if (newBaseHealth > baseHealth)
+    {
+        float divisor = float(newBaseHealth) /   baseHealth
+        npc.s.damageDivisor <- divisor
+    }
+
+
 
     float healthFrac = float(npc.GetHealth()) / npc.GetMaxHealth()
 

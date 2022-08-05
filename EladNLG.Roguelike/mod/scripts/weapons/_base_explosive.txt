@@ -1,0 +1,12 @@
+#base "_base_projectile.txt"
+WeaponData
+{
+    Mods
+    {
+        slowProjectile
+        {
+            "projectile_launch_speed"               "*0.8"
+			"explosion_damage"						"*1.35"
+        }
+    }
+}

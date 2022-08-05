@@ -11,6 +11,60 @@
             {
                 "Before": "AddLogbookMenu"
             }
+        },
+        {
+            "Path": "ui/menu_roguelike.nut",
+            "RunOn": "UI"
+        },
+        {
+            "Path": "ui/menu_start_run.nut",
+            "RunOn": "UI",
+            "UICallback":
+            {
+                "Before": "StartRun_Init"
+            }
+        }
+    ],
+    "Dependencies": {
+        "PLAYER_HAS_ROGUELIKE_MOD": "TF|Roguelike"
+    },
+    "ConVars": [
+        // here because disabling a mod removes all of it's convars, losing the convar data too
+        {
+            "Name": "roguelike_achievements",
+            "DefaultValue": "0",
+            "Flags": 16777216
+        },
+        // selected in menu
+        {
+            "Name": "roguelike_seed",
+            "DefaultValue": "0",
+            "Flags": 16388 // FCVAR_CHEAT | FCVAR_GAMEDLL
+        },
+        {
+            "Name": "artifact_development",
+            "DefaultValue": "0",
+            "Flags": 24576 // FCVAR_REPLICATED | FCVAR_CHEATS
+        },
+        {
+            "Name": "artifact_development_items",
+            "DefaultValue": "0",
+            "Flags": 24576 // FCVAR_REPLICATED | FCVAR_CHEATS
+        },
+        {
+            // if you don't execute a boss, insta death.
+            "Name": "artifact_honor",
+            "DefaultValue": "0",
+            "Flags": 24576 // FCVAR_REPLICATED | FCVAR_CHEATS
+        },
+        {
+            "Name": "level_count",
+            "DefaultValue": "0",
+            "Flags": 24576
+        },
+        {
+            "Name": "was_roguelike_on",
+            "DefaultValue": "-1"
         }
     ]
 }

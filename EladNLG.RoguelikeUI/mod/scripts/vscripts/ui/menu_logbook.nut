@@ -31,7 +31,6 @@ struct {
 
 void function AddLogbookMenu()
 {
-    print("\n\n\n\n\n\n\n\n\n\n\n\nPAIN\n\n\n\n\n\n\n\n")
 	AddMenu( "Logbook", $"resource/ui/menus/logbook.menu", InitLogbook )
 }
 

@@ -15757,7 +15757,9 @@ void function CreateCoreLightFX1()
 
 function LifeBoats_PodLoop( player, lifeboat )
 {
-	PickStartPoint( "sp_crashsite", "Waking_Up" )
+	expect entity( player )
+	Roguelike_UnlockAchievement( player, "loop" )
+	thread PickStartPoint( "sp_crashsite", "Waking_Up" )
 }
 
 void function LifeBoats_PodSetup()

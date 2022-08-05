@@ -1,0 +1,25 @@
+"WeaponData"
+{
+    Mods
+    {
+        light_mag
+        {
+            "ammo_clip_size"    "*0.8"
+            "move_speed_modifier"   "*1.05"
+        }
+
+        heavy_mag
+        {
+            "ammo_clip_size"    "*1.5"
+            "viewkick_yaw_random"       "*2"
+        }
+        sub_mini_gun
+        {
+            "ammo_clip_size"            "*1.5"
+            "fire_rate"                 "*1.5"
+            "fire_rate_max"             "*1.5"
+            "damage_near_value"         "*0.8"
+            "damage_far_value"          "*0.8"
+        }
+    }
+}   

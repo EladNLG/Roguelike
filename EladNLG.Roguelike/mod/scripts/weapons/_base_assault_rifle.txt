@@ -1,0 +1,9 @@
+#base "_base_weapon.txt"
+#base "_base_hitscan.txt"
+"WeaponData"
+{
+    Mods
+    {
+        
+    }
+}

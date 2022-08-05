@@ -10,6 +10,7 @@ global function GenerateNPCMods
 #endif
 global function GetArrayString
 global function FixupTitle
+global function SetModsUntilItWorks
 
 global array<entity> spawnedByScript = []
 
@@ -461,7 +462,7 @@ void function GenerateNPCMods( entity weapon, int index = -1 )
 		}
 		return;
 	}
-	if (weapon.GetWeaponClassName().find("sp") != null) return;
+	//if (weapon.GetWeaponClassName().find("sp") == 0) return;
 	entity npc = weapon.GetOwner()
 	if (weapon.GetWeaponClassName() == "") printl("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
 	string weaponClassName = weapon.GetWeaponClassName()
@@ -476,7 +477,7 @@ void function GenerateNPCMods( entity weapon, int index = -1 )
 		// we use do/while to gurantee this always gets done at least once.
 		do
 		{
-			weaponClassName = RemoveNonPrecached(allowedWeapons, !isOffhand, isOffhand, true)[RandomInt(RemoveNonPrecached(allowedWeapons, !isOffhand, isOffhand, true).len())]
+			weaponClassName = RemoveNonPrecached(allowedWeapons, !isOffhand, isOffhand, true)[xorshift_range_int( 0, RemoveNonPrecached(allowedWeapons, !isOffhand, isOffhand, true).len(), GetRoguelikeSeed() + 5 )]
 		}
 		while (EntityHasWeapon(npc, weaponClassName))
 		
@@ -509,7 +510,7 @@ void function GenerateNPCMods( entity weapon, int index = -1 )
 			i--
 			continue;
 		}
-		maxWeight += GetModWeight(m)
+		maxWeight += GetModWeight(m, weaponClassName)
 	}
 
 	string mods = ""
@@ -517,21 +518,30 @@ void function GenerateNPCMods( entity weapon, int index = -1 )
 		mods += m
 		mods += ", "
 	}
-	int modCount = int(ceil(pow(RandomFloat(1), 3) * 5))
+	int modCount = [ 3, 4, 5, 6, 7 ][GetRandomIndexFromWeightedArray( [ 50.0, 25.0, 12.5, 6.25, 3.125 ] )]
 	// one mod
 	for (int i = 0; i < modCount; i++) {
 		float selected = RandomFloat( maxWeight )
+		string addedMod = ""
 		foreach (string m in primaryMods)
 		{
-			if (GetModWeight(m) > selected)
+			if (GetModWeight(m, weaponClassName) > selected)
 			{
-				Assert( !file.attachments.contains(m), "Mod is atachment lol")
+				addedMod = m
 				result.append(m)
 				primaryMods.remove(primaryMods.find(m))
-				maxWeight -= GetModWeight(m)	
+				maxWeight -= GetModWeight(m, weaponClassName)	
 				break;
 			}
-			selected -= GetModWeight(m)
+			selected -= GetModWeight(m, weaponClassName)
+		}
+		if (ShopPrices_IsModRegistered(addedMod) && ShopData_GetModValue(addedMod) == MODVALUE_PRESET)
+		{
+			printt("MOD PRESET USED", addedMod)
+			result = [ addedMod ]
+			result.extend(ShopPrices_GetPresetMods(addedMod))
+			printt(result[0])
+			break
 		}
 	}
 // sp_s2s_settings, burn_mod_rocket_launcher, 
@@ -546,13 +556,13 @@ void function GenerateNPCMods( entity weapon, int index = -1 )
 	array<int> indexesToRemove = []
 	for (int i = 0; i < result.len(); i++) {
 		string m = result[i]
-		if (m == "silencer") isSilenced = true
+		
 		if (m.find("burn_mod") != null) isAmped = true
 		if (m == "sp_s2s_settings") isS2S = true
 		if (m == "extended_ammo") isExtended = true
 		if (m == "at_unlimited_ammo") isUnlimitedAmmo = true
-		if (isSilenced && isAmped) indexesToRemove.append(i)
-		else if (isAmped && isS2S) indexesToRemove.append(i)
+
+		if (isAmped && isS2S) indexesToRemove.append(i)
 		else if (isExtended && isS2S) indexesToRemove.append(i)
 		else if (isExtended && isUnlimitedAmmo) indexesToRemove.append(i)
 	}
@@ -560,20 +570,30 @@ void function GenerateNPCMods( entity weapon, int index = -1 )
 	{
 		result.remove(indexesToRemove[i] - i)
 	}
+    //float timePerDifficulty = TIME_PER_DIFFICULTY / pow(GetLevelCountMultiplier(), GetConVarInt( "level_count" ))
+
+	//weapon.SetScriptName("" + int(GetConVarInt("roguelike_time") * 3 / timePerDifficulty))
 
 	if (result.len() < 1) printl("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-	try 
-	{
-		weapon.SetMods(result)
-	}
-	catch (ex)
-	{
-		print("\n---------- [ERROR] ----------\n\nFAILED TO SET MODS ON " + weapon.GetWeaponClassName() + "!!!\n\nMODS USED:" + GetArrayString(result) + "\n\n---------- [ERROR] ----------")
-	}
+	SetModsUntilItWorks(weapon, result)
 	if (!IsValid(npc))
 		HighlightWeapon( weapon )
 }
 #endif
+
+void function SetModsUntilItWorks(entity weapon, array<string> mods )
+{
+	try 
+	{
+		weapon.SetMods(mods)
+	}
+	catch (ex)
+	{
+		print("\n---------- [ERROR] ----------\n\nFAILED TO SET MODS ON " + weapon.GetWeaponClassName() + "!!!\n\nMODS USED:" + GetArrayString(mods) + "\n\n---------- [ERROR] ----------")
+		mods.remove(0)
+		SetModsUntilItWorks(weapon, mods)
+	}
+}
 
 string function GetArrayString( array<string> mods )
 {
@@ -584,45 +604,6 @@ string function GetArrayString( array<string> mods )
 	}
 	return s
 }
-
-#if MP
-float function GetModWeight( string modName )
-{
-	switch (modName)
-	{
-		// add more chance to jump kit cause it coool
-		case "jump_kit":
-			return 10.0;
-			break;
-		// disable smart lock.. cause it doesn't work
-		case "smart_lock":
-			return 0.0;
-			break;
-		// same problem with this mod, forgot what it's called.
-		case "tactical_cdr_on_kill":
-			return 0.0;
-			break;
-		case "less_npc_burst":
-			return 0.0;
-			break;
-		// but let's compensate with useless mods that DO appear on your screen >:)))
-		case "silencer":
-			return 2.0;
-			break;
-		case "pro_screen":
-			return 2.0;
-			break;
-		case "pas_run_and_gun":
-			return 2.0;
-			break;
-		case "pas_fast_aim":
-			return 1.5;
-			break;
-	}
-	if (modName.find("burn_mod") != null) return 1.5
-	return 1.0;
-}
-#endif
 
 void function FixupTitle( entity npc )
 {

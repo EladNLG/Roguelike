@@ -3,6 +3,9 @@
     "Language"  "english"
     "Tokens"
     {
-        
+        "WPN_PEACEKRABER"       "Peacekraber"
+        "WPN_PEACEKRABER_SHORT" "Peacekraber"
+        "WPN_PEACEKRABER_LONGDESC"  "The child of the kraber and the peacekeeper, the Peacekraber is a high-impact, high time-between-shots shotgun."
+        "WPN_PEACEKRABER_DESC"  "A high-impact, high time-between-shots shotgun." 
     }
 }

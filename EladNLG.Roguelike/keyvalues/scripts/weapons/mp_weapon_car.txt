@@ -1,0 +1,6 @@
+#base "_base_smg.txt"
+#base "_base_hitscan.txt"
+WeaponData
+{
+    
+}

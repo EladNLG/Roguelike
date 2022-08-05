@@ -105,6 +105,7 @@ array<string> function RemoveNonPrecached(array<string> weapons, bool removeAbil
 		// wingman elite doesn't have NPC-Specific behaviour - so when an NPC fires it script thinks the player fired it and therefore predicts it :(
 		// So NPCs cannot use wingman elites
 		if (result.find("mp_weapon_wingman_n") >= 0) result.remove(result.find("mp_weapon_wingman_n"))
+		if (result.find("mp_weapon_arc_launcher") >= 0) result.remove(result.find("mp_weapon_arc_launcher"))
 	}
 	//print(GetArrayString(result))
 	return result
@@ -143,7 +144,6 @@ bool function IsWeaponOffhand(string weapon)
 	}
 	catch (ex)
 	{
-		print(ex)
 		nonOffhandWeapons.append(weapon)
 	}
 
@@ -959,9 +959,23 @@ LeveledScriptedWeapons function GetAllLeveledScriptWeapons()
 
 void function CreateWeaponPickup( entity ent )
 {
-	Assert( ent.HasKey( "script_weapon" ) )
+	//print(ent.GetValueForKey("script_weapon"))
+	//Assert( ent.HasKey( "script_weapon" ) )
 	string weaponClass = RemoveNonPrecached(allowedWeapons).getrandom()
+	
+	bool constrain = !ent.HasKey( "start_constrained" ) || ( ent.HasKey( "start_constrained" ) && ent.GetValueForKey( "start_constrained" ) == "1" )
+	entity weapon
 
+	if ( constrain ) // make all weapons constrained for now
+	{
+		weapon = CreateWeaponEntityByNameConstrained( weaponClass, ent.GetOrigin(), ent.GetAngles() )
+	}
+	else
+	{
+		weapon = CreateWeaponEntityByNameWithPhysics( weaponClass, ent.GetOrigin(), ent.GetAngles() )
+		weapon.SetVelocity( <0,0,0> )
+	}
+	GenerateNPCMods( weapon )
 	#if DEV
 	if ( !IsTestMap() )
 	{
@@ -999,19 +1013,6 @@ void function CreateWeaponPickup( entity ent )
 			doMarkAsLoadoutPickup = true
 	}
 
-	bool constrain = !ent.HasKey( "start_constrained" ) || ( ent.HasKey( "start_constrained" ) && ent.GetValueForKey( "start_constrained" ) == "1" )
-	entity weapon
-
-	if ( constrain ) // make all weapons constrained for now
-	{
-		weapon = CreateWeaponEntityByNameConstrained( weaponClass, ent.GetOrigin(), ent.GetAngles() )
-	}
-	else
-	{
-		weapon = CreateWeaponEntityByNameWithPhysics( weaponClass, ent.GetOrigin(), ent.GetAngles() )
-		weapon.SetVelocity( <0,0,0> )
-	}
-
 	SetTargetName( weapon, "leveled_" + weaponClass )
 	if ( ent.HasKey( "fadedist" ) )
 	{
@@ -1044,8 +1045,7 @@ void function CreateWeaponPickup( entity ent )
 	{
 		weapon.SetParent( ent.GetParent(), "", true )
 	}
-
-	GenerateNPCMods(weapon)
+	
 	// for sp_training, to replenish the weapon when it's picked up -sean
 	ent.e.attachedEnts.append( weapon )
 }

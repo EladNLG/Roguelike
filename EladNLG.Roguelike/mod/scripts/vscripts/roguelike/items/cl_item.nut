@@ -2,6 +2,7 @@ global function ClItem_Init
 global function ReplaceWithSeries
 global function ServerCallback_ObtainedItem
 global function ServerCallback_SetItemAmount
+global function ServerCallback_SetLoanAmount
 global function CashAmountChanged
 
 const RUI_TEXT_RIGHT = $"ui/cockpit_console_text_top_right.rpak"
@@ -39,11 +40,16 @@ struct
     var flyoutRUI
     var drawbackRUI
     var moneyRUI
+    var loanRUI
+    int requiredToPay = 0
     BarTopoData& data
 } file
 
 void function ClItem_Init()
 {
+    if (IsLobby()) return
+
+    
     AddCallback_UseEntGainFocus( OnEntGainedFocus )
     AddCallback_UseEntLoseFocus( OnEntLostFocus )
     AddCallback_OnPlayerLifeStateChanged( OnPlayerLifeStateChanged )
@@ -60,19 +66,20 @@ void function OnEntitiesDidLoad()
     RuiSetFloat2( rui, "msgPos", <0.05, 0.1, 0> )
     RuiSetFloat3( rui, "msgColor", <0.9, 0.55, 0.0> )
     RuiSetString( rui, "msgText", "0$" )
-    RuiSetFloat( rui, "msgFontSize", 90.0 )
+    RuiSetFloat( rui, "msgFontSize", 60.0 )
     RuiSetFloat( rui, "msgAlpha", 0.9 )
-    RuiSetFloat( rui, "thicken", 0.0 )
+    RuiSetFloat( rui, "thicken", 0.5 )
     file.moneyRUI = rui
     rui = RuiCreate( RUI_TEXT_LEFT, clGlobal.topoCockpitHud, RUI_DRAW_COCKPIT, 0 )
     RuiSetInt( rui, "maxLines", 1 )
     RuiSetInt( rui, "lineNum", 0 )
-    RuiSetFloat2( rui, "msgPos", <0.05, 0.175, 0> )
+    RuiSetFloat2( rui, "msgPos", <0.05, 0.15, 0> )
     RuiSetFloat3( rui, "msgColor", <0.9, 0.55, 0.0> )
-    RuiSetString( rui, "msgText", "MONEY" )
-    RuiSetFloat( rui, "msgFontSize", 45.0 )
+     RuiSetString( rui, "msgText", "" )
+    RuiSetFloat( rui, "msgFontSize", 30.0 )
     RuiSetFloat( rui, "msgAlpha", 0.9 )
     RuiSetFloat( rui, "thicken", 0.0 )
+    file.loanRUI = rui
 
     file.data = BasicImageBar_CreateRuiTopo( <0,0,0>, < -0.055, -0.2, 0>, 1, 1, eDirection.right, false )
     thread MoneyRUI_Update()
@@ -98,6 +105,9 @@ void function MoneyRUI_Update()
     float lastTSLDC = 0
     while (true)
     {
+        if (file.requiredToPay > 0)
+            RuiSetString( file.loanRUI, "msgText", "REQUIRED TO PAY LOAN: " + file.requiredToPay)
+        else RuiSetString( file.loanRUI, "msgText", "" )
         RuiSetString( file.moneyRUI, "msgText", int(GraphCapped(sqrt(Time()), sqrt(lastTimeCashChanged), sqrt(lastTimeCashChanged + 1), lastCashAmount, curCashAmount)) + "$")
         WaitFrame()
     }
@@ -242,6 +252,11 @@ void function ItemDropGainedFocus( entity ent )
 
     RuiSetGameTime( file.drawbackRUI, "startTime", Time() - 0.5 )
     RuiSetFloat( file.drawbackRUI, "duration", 99999.9 )
+    
+    RuiSetFloat( file.drawbackRUI, "underlineHeight", 0.0 )
+    RuiSetFloat( file.drawbackRUI, "underlineWidth", 0.0 )
+    RuiSetFloat( file.flyoutRUI, "underlineHeight", 0.0 )
+    RuiSetFloat( file.flyoutRUI, "underlineWidth", 0.0 )
 
     RuiTrackFloat3( file.drawbackRUI, "pos", ent, RUI_TRACK_OVERHEAD_FOLLOW )
 
@@ -252,12 +267,16 @@ void function ItemDropGainedFocus( entity ent )
     
 }
 
+void function ServerCallback_SetLoanAmount( int amount )
+{
+    file.requiredToPay = amount
+}
+
 void function OnEntLostFocus( entity ent )
 {
-    if (IsValid(ent) && ent.GetScriptName() == "roguelike_chest")
-        clGlobal.levelEnt.Signal( "ChestLostFocus" )
-    if (file.curItem != ent)
-        return
+    clGlobal.levelEnt.Signal( "ChestLostFocus" )
+    //if (file.curItem != ent)
+    //    return
     
     if (file.flyoutRUI != null)
     {

@@ -1,0 +1,11 @@
+"WeaponData"
+{
+    Mods
+    {
+        infinite_charge
+        {
+            "charge_time"   "45"
+            "charge_levels" "100"
+        }
+    }
+}

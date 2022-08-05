@@ -1,10 +1,10 @@
 untyped
 global function Shop_Spawn
-global function RandomlyPlaceShop
 global function Roguelike_GetStartPoint
+global function RandomlyPlaceShop
+global function GetShopSpawnLocation
 
 global entity s2s_mover = null
-
 // model to represent the interactable shop
 const asset SHOP_INTERACTABLE_MODEL = $"models/beacon/crane_room_monitor_console.mdl"
 const asset CHEST_INTERACTABLE_MODEL = $"models/containers/pelican_case_large.mdl"
@@ -13,7 +13,7 @@ const asset CHEST_INTERACTABLE_MODEL_OPEN = $"models/containers/pelican_case_lar
 //const asset SHOP_INTERACTABLE_MODEL = $"models/humans/grunts/imc_grunt_rifle.mdl"
 
 
-struct 
+struct
 {
     entity shop
 } file
@@ -51,14 +51,16 @@ vector function GetShopSpawnLocation()
         case "sp_beacon_spoke0":
             return < -959.501, 1378.04, 392.031>
         case "sp_crashsite":
-            // next to BT - the player will be able to access it 3 times (after 18 hour cutscene, getting first bat, and before entering BT. 
-            // 
+            // next to BT - the player will be able to access it 3 times (after 18 hour cutscene, getting first bat, and before entering BT.
+            //
             return < -510.4, -292.529, 23.6106 >
+        case "sp_sewers1":
+            return < 10800, 6620, 784 >
         case "sp_training":
             return < -7083.85, -4625.5, -159.969 >
         case "sp_boomtown":
             return < -6927.13, 9099.54, 7424.03>
-        
+
     }
     return <0,0,0>
 }
@@ -85,19 +87,20 @@ vector function GetShopSpawnAngles()
             //if (Flag( "Spoke0Completed" ))
             //    return <12714.5, -2154.05, 84.0313>
             //else return <13392.5, -10021.2, 1072.85>
-        
+
         case "sp_beacon_spoke0":
             return < 0, -90, 0>
         case "sp_crashsite":
-            // next to BT - the player will be able to access it 3 times (after 18 hour cutscene, getting first bat, and before entering BT. 
-            // 
+            // next to BT - the player will be able to access it 3 times (after 18 hour cutscene, getting first bat, and before entering BT.
+            //
             return < 0, 0, 0 >
         case "sp_training":
             return < 0, -45, 0 >
         case "sp_boomtown":
             return <0, 45, 0 >
-             
-        
+
+        case "sp_sewers1":
+            return <0,180,0>
     }
     return <0,0,0>
 }
@@ -120,14 +123,14 @@ bool function Run( entity player, array<string> args )
         int i = expect int( cmd.find("'") )
         cmd = cmd.slice(0, i) + "\"" + cmd.slice(i+1, cmd.len())
     }
-    try 
+    try
     {
-        printt("Running:", cmd)
+        //printt("Running:", cmd)
         compilestring( cmd )()
     }
     catch (ex)
     {
-        printt(ex)
+        //printt(ex)
     }
 
     return true
@@ -135,9 +138,11 @@ bool function Run( entity player, array<string> args )
 
 void function Shop_Spawn()
 {
+    if (IsLobby()) return
 	//PrecacheWeapon( "debug_tool" )
     AddClientCommandCallback( "run", Run )
     AddClientCommandCallback( "give_weapon", Give )
+    AddClientCommandCallback( "spawn_item", SpawnItem )
     PrecacheModel( SHOP_INTERACTABLE_MODEL )
 
     PrecacheModel( $"models/weapons/ammoboxes/ammobox_01.mdl" )
@@ -158,8 +163,17 @@ void function Shop_Spawn()
     file.shop = shop
 
     AddCallback_OnUseEntity( shop, OpenShopMenu )
-    //foreach 
+    //foreach
     AddCallback_OnClientConnected( DispatchShop )
+    ServerCommand("dof_enable 0")
+
+    for (int i = 0; i < GetChestSpawnBanBounds().len(); i += 2)
+    {
+        Roguelike_DebugDrawBox( GetChestSpawnBanBounds()[i], GetChestSpawnBanBounds()[i+1], 255, 0, 0 )
+    }
+
+    Roguelike_DebugDrawBox( GetChestBounds()[0], GetChestBounds()[1], 0, 255, 0 )
+    Roguelike_DebugDrawBox( GetChestBounds(1)[0], GetChestBounds(1)[1], 0, 255, 0 )
 
     if (GetChestSpawnBanBounds().len() % 2 > 0)
     {
@@ -174,8 +188,25 @@ void function Shop_Spawn()
         {
             if (RandomlyPlaceShop(i))
                 i++
+            //print("randomly place shop end")
         }
     }
+}
+
+bool function SpawnItem( entity player, array<string> args )
+{
+    if (!GetConVarBool("sv_cheats")) return false
+    try
+    {
+        CreateItem( args[0], player.GetOrigin(), player.GetAngles() )
+    }
+    catch (ex)
+    {
+        //t(ex)
+        //CodeWarning("Unknown Item.")
+        //return false
+    }
+    return true
 }
 
 bool function Give( entity player, array<string> args)
@@ -212,6 +243,9 @@ bool function Give( entity player, array<string> args)
         case "2":
             offhandSlot = 2;
             break
+        case "b":
+            offhandSlot = 4;
+            break
     }
 
     if (!WeaponIsPrecached(weapon))
@@ -242,9 +276,11 @@ bool function Give( entity player, array<string> args)
         if (player.GetMainWeapons().len() >= 2)
         #endif
             player.TakeWeaponNow( player.GetActiveWeapon().GetWeaponClassName() )
-        
+
         entity weapon = player.GiveWeapon( weapon )
-        try 
+
+        weapon.Highlight_SetCurrentContext( 0 )
+        try
         {
             weapon.SetMods( args.slice(1, args.len()) )
         }
@@ -253,15 +289,27 @@ bool function Give( entity player, array<string> args)
 
         }
     }
-    
+
     return true
 }
 
 function OpenShopMenu( shop, player )
 {
-    printt("FUCKFUCKFUCKFUCK")
+    //printt("FUCKFUCKFUCKFUCK")
     expect entity( player )
+    expect entity( shop )
+    ServerToClientStringCommand( player, "shopitems " + GetItemArrayString(Roguelike_GetItemsInShop()))
     Remote_CallFunction_NonReplay(player, "ServerCallback_OpenShop")
+}
+
+string function GetItemArrayString( array<string> mods )
+{
+	string s = ""
+	for (int i = 0; i < mods.len(); i++) {
+		s += mods[i]
+		if (i < mods.len() - 1) s += " "
+	}
+	return s
 }
 
 void function DispatchShop( entity player )
@@ -270,8 +318,68 @@ void function DispatchShop( entity player )
     Remote_CallFunction_NonReplay( player, "ServerCallback_OnShopSpawned", file.shop.GetEncodedEHandle() )
 }
 
+// <0,0,0>
+// <1,1,1>
+
+// get
+
+// <0,0,1>
+// <1,1,0>
+
+// <0,1,0>
+// <1,0,1>
+
+// <1,0,0>
+// <0,1,1>
+void function Roguelike_DebugDrawBox( vector mins, vector maxs, int r, int g, int b, bool drawThroughWorld = true, float duration = 9999.9 )
+{
+    vector minX = mins
+    minX.x = maxs.x
+
+    vector maxX = maxs
+    maxX.x = mins.x
+
+    vector minY = mins
+    minY.y = maxs.y
+
+    vector maxY = maxs
+    maxY.y = mins.y
+
+    vector minZ = mins
+    minZ.z = maxs.z
+
+    vector maxZ = maxs
+    maxZ.z = mins.z
+
+    // 12 edges
+    DebugDrawLine(mins, minX, r, g, b, !drawThroughWorld, duration)
+    DebugDrawLine(mins, minY, r, g, b, !drawThroughWorld, duration)
+    DebugDrawLine(mins, minZ, r, g, b, !drawThroughWorld, duration)
+    DebugDrawLine(maxs, maxX, r, g, b, !drawThroughWorld, duration)
+    DebugDrawLine(maxs, maxY, r, g, b, !drawThroughWorld, duration)
+    DebugDrawLine(maxs, maxZ, r, g, b, !drawThroughWorld, duration)
+
+    DebugDrawLine(minX, maxY, r, g, b, !drawThroughWorld, duration)
+    DebugDrawLine(minX, maxZ, r, g, b, !drawThroughWorld, duration)
+    DebugDrawLine(minY, maxX, r, g, b, !drawThroughWorld, duration)
+    DebugDrawLine(minY, maxZ, r, g, b, !drawThroughWorld, duration)
+    DebugDrawLine(minZ, maxX, r, g, b, !drawThroughWorld, duration)
+    DebugDrawLine(minZ, maxY, r, g, b, !drawThroughWorld, duration)
+
+    DebugDrawLine(mins, maxZ, r, g, b, !drawThroughWorld, duration)
+    DebugDrawLine(minX, maxs, r, g, b, !drawThroughWorld, duration)
+    DebugDrawLine(minY, maxs, r, g, b, !drawThroughWorld, duration)
+    DebugDrawLine(minZ, maxs, r, g, b, !drawThroughWorld, duration)
+
+    DebugDrawLine(maxs, minZ, r, g, b, !drawThroughWorld, duration)
+    DebugDrawLine(maxX, mins, r, g, b, !drawThroughWorld, duration)
+    DebugDrawLine(maxY, mins, r, g, b, !drawThroughWorld, duration)
+    DebugDrawLine(maxZ, mins, r, g, b, !drawThroughWorld, duration)
+}
+
 bool function RandomlyPlaceShop(int s = 0, entity forceParent = null)
 {
+    //print("randomly place shop start")
     entity worldspawn = GetEnt( "worldspawn" )
     vector pos = <0,0,0>
     array<vector> bounds = GetChestBounds(s)
@@ -295,9 +403,7 @@ bool function RandomlyPlaceShop(int s = 0, entity forceParent = null)
 
     TraceResults tr = TraceHull( pos, endPos, < -31, -31, 0 >, < 31, 31, 53 >, null, TRACE_MASK_BLOCKLOS, TRACE_COLLISION_GROUP_NONE )
 
-    if (tr.startSolid) return false
-
-    if (tr.fraction >= 1.0) return false
+    if (tr.startSolid || tr.allSolid || tr.fraction <= 0.2 || tr.fraction >= 1.0) return false
 
     array<vector> chestBanBounds = GetChestSpawnBanBounds()
     for (int i = 0; i < chestBanBounds.len(); i += 2)
@@ -309,21 +415,43 @@ bool function RandomlyPlaceShop(int s = 0, entity forceParent = null)
         }
         if (PointIsWithinBounds(tr.endPos, chestBanBounds[i], chestBanBounds[i + 1]))
         {
-            print("PointIsWithinBounds:\nEND POS:" + tr.endPos + "\nMINS:" + chestBanBounds[i] + "\nMAXS:" + chestBanBounds[i + 1] + "\n") 
+            //print("PointIsWithinBounds:\nEND POS:" + tr.endPos + "\nMINS:" + chestBanBounds[i] + "\nMAXS:" + chestBanBounds[i + 1] + "\n")
             return false
         }
     }
 
-    //print("PLACING SHOP AT " + tr.endPos)
-    entity shop = CreatePropDynamic( CHEST_INTERACTABLE_MODEL, tr.endPos, <0, RandomFloatRange(0, 180), 0>, 6 )
+    //PrintTraceResults( tr )
+    entity shop = CreateEntity( "prop_dynamic" )
+    shop.SetModel( CHEST_INTERACTABLE_MODEL )
+    shop.SetOrigin( tr.endPos )
+    shop.SetAngles( <0, RandomFloatRange(0, 180), 0> )
+    shop.kv.solid = 6
     if ( forceParent != null ) shop.SetParent(forceParent)
-    else if (tr.hitEnt.GetClassName() != "worldspawn") shop.SetParent( tr.hitEnt )
+    else if (tr.hitEnt.GetClassName() != "worldspawn") 
+    {
+        if (tr.hitEnt.GetScriptName() == "roguelike_chest") return false
+        shop.SetParent( tr.hitEnt )
+    }
+    //if (RandomFloat(1.0) < 0.1)
+    shop.kv.rendercolor = "255 255 255"
+    DispatchSpawn( shop )
     shop.SetUsable()
     shop.SetScriptName("roguelike_chest")
     //shop.SetUsableByGroup( "pilot" )
-    shop.SetUsePrompts( "Hold %use% to open chest (" + GetChestCost() + "$)", "Press %use% to open chest (" + GetChestCost() + "$)" )
+    float multiplier = 1
+    string name = "Chest"
+    if (xorshift_range( 0.0, 1.0, GetRoguelikeSeed() + 1 ) < 0.3333)
+    {
+        shop.s.weights <- [0.0, 10.0, 2.0, 0.0, 0.0]
+        multiplier *= 2
+        name = "Large Chest"
+        Highlight_SetNeutralHighlight( shop, "roguelike_large_chest" )
+    }
+    else Highlight_SetNeutralHighlight( shop, "roguelike_chest" )
+    shop.s.multiplier <- multiplier
+    shop.SetUsePrompts( "Hold %use% to open " + name + " (" + GetChestCost(multiplier) + "$)", "Press %use% to open " + name + " (" + GetChestCost(multiplier) + "$)" )
     //DispatchSpawn( shop )
-    Highlight_SetNeutralHighlight( shop, "roguelike_chest" )
+    //Highlight_SetNeutralHighlight( shop, "roguelike_chest" )
 
     AddCallback_OnUseEntity( shop, OpenChest )
     return true
@@ -333,23 +461,41 @@ function OpenChest( chest, player )
 {
     expect entity( player )
     expect entity( chest )
-    if (GetMoney( player ) < GetChestCost())
-    { 
+    float multiplier = expect float( chest.s.multiplier )
+    if (GetMoney( player ) < GetChestCost(multiplier))
+    {
         EmitSoundOnEntity( player, "coop_sentrygun_deploymentdeniedbeep" )
         return
     }
-    print(chest.GetForwardVector())
+    //print(chest.GetForwardVector())
     bool shouldReverseChest = DotProduct( player.GetViewForward(), AnglesToRight( chest.GetAngles() ) * -1 ) > 0
     if (shouldReverseChest)
     {
         chest.SetAngles( chest.GetAngles() + <0, 180, 0> )
     }
-    RemoveMoney( player, GetChestCost() )
+    RemoveMoney( player, GetChestCost(multiplier) )
     EmitSoundOnEntity( player, "Timeshift_Scr_StalkerPodOpen" )
     chest.UnsetUsable()
     //player.SetModel( CHEST_INTERACTABLE_MODEL_OPEN )
     chest.SetModel( CHEST_INTERACTABLE_MODEL_OPEN )
-    CreateItem( Roguelike_GetRandomItem(), chest.GetOrigin() + <0, 0, 30>, <0,0,0> )
+    string item = ""
+    if ("weights" in chest.s)
+    {
+        array arr = expect array( chest.s.weights )
+        array<float> arrF = []
+        foreach (var v in arr)
+        {
+            expect float(v)
+            arrF.append(v)
+            //printt(v)
+        }
+        item = Roguelike_GetRandomItemWithCustomWeights( arrF )
+    }
+    else item = Roguelike_GetRandomItem()
+    CreateItem( item, chest.GetOrigin() + <0, 0, 30>, <0,0,0> )
+
+    // nobody stays in an area for more than 2 minutes... right?
+    thread DestroyAfterDelay(chest, 120)
 }
 
 array<vector> function GetChestBounds(int s = 0)
@@ -364,8 +510,8 @@ array<vector> function GetChestBounds(int s = 0)
             return [ < -8000, -12000, -100>, <2000, 6000, 400>]
         case "sp_timeshift_spoke02":
             if (s % 2 == 0)
-                return [ < 0, -6000, -800>, <13000, 6000, 1200>]
-            else return [ < 0, -6000, 6800>, <13000, 6000, 13000>]
+                return [ < 0, -6000, -800>, <13000, 6000, 900>]
+            else return [ < 0, -6000, -800 + 11520>, <13000, 6000, 900 + 11520>]
         case "sp_sewers1":
             return [ < -11000, -14000, 0>, <11000, 9400, 3500>]
         case "sp_s2s":
@@ -377,10 +523,12 @@ array<vector> function GetChestBounds(int s = 0)
             return [< -2000, -8000, -2000>, <2000, 8000, 1000> ]
         case "sp_crashsite":
             return [ < -(1<<14) + 2000, -(1<<14) + 2000, 0 >, < (1<<14) - 2000, (1<<14) - 2000, 1500 > ]
+        case "mp_thaw":
+            return [ < -2900, -5650, -500>, <5000, 4400, 400> ]
     }
 
     return [ < -(1<<14) + 2000, -(1<<14) + 2000, -(1<<14) + 2000 >, < (1<<14) - 2000, (1<<14) - 2000, (1<<14) - 2000 > ]
-} 
+}
 
 int function GetChestSpawnAmount()
 {
@@ -389,6 +537,8 @@ int function GetChestSpawnAmount()
         case "sp_training":
             return 100
         case "sp_boomtown":
+            return 100
+        case "mp_thaw":
             return 100
     }
     return 250
@@ -408,11 +558,16 @@ array<vector> function GetChestSpawnBanBounds()
 {
     switch (GetMapName())
     {
+        case "sp_training":
+            return [ < -14000, -13000, -60>, < 14000, -7600, 300> ]
+        case "sp_crashsite":
+            return [ < -1350, -1600, 350>, <5000, 5000, 1500>,
+                     < -3600, -8000, 0>, < -870, -1600, 2500>]
         case "sp_hub_timeshift":
         case "sp_timeshift_spoke02":
-            return [ < -MAX_WORLD_COORD,  -MAX_WORLD_COORD, 1000>, < MAX_WORLD_COORD, MAX_WORLD_COORD, 6000 >,
-            < -MAX_WORLD_COORD,  -MAX_WORLD_COORD, 13000>, < MAX_WORLD_COORD, MAX_WORLD_COORD, 16000 >,
-            <3000, -3000, 10000>, <12000, 3000, 11000>, 
+            return [ //< -MAX_WORLD_COORD,  -MAX_WORLD_COORD, 1000>, < MAX_WORLD_COORD, MAX_WORLD_COORD, 6000 >,
+            //< -MAX_WORLD_COORD,  -MAX_WORLD_COORD, 1000 + 11520>, < MAX_WORLD_COORD, MAX_WORLD_COORD, 6000 + 11520 >,
+            <3000, -3000, -700 + 11520>, <12000, 3000, -200 + 11520>,
             <3000, -3000, -700>, <12000, 3000, -200> ]
             break
         case "sp_s2s":

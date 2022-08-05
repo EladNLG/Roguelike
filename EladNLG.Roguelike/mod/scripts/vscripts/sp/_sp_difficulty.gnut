@@ -15,17 +15,17 @@ const float FRIENDLY_TVT_DAMAGE_SCALE = 0.2 // scale damage dealt by militia npc
 const float BT_TVT_DAMAGE_SCALE = 0.5 // scale damage dealt by BT npc against IMC titans
 const float PLAYER_TITAN_PVT_OUT_OF_VIEW_DAMAGE_FORGIVENESS = 0.4 // damage is multiplied by this amount for out of view enemies dealing damage to player (as titan)
 const float MFP_CHANCE_TO_HIT = 0.5 // Extra chance to miss if player is fast.
-const float DIFFICULTY_EASY_DAMAGE_SCALAR = 0.5 // damage against player is multiplied by this number on Easy.
+const float DIFFICULTY_EASY_DAMAGE_SCALAR = 1 // damage against player is multiplied by this number on Easy.
 const float DIFFICULTY_NORMAL_DAMAGE_SCALAR = 1 // damage against player is multiplied by this number on Normal.
-const float DIFFICULTY_HARD_DAMAGE_SCALAR = 1.5 // damage against player is multiplied by this number on Hard.
-const float DIFFICULTY_MASTER_DAMAGE_SCALAR = 1.9 // damage against player is multiplied by this number on Master.
+const float DIFFICULTY_HARD_DAMAGE_SCALAR = 1 // damage against player is multiplied by this number on Hard.
+const float DIFFICULTY_MASTER_DAMAGE_SCALAR = 1 // damage against player is multiplied by this number on Master.
 const float PLAYER_TITAN_DAMAGE_SCALAR = 1 // damage against player titan multiplied by this
 const float DIFFICULTY_MASTER_BOSS_HEALTH_SCALAR = 2.0 // boss health is scaled by this amount
 
 struct
 {
 	int lowestDifficulty = 999
-	float maxDamagePerHit
+	float maxDamagePerHit = 0.9
 } file
 
 void function UpdateSpDifficulty( entity player )
@@ -35,31 +35,27 @@ void function UpdateSpDifficulty( entity player )
 	{
 		// cone and aim patterns dictate how long it takes npcs to aim at a freshly visible target
 		case DIFFICULTY_EASY:
-			NPCSetAimConeFocusParams( 8, 3.5 )
+			NPCSetAimConeFocusParams( 0.2, 3.5 )
 			NPCSetAimPatternFocusParams( 5, 2.5, 0.2 )
 			NPCSetReacquireParams( 2.5, 2 )
-			file.maxDamagePerHit = 40
 			printt( "SP_Difficulty is: easy" )
 			break
 		case DIFFICULTY_NORMAL:
-			NPCSetAimConeFocusParams( 6, 3 )
+			NPCSetAimConeFocusParams( 0.2, 3 )
 			NPCSetAimPatternFocusParams( 5, 2.5, 0.2 )
 			NPCSetReacquireParams( 3, 2.5 )
-			file.maxDamagePerHit = 60
 			printt( "SP_Difficulty is: normal" )
 			break
 		case DIFFICULTY_HARD:
 			NPCSetAimConeFocusParams( 3, 2.0 )
 			NPCSetAimPatternFocusParams( 3, 0.5, 0.8 )
 			NPCSetReacquireParams( 4, 3 )
-			file.maxDamagePerHit = 70
 			printt( "SP_Difficulty is: hard" )
 			break
 		case DIFFICULTY_MASTER:
 			NPCSetAimConeFocusParams( 0.2, 1.0 )
 			NPCSetAimPatternFocusParams( 0.2, 0.1, 0.8 )
 			NPCSetReacquireParams( 5, 3.5 )
-			file.maxDamagePerHit = 80
 			printt( "SP_Difficulty is: master" )
 			break
 
@@ -181,8 +177,7 @@ void function SpPlayer_OnDamaged( entity player, var damageInfo )
 		if ( !DamageAlwaysLethal( damageInfo ) )
 		{
 			float recentDamage = GetTotalDamageTakenInTime( player, 0.25 )
-			float maxDamageAllowed = max( 5, file.maxDamagePerHit - recentDamage )
-
+			float maxDamageAllowed = max( 5, file.maxDamagePerHit * player.GetHealth() - recentDamage )
 
 			// make it possible to beat a Titan
 			if ( DamageInfo_GetDamage( damageInfo ) > maxDamageAllowed )
@@ -317,20 +312,20 @@ void function SetTitanProficiency( entity npcTitan )
 		int difficulty = GetSpDifficulty()
 		switch ( difficulty )
 		{
-			case DIFFICULTY_EASY:
+			/*case DIFFICULTY_EASY:
 				if ( !IsBossTitan( npcTitan ) )
 					npcTitan.kv.WeaponProficiency = eWeaponProficiency.POOR
 				else
 					npcTitan.kv.WeaponProficiency = eWeaponProficiency.GOOD
 				break
 
-			case DIFFICULTY_NORMAL:
 				if ( !IsBossTitan( npcTitan ) )
 					npcTitan.kv.WeaponProficiency = eWeaponProficiency.AVERAGE
 				else
 					npcTitan.kv.WeaponProficiency = eWeaponProficiency.VERYGOOD
-				break
-
+				break*/
+			case DIFFICULTY_EASY:
+			case DIFFICULTY_NORMAL:
 			case DIFFICULTY_HARD:
 				if ( !IsBossTitan( npcTitan ) )
 					npcTitan.kv.WeaponProficiency = eWeaponProficiency.GOOD
@@ -475,8 +470,9 @@ void function SetProficiencyFromSPDifficulty( entity soldier )
 {
 	entity enemy = soldier.GetEnemy()
 	int weaponProficiency = eWeaponProficiency.GOOD
+	soldier.kv.accuracyMultiplier = 2
 
-	if ( IsAlive( enemy ) && enemy.IsPlayer() && !IsValidRocketTarget( enemy ) )
+	/*if ( IsAlive( enemy ) && enemy.IsPlayer() && !IsValidRocketTarget( enemy ) )
 	{
 		switch ( GetSpDifficulty() )
 		{
@@ -497,7 +493,7 @@ void function SetProficiencyFromSPDifficulty( entity soldier )
 				soldier.kv.accuracyMultiplier = 8
 				break
 		}
-	}
+	}*/
 
 	soldier.kv.WeaponProficiency = weaponProficiency
 }

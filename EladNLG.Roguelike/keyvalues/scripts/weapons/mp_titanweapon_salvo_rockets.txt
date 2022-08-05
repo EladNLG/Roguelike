@@ -1,0 +1,5 @@
+WeaponData
+{
+	//"fire_mode"   									"offhand_instant"
+	//"alwaysShow"									"1"
+}

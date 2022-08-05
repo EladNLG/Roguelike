@@ -1,0 +1,41 @@
+"pilot_solo"
+{
+	"global"
+	{
+		//"pitchMaxUp"					"90"
+		//"pitchMaxDown"					"90"
+		"wallrunMaxSpeedHorizontal"		"1000"
+		//wallrunAccelerateVertical 	1360
+		//wallrunAccelerateHorizontal 2400
+		sprint 0
+		friction		1
+
+		dodge			1
+		dodgeImpactTable		"titan_dodge"
+		rumbleOnDodge	"rumble_titan_dash"
+		dodgeDuration		0.1
+        dodgeAnimDuration	0.0
+        dodgeInterval		0.2
+        dodgeSpeed			500
+        dodgeStopSpeed		0
+        dodgeHeight			30 //25
+        dodgeHeightMax		30
+        dodgePowerDrain		100
+        powerregenrate		20.0
+        dodgePowerDelay		0.2
+		sound_dodge_1p			"tone_dash_1p"
+		sound_dodge_3p			"tone_dash_3p"
+		sound_dodgeFail			"Player.DodgeFail"
+		ClassMods
+		{
+			dodge_pilot
+			{
+				dodge 1
+			}
+		}
+	}
+	"stand"
+	{
+		speed 243
+	}
+}

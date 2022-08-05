@@ -1,0 +1,24 @@
+#base "_base_shotgun.txt"
+#base "_base_hitscan.txt"
+WeaponData
+{
+    Mods
+    {
+        choked
+        {
+            "spread_stand_hip"								"*0.75"
+            "spread_stand_hip_run"							"*0.75"
+            "spread_stand_hip_sprint"                       "*0.75"
+            "spread_crouch_hip"   							"*0.75"
+            "spread_air_hip"  								"*0.75"
+            "spread_stand_ads"								"*0.75"
+            "spread_crouch_ads"   							"*0.75"
+            "spread_air_ads"  								"*0.75"
+            "spread_wallrunning"  							"*0.75"
+            "spread_wallhanging"  							"*0.75"
+            "damage_far_value"                "*5"
+            "damage_far_distance"           "*2.5"
+		    "damage_near_distance"			"*1.5"
+        }
+    }
+}

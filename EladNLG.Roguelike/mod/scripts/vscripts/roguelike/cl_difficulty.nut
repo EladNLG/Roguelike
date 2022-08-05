@@ -4,10 +4,12 @@ global function ServerCallback_UnfreezeTimer
 global function ServerCallback_HideTimer
 global function ServerCallback_ShowTimer
 
+global int roguelikeDifficulty
+
 const RUI_TEXT_RIGHT = $"ui/cockpit_console_text_top_right.rpak"
 const RUI_TEXT_LEFT = $"ui/cockpit_console_text_top_left.rpak"
 
-struct 
+struct
 {
     var timeRUI
     var timeLabelRUI
@@ -60,6 +62,8 @@ array<vector> difficultyColors = [
 
 void function Difficulty_Init()
 {
+    //if (GetConVarInt("roguelike_time") <= 0)
+    //    RunUIScript( "ResetTimer" )
     RegisterSignal( "RoguelikeTimerOff" )
     AddCallback_EntitiesDidLoad( EntitiesDidLoad )
 }
@@ -70,10 +74,10 @@ void function EntitiesDidLoad()
     var rui = RuiCreate( RUI_TEXT_RIGHT, clGlobal.topoCockpitHud, RUI_DRAW_COCKPIT, 0 )
     RuiSetInt( rui, "maxLines", 1 )
     RuiSetInt( rui, "lineNum", 0 )
-    RuiSetFloat2( rui, "msgPos", <0.95, 0.315, 0> )
+    RuiSetFloat2( rui, "msgPos", <0.95, 0.265, 0> )
     RuiSetFloat3( rui, "msgColor", <0.9, 0.1, 0.1> )
     RuiSetString( rui, "msgText", "HARD" )
-    RuiSetFloat( rui, "msgFontSize", 90.0 )
+    RuiSetFloat( rui, "msgFontSize", 60.0 )
     RuiSetFloat( rui, "msgAlpha", 0.9 )
     RuiSetFloat( rui, "thicken", 0.5 )
     file.difficultyRUI = rui
@@ -81,10 +85,10 @@ void function EntitiesDidLoad()
     rui = RuiCreate( RUI_TEXT_RIGHT, clGlobal.topoCockpitHud, RUI_DRAW_COCKPIT, 0 )
     RuiSetInt( rui, "maxLines", 1 )
     RuiSetInt( rui, "lineNum", 0 )
-    RuiSetFloat2( rui, "msgPos", <0.95, 0.265, 0> )
+    RuiSetFloat2( rui, "msgPos", <0.95, 0.225, 0> )
     RuiSetFloat3( rui, "msgColor", <0.9, 0.1, 0.1> )
     RuiSetString( rui, "msgText", "DIFFICULTY" )
-    RuiSetFloat( rui, "msgFontSize", 45.0 )
+    RuiSetFloat( rui, "msgFontSize", 30.0 )
     RuiSetFloat( rui, "msgAlpha", 0.9 )
     RuiSetFloat( rui, "thicken", 0.0 )
     file.difficultyLabelRUI = rui
@@ -95,17 +99,17 @@ void function EntitiesDidLoad()
     RuiSetFloat2( rui, "msgPos", <0.95, 0.1, 0> )
     RuiSetFloat3( rui, "msgColor", <0.55, 0.55, 0.55> )
     RuiSetString( rui, "msgText", "01:35" )
-    RuiSetFloat( rui, "msgFontSize", 90.0 )
+    RuiSetFloat( rui, "msgFontSize", 60.0 )
     RuiSetFloat( rui, "msgAlpha", 0.9 )
     RuiSetFloat( rui, "thicken", 0.5 )
     file.timeRUI = rui
     rui = RuiCreate( RUI_TEXT_RIGHT, clGlobal.topoCockpitHud, RUI_DRAW_COCKPIT, 0 )
     RuiSetInt( rui, "maxLines", 1 )
     RuiSetInt( rui, "lineNum", 0 )
-    RuiSetFloat2( rui, "msgPos", <0.95, 0.175, 0> )
+    RuiSetFloat2( rui, "msgPos", <0.95, 0.15, 0> )
     RuiSetFloat3( rui, "msgColor", <0.55, 0.55, 0.55> )
     RuiSetString( rui, "msgText", "TIME" )
-    RuiSetFloat( rui, "msgFontSize", 45.0 )
+    RuiSetFloat( rui, "msgFontSize", 30.0 )
     RuiSetFloat( rui, "msgAlpha", 0.9 )
     RuiSetFloat( rui, "thicken", 0.0 )
     file.timeLabelRUI = rui
@@ -115,13 +119,13 @@ void function EntitiesDidLoad()
     RuiSetFloat2( rui, "msgPos", <0.95, 0.4, 0> )
     RuiSetFloat3( rui, "msgColor", <0.55, 0.55, 0.55> )
     RuiSetString( rui, "msgText", "made by eladnlg" )
-    RuiSetFloat( rui, "msgFontSize", 45.0 )
+    RuiSetFloat( rui, "msgFontSize", 30.0 )
     RuiSetFloat( rui, "msgAlpha", 0.5 )
     RuiSetFloat( rui, "thicken", 0.0 )
 
     float vertMultiplier = COCKPIT_RUI_WIDTH / COCKPIT_RUI_HEIGHT
-    BarTopoData bg = BasicImageBar_CreateRuiTopo( <0,0,0>, < 0.375, -0.185, 0>, 0.15 + 0.005, 0.01 + 0.005 * vertMultiplier, eDirection.left, true )
-    file.difficultyBar = BasicImageBar_CreateRuiTopo( <0,0,0>, < 0.375, -0.185, 0>, 0.15, 0.01, eDirection.left, true, 1 )
+    BarTopoData bg = BasicImageBar_CreateRuiTopo( <0,0,0>, < 0.39, -0.24, 0>, 0.12 + 0.005, 0.005 + 0.005 * vertMultiplier, eDirection.left, true )
+    file.difficultyBar = BasicImageBar_CreateRuiTopo( <0,0,0>, < 0.39, -0.24, 0>, 0.12, 0.005, eDirection.left, true, 1 )
     //BasicImageBar_UpdateSegmentCount( bg, 3, 0.05 )
     BasicImageBar_UpdateSegmentCount( file.difficultyBar, 3, 0.05 )
     foreach (var rui in file.difficultyBar.imageRuis )
@@ -150,7 +154,6 @@ void function RestartUpdateWhenHUDOn()
 }
 
 bool signalledHideTimer = false
-const float TIME_PER_DIFFICULTY = 300
 void function DifficultyRUI_Update()
 {
     if (IsLobby()) return
@@ -175,29 +178,32 @@ void function DifficultyRUI_Update()
             clGlobal.levelEnt.EndSignal("RoguelikeTimerOff")
             calledEnd = true
         }
+        float timePerDifficulty = TIME_PER_DIFFICULTY / pow(GetLevelCountMultiplier(), GetConVarInt( "level_count" ))
         float time = Time() - GetGlobalNetTime("difficultyStartTime")
         float seconds = time % 60
         int minutes = int(time) / 60
-        int difficulty = int(min(time * 3 / TIME_PER_DIFFICULTY, 99) / 3)
-        float difficultyFrac = time % TIME_PER_DIFFICULTY / TIME_PER_DIFFICULTY
-        float timeSinceLastDifChange = time % (TIME_PER_DIFFICULTY / 3)
+        int difficulty = int(time / timePerDifficulty)
+        roguelikeDifficulty = int(time * 3 / timePerDifficulty)
+        float difficultyFrac = time % timePerDifficulty / timePerDifficulty
+        float timeSinceLastDifChange = time % (timePerDifficulty / 3)
 
         RuiSetString( file.timeRUI, "msgText", format("%02i:%02i", minutes, int(fabs(seconds))) )
-        
+
         BasicImageBar_SetFillFrac( file.difficultyBar, difficultyFrac )
-        vector curColor = difficultyColors[int(min(difficulty, difficultyColors.len() - 1))]
+        vector curColor = difficultyColors[int(max(min(difficulty, difficultyColors.len() - 1),0))]
         vector resultColor = <GraphCapped(timeSinceLastDifChange, 0, 3, 1, curColor.x),
                                 GraphCapped(timeSinceLastDifChange, 0, 3, 1, curColor.y),
                                 GraphCapped(timeSinceLastDifChange, 0, 3, 1, curColor.z)>
-        
+
         foreach (var rui in file.difficultyBar.imageRuis )
         {
             RuiSetFloat3( rui, "basicImageColor", resultColor )
         }
         RuiSetFloat3( file.difficultyRUI, "msgColor", resultColor )
-        RuiSetString( file.difficultyRUI, "msgText", difficulties[int(min(difficulty, difficulties.len() - 1))] )
+        RuiSetString( file.difficultyRUI, "msgText", difficulties[int(max(min(difficulty, difficulties.len() - 1), 0))] )
         RuiSetFloat3( file.difficultyLabelRUI, "msgColor", resultColor )
-        RuiSetFloat( file.difficultyRUI, "msgFontSize", 90.0 * min(1, 7.0 / difficulties[int(min(difficulty, difficulties.len() - 1))].len()) )
+        RuiSetString( file.difficultyLabelRUI, "msgText", "Level " + (roguelikeDifficulty + 1) )
+        RuiSetFloat( file.difficultyRUI, "msgFontSize", 45.0 * min(1, 13.0 / difficulties[int(max(min(difficulty, difficulties.len() - 1),0))].len()) )
 
         WaitFrame()
     }
@@ -221,7 +227,7 @@ void function ServerCallback_HideTimer()
 
 void function ServerCallback_HideTimer_Thread()
 {
-    while (file.bgBar.topoData.len() <= 0) 
+    while (file.bgBar.topoData.len() <= 0)
         WaitFrame()
     print("\n\n\n\nAAAAAAAAAAAAA")
     signalledHideTimer = true

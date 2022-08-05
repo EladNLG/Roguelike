@@ -1,0 +1,25 @@
+#base "_base_lmg.txt"
+#base "_base_hitscan.txt"
+WeaponData
+{
+    Mods
+    {
+        rampdown
+        {
+            "fire_rate"             "*3"
+            "fire_rate_max"         "*0.333"
+	        "fire_rate_max_time_speedup"	"*3.25"
+            "burst_or_looping_fire_sound_start_1p" "weapon_devotion_lastshot_1p"
+            "burst_or_looping_fire_sound_middle_1p"			"weapon_devotion_lastshot_1p"
+        }
+
+        it_never_ends
+        {
+            "fire_rate_max"         "++80"
+            "fire_rate_max_time_speedup"        "*9"
+            "ammo_clip_size"                "*3"
+            "ammo_stockpile_max"            "*3"
+            "ammo_default_total"            "*2"
+        }
+    }
+}

@@ -1,0 +1,12 @@
+"WeaponData"
+{
+    Mods
+    {
+        ap_rounds
+        {
+            "titanarmor_critical_hit_required"              "0"
+            "damage_near_value_titanarmor"					"*2.5"
+            "damage_far_value_titanarmor" 					"*2.5"
+        }
+    }
+}

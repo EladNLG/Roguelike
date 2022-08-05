@@ -28,7 +28,6 @@ global function CodeCallback_WeaponLoadoutPickup
 global function GetWeaponCooldownsForTitanLoadoutSwitch
 global function SetWeaponCooldownsForTitanLoadoutSwitch
 global function AssignDefaultNPCSidearm
-global function GetModWeight
 
 const float LOADOUT_SWITCH_COOLDOWN_PENALTY = 5.0  // 5 second penalty
 
@@ -568,6 +567,7 @@ array<string> function GetNPCDefaultWeapons()
 
 PilotLoadoutDef function GetPilotLoadoutForCurrentMapSP()
 {
+	ServerCommand("weapon_reparse")
 	PilotLoadoutDef pilotLoadout
 
 	pilotLoadout.name = GetMapName()
@@ -612,7 +612,7 @@ PilotLoadoutDef function GetPilotLoadoutForCurrentMapSP()
 			i--
 			continue;
 		}
-		maxWeight += GetModWeight(m)
+		maxWeight += GetModWeight(m, primary)
 	}
 
 	// add 3 mods
@@ -621,14 +621,14 @@ PilotLoadoutDef function GetPilotLoadoutForCurrentMapSP()
 		float selected = xorshift_range( 0.0, maxWeight )
 		foreach (string m in primaryMods)
 		{
-			if (GetModWeight(m) > selected)
+			if (GetModWeight(m, primary) > selected)
 			{
 				pilotLoadout.primaryMods.append(m)
 				primaryMods.remove(primaryMods.find(m))
-				maxWeight -= GetModWeight(m)
+				maxWeight -= GetModWeight(m, primary)
 				break;
 			}
-			selected -= GetModWeight(m)
+			selected -= GetModWeight(m, primary)
 		}
 	}
 
@@ -655,22 +655,26 @@ PilotLoadoutDef function GetPilotLoadoutForCurrentMapSP()
 			secondaryMods.remove(secondaryMods.find(m))
 			continue;
 		}
-		maxWeight += GetModWeight(m)
+		printt(m, "Weight:", GetModWeight(m, secondary))
+		maxWeight += GetModWeight(m, secondary)
 	}
 
 	modCount = int(ceil(pow(xorshift_range(0.0, 1.0), 3) * 5))
 	for (int i = 0; i < modCount; i++) {
+		if (maxWeight < 0.0)
+			break
 		float selected = xorshift_range( 0.0, maxWeight )
 		foreach (string m in secondaryMods)
 		{
-			if (GetModWeight(m) > selected)
+			if (GetModWeight(m, secondary) > selected)
 			{
 				pilotLoadout.secondaryMods.append(m)
 				secondaryMods.remove(secondaryMods.find(m))
-				maxWeight -= GetModWeight(m)
+				printt(m, "Removed Weight:", GetModWeight(m, secondary))
+				maxWeight -= GetModWeight(m, secondary)
 				break;
 			}
-			selected -= GetModWeight(m)
+			selected -= GetModWeight(m, secondary)
 		}
 	}
 
@@ -683,7 +687,7 @@ PilotLoadoutDef function GetPilotLoadoutForCurrentMapSP()
 	pilotLoadout.ordnance = RemoveNonPrecached(ordnanceListRand)[xorshift_range_int(0, RemoveNonPrecached(ordnanceListRand).len() - 1)]
 
 	array<string> specialListRand
-	specialListRand = ["mp_ability_cloak","mp_weapon_hard_cover","mp_weapon_grenade_sonar","mp_ability_grapple","mp_ability_heal","mp_ability_holopilot","mp_ability_shifter"]
+	specialListRand = ["mp_ability_cloak","mp_weapon_grenade_sonar","mp_ability_grapple","mp_ability_heal","mp_ability_shifter"]
 	if (RemoveNonPrecached(specialListRand).len() > 0)
 	{
 		int special = xorshift_range_int(0, RemoveNonPrecached(specialListRand).len())
@@ -703,43 +707,6 @@ PilotLoadoutDef function GetPilotLoadoutForCurrentMapSP()
 			break
 	}
 	return pilotLoadout
-}
-
-float function GetModWeight( string modName )
-{
-	switch (modName)
-	{
-		// add more chance to jump kit cause it coool
-		case "jump_kit":
-			return 10.0;
-			break;
-		// disable smart lock.. cause it doesn't work
-		case "smart_lock":
-			return 0.0;
-			break;
-		// same problem with this mod, forgot what it's called.
-		case "tactical_cdr_on_kill":
-			return 0.0;
-			break;
-		case "less_npc_burst":
-			return 0.0;
-			break;
-		// but let's compensate with useless mods that DO appear on your screen >:)))
-		case "silencer":
-			return 2.0;
-			break;
-		case "pro_screen":
-			return 2.0;
-			break;
-		case "pas_run_and_gun":
-			return 2.0;
-			break;
-		case "pas_fast_aim":
-			return 1.5;
-			break;
-	}
-	if (modName.find("burn_mod") != null) return 1.5
-	return 1.0;
 }
 
 array<string> attachments = ["hcog", "redline_sight", "holosight", "threat_scope", "aog", "iron_sights", "temp_sight", "scope_4x"]
@@ -1034,7 +1001,7 @@ void function SPTitanLoadout_SetupForLevelStart()
 	if ( trans != null )
 	{
 		expect LevelTransitionStruct( trans )
-		SetBTLoadoutsUnlockedBitfield( xorshift_range_int(1, 511) )
+		SetBTLoadoutsUnlockedBitfield( trans.titan_unlocksBitfield )
 
 		return
 	}
@@ -1046,7 +1013,7 @@ void function SPTitanLoadout_SetupForLevelStart()
 	{
 		int loadoutIndex = GetSPTitanLoadoutIndexForWeapon( weaponName )
 	}
-	SetBTLoadoutsUnlockedBitfield( xorshift_range_int(1, 511) )
+	SetBTLoadoutsUnlockedBitfield( 1 )
 }
 
 void function LoadoutsSP_OnPlayerRespawned( entity player )

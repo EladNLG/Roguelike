@@ -244,7 +244,7 @@ var function CreateWorldTopo( vector org, vector ang, float width, float height 
 	//DebugDrawAngles( org + right, ang, 10000 )
 	//DebugDrawAngles( org + down, ang, 10000 )
 
-	var topo = RuiTopology_CreatePlane( org, right, down, true )
+	var topo = RuiTopology_CreatePlane( org, right, down, false )
 	return topo
 }
 

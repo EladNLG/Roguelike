@@ -1,19 +1,65 @@
 globalize_all_functions
 
-global const PLAYER_HAS_ROGUELIKE_MOD = true
+global bool allowMP = true
+global bool allowSP = true
 
 array<var> function AddRoguelikeMenu( ComboStruct comboStruct )
 {
+    // check for the player if he has toggled the roguelike mod during this session,
+    // and wether it is off or on right now.
+    //
+    // if so, we have 
+    #if PLAYER_HAS_ROGUELIKE_MOD
+    switch (GetConVarInt("was_roguelike_on"))
+    {
+        // roguelike was off previously and we toggled it on.
+        case 0:
+        case 2:
+            thread OpenFuckedUp_Thread()
+            break
+        // roguelike was on for the entirety of this session.
+        case -1:
+        case 1:
+            allowMP = false
+            SetConVarInt("was_roguelike_on", 1)
+    }
+    #else
+    switch (GetConVarInt("was_roguelike_on"))
+    {
+        // roguelike was off for the entirety of this session.
+        case 1:
+        case 2:
+            thread OpenFuckedUp_Thread()
+            break
+        // roguelike was on previously and we toggled it off.
+        case -1:
+        case 0:
+            allowSP = false
+            SetConVarInt("was_roguelike_on", 0)
+            break
+    }
+    #endif
     AddComboButtonHeader( comboStruct, 0, "ROGUELIKE" )
     array<var> result = []
     result.append(AddComboButton( comboStruct, 0, 0, "New Run" ))
     result.append(AddComboButton( comboStruct, 0, 1, "Logbook" ))
-    result.append(AddComboButton( comboStruct, 0, 2, "Stats" ))
+    result.append(AddComboButton( comboStruct, 0, 2, "Stats" )) // maybe not
+    Hud_SetLocked( result[2], true )
     result.append(AddComboButton( comboStruct, 0, 3, "Play Campaign" ))
-    Hud_AddEventHandler( result[0], UIE_CLICK, NewRun )
+    Hud_AddEventHandler( result[0], UIE_CLICK, OpenNewRunMenu )// NewRun )
     Hud_AddEventHandler( result[1], UIE_CLICK, AdvanceMenuEventHandler(GetMenu("Logbook")) )
     Hud_AddEventHandler( result[3], UIE_CLICK, PlayCampaign )
     return result
+}
+
+void function OpenNewRunMenu(var button)
+{
+    if (!allowSP)
+    {
+        OpenSPDisabledPopup()
+        return
+    }
+    AdvanceMenu(GetMenu("StartRun"))
 }
 
 void function PlayCampaign(var button) {
@@ -22,15 +68,18 @@ void function PlayCampaign(var button) {
 
 void function NewRun( var button )
 {
+    int seed = int( Hud_GetUTF8Text( Hud_GetChild( GetMenu( "StartRun"), "SetSeed") ) )
     SetConVarInt( "player_xp", 0 )
     SetConVarInt( "player_level", 0 )
     SetConVarInt( "roguelike_time", 0 )
     SetConVarInt( "roguelike_seed", 0 )
-    SetConVarInt( "sp_startpoint", 6 )
+    SetConVarInt( "sp_startpoint", 7 )
+    SetConVarInt( "level_count", 0 )
     SetConVarString( "player_1_items", "" )
     SetConVarString( "player_2_items", "" )
     SetConVarString( "player_3_items", "" )
     SetConVarString( "player_4_items", "" )
+    SetConVarInt( "roguelike_difficulty", int( Hud_GetDialogListSelectionValue( GetDifficultyButton() ) ) )
     if (!NSIsModEnabled( "TF|Roguelike" ))
     {
         NSSetModEnabled( "TF|Roguelike", true )
@@ -38,4 +87,59 @@ void function NewRun( var button )
         ClientCommand( "uiscript_reset; map sp_crashsite" )
     }
     else ClientCommand( "map sp_crashsite" )
+}
+
+void function OpenSPDisabledPopup()
+{
+	DialogData dialogData
+	dialogData.header = "ROGUELIKE UNAVAILABLE"
+	dialogData.message = "To play roguelike, it needs to be toggled on. This requires a restart. Do you wish to toggle it on and close the game?"
+	dialogData.image = $"ui/menu/common/dialog_error"
+	AddDialogButton( dialogData, "#YES", void function() { 
+		NSSetModEnabled("TF|Roguelike", true)
+        thread QuitGameWithFrameDelay()
+	} )
+	AddDialogButton( dialogData, "#NO" )
+
+	OpenDialog(dialogData)
+}
+
+void function OpenMPDisabledPopup()
+{
+	DialogData dialogData
+	dialogData.header = "MULTIPLAYER UNAVAILABLE"
+	dialogData.message = "To play MP, roguelike needs to be toggled off. This requires a restart. Do you wish to toggle it off and close the game?"
+	dialogData.image = $"ui/menu/common/dialog_error"
+	AddDialogButton( dialogData, "#YES", void function() { 
+		NSSetModEnabled("TF|Roguelike", false)
+        thread QuitGameWithFrameDelay()
+	} )
+	AddDialogButton( dialogData, "#NO" )
+
+	OpenDialog(dialogData)
+}
+
+void function OpenFuckedUp_Thread()
+{
+	WaitFrame()
+	OpenFuckedUp()
+}
+
+void function QuitGameWithFrameDelay()
+{
+    WaitFrame()
+    ClientCommand("reload_mods; quit")
+}
+
+void function OpenFuckedUp()
+{
+	DialogData dialogData
+	dialogData.header = "ROGUELIKE ERROR"
+	dialogData.message = "Roguelike was toggled on/off manually. This makes both the campaign and multiplayer crash, unless a restart is done. Please close the game."
+	dialogData.image = $"ui/menu/common/dialog_error"
+
+	AddDialogButton( dialogData, "#OK", void function() { 
+        ClientCommand("quit")
+	} )
+	OpenDialog(dialogData)
 }

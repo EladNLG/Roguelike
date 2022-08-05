@@ -1,0 +1,35 @@
+#base "_base_hitscan.txt"
+WeaponData
+{
+    SP_BASE
+    {
+		"damage_near_value"   							"300"
+		"damage_far_value"								"300"
+		"damage_near_distance"							"200"
+		"damage_far_distance" 							"15000"
+		"damage_near_value_titanarmor"					"1025"
+		"damage_far_value_titanarmor" 					"725"
+		"damage_near_distance"							"4800"
+		"damage_far_distance" 							"5300"
+		"red_crosshair_range" 							"10000"   
+    }
+    Mods
+    {
+        long_charge
+        {
+            "damage_near_value"   							"*3"
+            "damage_far_value"								"*3"
+            "damage_near_value_titanarmor"					"*3"
+            "damage_far_value_titanarmor" 					"*3"
+            "charge_time"                                   "*1.5"
+        }
+        short_charge
+        {
+            "damage_near_value"   							"*0.8"
+            "damage_far_value"								"*0.8"
+            "damage_near_value_titanarmor"					"*0.8"
+            "damage_far_value_titanarmor" 					"*0.8"
+            "charge_time"                                   "*0.5"
+        }
+    }
+}

@@ -4,14 +4,7 @@ global function ItemDrops_Init
 global function CreateItem
 global function RemoveFromTimer
 global function RestartTimer
-
-global array<vector> roguelikeChatRarityColors = [
-    <0.8, 0.8, 0.8>, // common
-    <0.3, 0.9, 0.3>, // uncommon
-    <0.9, 0.3, 0.3>, // legendary
-    <0.3, 0.3, 0.9>, // umbral
-    <0.8, 0.4, 0.1> // titan
-]
+global function ColorToEscapeCode
 
 array<asset> itemModels = [
     $"models/weapons/ammoboxes/mags_cluster.mdl", 
@@ -35,13 +28,20 @@ void function RemoveFromTimer( float amount )
     SetGlobalNetTime( "difficultyStartTime", GetGlobalNetTime( "difficultyStartTime" ) + amount )
     ForceDifficultyCallbacks()
 }
-
+void function AddWeaponCallback()
+{
+}
 void function ItemDrops_Init()
 {
+    if (IsLobby()) return
 	AddCallback_OnNPCKilled(  OnNPCKilled_DropItem )
     AddSpawnCallback( "player", PlayerConnected )
+    AddCallback_OnPlayerRespawned( PlayerRespawned )
+    
     AddClientCommandCallback( "give_item", GiveItem )
+    #if SP
     AddCallback_OnLevelEnd( OnLevelEnd )
+    #endif
 }
 
 bool function GiveItem( entity player, array<string> args )
@@ -74,14 +74,29 @@ bool function GiveItem( entity player, array<string> args )
     return true
 }
 
+void function CheckLoan( entity player )
+{
+    int loanStacks = expect int( player.s.hasLoan )
+    int loanPaybackNeeded = loanStacks * GetChestCost() * 8
+
+    if (GetMoney( player ) < loanPaybackNeeded)
+        Roguelike_GiveEntityItem( player, "fatigue" )
+}
+
 void function OnLevelEnd( string mapName, LevelTransitionStruct trans )
 {
     foreach ( index, player in GetPlayerArray())
     {
         if (index > 3) break
+        if (player.s.hasLoan)
+            CheckLoan(player)
+        AddXP( GetMoney( player ) )
+        RemoveMoney( player, GetMoney( player ) )
         SetConVarString("player_" + (index + 1) + "_name", player.GetPlayerName() )
+        SetConVarString("player_" + (player.GetPlayerIndex() + 1) + "_items", GetItemConVarValue( player ) )
     }
-    SetConVarInt("roguelike_time", int(Time() - GetGlobalNetTime("difficultyStartTime")))
+    SetConVarInt( "level_count", GetConVarInt("level_count") + 1 )
+    SetConVarInt( "roguelike_time", int( Time() - GetGlobalNetTime("difficultyStartTime") ) )
 }
 
 void function PlayerConnected( entity player )
@@ -99,6 +114,33 @@ void function PlayerConnected( entity player )
             //SetItemsForPlayerFromString(player, "")
             break
         }
+    }
+
+    player.s.hasLoan <- 0
+    if (Roguelike_GetItemCount( player, "loan") > 0)
+    {
+        player.s.hasLoan <- Roguelike_GetItemCount( player, "loan" )
+        AddMoney( player, Roguelike_GetItemCount( player, "loan" ) * GetChestCost() * 5 )
+    }
+    if (Roguelike_GetItemCount( player, "fatigue" ) > 0)
+    {
+        string fatigueStr = "fatigued..."
+        switch (Roguelike_GetItemCount(player, "fatigue"))
+        {
+            case 2:
+                fatigueStr = "VERY fatigued..."
+                break
+            case 3:
+                fatigueStr = "EXTREMELY fatigued..."
+                break
+            case 4:
+                fatigueStr = "wants to lay down a little..."
+                break
+            case 5:
+                fatigueStr = "died from lack of blood."
+        }
+        Chat_Impersonate( player, format(
+            "\x1b[38;2;150;150;150mis %s%s\x1b[38;2;150;150;150m", ColorToEscapeCode(roguelikeChatRarityColors[RARITY_LEGENDARY]), fatigueStr), false )
     }
     float startTime = Time()
     //if (GetMapName() == "sp_crashsite")
@@ -119,17 +161,22 @@ void function PlayerConnected( entity player )
             SetGlobalNetTime("difficultyStartTime", startTime - GetConVarInt("roguelike_time"))
     }
 
-    PlayerRespawned( player )
+    //PlayerRespawned( player )
 }
 
 void function PlayerRespawned( entity player )
 {
-    print("Pain")
-    foreach ( item in Roguelike_GetAllItems( player ) )
+    //print("Pain")
+    //print(TraceLine(player.GetOrigin(), player.GetOrigin() + <0,0, -1> * 500, [], TRACE_MASK_SOLID, TRACE_COLLISION_GROUP_NONE ).endPos)
+    foreach ( item in Roguelike_GetPlayerItems( player ) )
     {
-        print(item)
+        if (expect int( player.s.hasLoan ) > 0)
+            Remote_CallFunction_NonReplay( player, "ServerCallback_SetLoanAmount", player.s.hasLoan * GetChestCost() * 8 )
+        //print(item)
         foreach ( p in GetPlayerArray() )
+        {
             Remote_CallFunction_NonReplay( p, "ServerCallback_SetItemAmount", p.GetEncodedEHandle(), Roguelike_GetItemNumericId( item ), Roguelike_GetItemCount( player, item ) )
+        }
     }
     SetConVarString("player_" + (player.GetPlayerIndex() + 1) + "_items", GetItemConVarValue( player ) )
 }
@@ -145,6 +192,11 @@ void function OnNPCKilled_DropItem( entity npc, entity attacker, var damageInfo 
         itemRollsLost = 0
     }
     else itemRollsLost++*/
+
+    printt("Healing", attacker, "for", Roguelike_GetItemCount( attacker, "heal_on_kill") * 5 + "%", "(", 
+    int(attacker.GetMaxHealth() * 0.025 * Roguelike_GetItemCount( attacker, "heal_on_kill")), attacker.GetHealth() + int(attacker.GetMaxHealth() * 0.05 * Roguelike_GetItemCount( attacker, "heal_on_kill") ), ")")
+    if ( IsAlive( attacker) && Roguelike_GetItemCount( attacker, "heal_on_kill") > 0)
+        attacker.SetHealth( minint( attacker.GetMaxHealth(), attacker.GetHealth() + int(attacker.GetMaxHealth() * 0.05 * Roguelike_GetItemCount( attacker, "heal_on_kill") ) ) )
 }
 
 entity function CreateItem( string item, vector origin, vector angles )
@@ -182,7 +234,8 @@ entity function CreateItem( string item, vector origin, vector angles )
 
     SetOutline( prop_dynamic, roguelikeRarityColors[rarity], 6.5 )
 
-    thread DestroyAfterDelay(prop_dynamic, 30)
+    // doesn't cause pop-up to be removed, also can be fustrating
+    //thread DestroyAfterDelay(prop_dynamic, 30)
 
     return prop_dynamic
 }
@@ -202,7 +255,10 @@ function GrabItemCallback( string item )
         expect entity( player )
         expect entity( itemObj )
         Roguelike_GiveEntityItem( player, item )
+        Roguelike_UnlockAchievement( player, "pickup" )
         int rarity = Roguelike_GetItemRarity( item )
+        if (rarity == 2)
+            Roguelike_UnlockAchievement( player, "pickup_legendary" )
         Chat_Impersonate( player, format(
             "\x1b[38;2;150;150;150mPicked up %s%s\x1b[38;2;150;150;150m (%i)", 
             ColorToEscapeCode(roguelikeChatRarityColors[rarity]), Roguelike_GetItemName( item ), Roguelike_GetItemCount(player, item)), false )
@@ -220,8 +276,8 @@ string function ColorToEscapeCode( vector color )
 string function GetItemConVarValue( entity player )
 {
     string result = ""
-    int len = Roguelike_GetAllItems(player).len()
-    foreach ( index, item in Roguelike_GetAllItems(player))
+    int len = Roguelike_GetPlayerItems(player).len()
+    foreach ( index, item in Roguelike_GetPlayerItems(player))
     {
         int itemId = Roguelike_GetItemNumericId( item )
         int amount = Roguelike_GetItemCount( player, item )

@@ -59,7 +59,7 @@ void function BaseGametype_Init_MPSP()
 
 void function CodeCallback_OnWeaponAttack( entity player, entity weapon, string weaponName, int ammoUsed )
 {
-
+	
 }
 
 void function CodeCallback_OnPlayerMatchmakingChanged( entity player )
@@ -330,6 +330,7 @@ void function CodeCallback_OnClientConnectionStarted( entity player )
 
 void function CodeCallback_OnPlayerKilled( entity player, var damageInfo )
 {
+	Roguelike_UnlockAchievement( player, "dead" )
 	thread PostDeathThread_SP( player, damageInfo )
 }
 

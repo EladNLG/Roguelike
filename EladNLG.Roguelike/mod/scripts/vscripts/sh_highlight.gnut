@@ -898,10 +898,10 @@ HighlightContext ornull function Highlight_GetEnemyHighlight( entity ent )
 
 void function __SetEntityContextHighlight( entity ent, int contextId, HighlightContext highlight )
 {
+	ent.Highlight_SetCurrentContext( contextId )
 	ent.Highlight_SetFunctions( contextId, highlight.insideSlot, highlight.entityVisible, highlight.outsideSlot, highlight.outlineRadius, highlight.highlightId, highlight.afterPostProcess )
 	ent.Highlight_SetParam( contextId, 0, highlight.paramVecs[0] )
 	ent.Highlight_SetParam( contextId, 1, highlight.paramVecs[1] )
-	ent.Highlight_SetCurrentContext( contextId )
 }
 
 

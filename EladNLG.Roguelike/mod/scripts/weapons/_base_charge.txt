@@ -1,0 +1,13 @@
+"WeaponData"
+{
+    Mods
+    {
+        extended_charge
+        {
+            "charge_time"               "*1.25"
+            "damage_near_value"         "*1.5"
+            "damage_far_value"         "*1.5"
+            "damage_very_far_value"         "*1.5"
+        }
+    }
+}

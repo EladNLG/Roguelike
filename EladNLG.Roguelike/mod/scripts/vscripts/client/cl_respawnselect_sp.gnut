@@ -2,6 +2,7 @@ global function ShowRespawnSelect_SP
 global function ClRespawnselect_SP_Init
 global function DisableDeathBlur
 global function DisplayRespawnPrompt
+global function GetAspectRatioFixTopo
 
 struct
 {
@@ -10,6 +11,10 @@ struct
 	var aspectRatioFixTopo
 } file
 
+var function GetAspectRatioFixTopo()
+{
+	return file.aspectRatioFixTopo
+}
 
 void function ClRespawnselect_SP_Init()
 {
@@ -22,10 +27,6 @@ void function ClRespawnselect_SP_Init()
 	float right = (GetScreenSize()[1] / 9.0) * 16.0
 	float down = GetScreenSize()[1]
 	float xOffset = (GetScreenSize()[0] - right) / 2
-	print(GetScreenSize()[1])
-	print(right)
-	print(down)
-	print(xOffset)
 	file.aspectRatioFixTopo = RuiTopology_CreatePlane( <xOffset, 0, 0>, <right, 0, 0>, <0, down, 0>, false )
 
 	DisableDeathBlur()

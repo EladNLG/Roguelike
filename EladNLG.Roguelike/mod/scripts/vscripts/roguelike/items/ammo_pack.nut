@@ -9,6 +9,14 @@ void function AmmoPack_Init()
 void function AmmoPack_OnNPCKilled( entity npc, entity attacker, var damageInfo )
 {
     //print("npc killed, rolling ammo pack")
+    
+    //int healStacks = Roguelike_GetItemCount( attacker, "heal_on_kill" )
+    //if (IsAlive(attacker) && healStacks > 0)
+    //{
+    //    attacker.SetHealth(int(min(attacker.GetHealth() + 0.02 * attacker.GetMaxHealth() * healStacks, attacker.GetMaxHealth())))
+    //}
+
+    print(eDamageSourceId.ukelele)
     if (!attacker.IsPlayer()) return
 
     entity weapon = DamageInfo_GetWeapon( damageInfo )
@@ -49,7 +57,7 @@ void function AmmoPack_OnNPCKilled( entity npc, entity attacker, var damageInfo 
         if (weapon.GetWeaponPrimaryClipCountMax() > 0)
             weapon.SetWeaponPrimaryClipCount( min( weapon.GetWeaponPrimaryClipCount() + max( weapon.GetWeaponPrimaryClipCountMax() / 5, 1 ),
                 weapon.GetWeaponPrimaryClipCountMax() ) )
-        else weapon.SetWeaponChargeFractionForced( max( 0, weapon.GetWeaponChargeFraction() - 0.1 ) )
+        else if (weapon.GetWeaponSettingInt( eWeaponVar.ammo_stockpile_max ) > 0)weapon.SetWeaponPrimaryAmmoCount( minint( weapon.GetWeaponSettingInt( eWeaponVar.ammo_stockpile_max ), weapon.GetWeaponPrimaryAmmoCount() + weapon.GetWeaponSettingInt( eWeaponVar.ammo_stockpile_max ) / 5 ) )
     }
         
 }
