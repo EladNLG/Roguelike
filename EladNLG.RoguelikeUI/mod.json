@@ -25,9 +25,7 @@
             }
         }
     ],
-    "Dependencies": {
-        "PLAYER_HAS_ROGUELIKE_MOD": "TF|Roguelike"
-    },
+    "Dependencies": {},
     "ConVars": [
         // here because disabling a mod removes all of it's convars, losing the convar data too
         {
