@@ -418,12 +418,16 @@ function CommonNPCOnSpawned( entity npc )
 	#if SERVER && SP
 	switch (npc.GetClassName())
 	{
+		case "npc_marvin":
+			npc.GiveWeapon("mp_weapon_rspn101")
 		case "npc_soldier":
 		case "npc_stalker":
 		case "npc_spectre":
-		case "npc_super_spectre":
+		//case "npc_super_spectre": // accidentally gave reapers random weapons LMFAO
 			array<entity> weapons = npc.GetMainWeapons()
 			foreach(entity weapon in npc.GetMainWeapons()){
+				if (weapon.GetWeaponClassName() == "sp_weapon_swarm_rockets_s2s")
+					continue
 				GenerateNPCMods(weapon)
 			}
 			for ( int i = 0; i < npc.GetOffhandWeapons().len(); i++ )

@@ -140,6 +140,7 @@ int function CalculatePlayerMaxHP( entity player )
     int baseHP = int(player.GetPlayerModHealth())
 
     baseHP = int(RoundToNearestInt(baseHP * (1.0 - Roguelike_GetItemCount( player, "fatigue" ) * 0.2)))
+    baseHP = int(RoundToNearestInt(baseHP * (1.0 + Roguelike_GetItemCount( player, "max_hp" ) * 0.1)))
 
     if (player.IsTitan())
     {

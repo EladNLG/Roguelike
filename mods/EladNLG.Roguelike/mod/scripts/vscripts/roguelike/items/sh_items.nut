@@ -230,6 +230,10 @@ void function ShItems_Init()
     Roguelike_RegisterItem("fatigue", "Fatigue", "", RARITY_CONTEXTUAL_ITEM)
     Roguelike_SetItemDrawbacks("fatigue", "-`220%%`0 Health & Movement Speed per stack. 5 stacks, and you die.")
 
+    Roguelike_RegisterItem( "max_hp", "Meat Armor", "+`25`0%% maximum health.", RARITY_COMMON )
+    func1 = Roguelike_LinearChanceFunc( 10, 10 )
+    Roguelike_AddItemStat( "max_hp", "Health Bonus", func1, "`2%.0f`0%%%%")
+
 
     //Roguelike_RegisterItem( "self_dmg", "Ibuprofen", "Kills the pain at the beginning.", RARITY_UMBRAL )
     //Roguelike_SetItemDrawbacks( "self_dmg", "BUT it comes back worse.")
