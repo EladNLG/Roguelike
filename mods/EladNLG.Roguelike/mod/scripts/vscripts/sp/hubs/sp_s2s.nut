@@ -990,6 +990,7 @@ void function S2S_EntitiesDidLoad()
 	s2s_mover = file.malta.mover
 	for (int i = 0; i < 250;)
 	{
+		print("shit")
 		if (RandomlyPlaceShop(i, file.malta.mover))
 			i++
 	}
@@ -13730,6 +13731,7 @@ ShipStruct function MaltaDeck_SpawnBossTitan()
 
 void function ViperOnDamaged( entity ent, var damageInfo )
 {
+	print("viper damaged")
 	entity player = DamageInfo_GetAttacker( damageInfo )
 
 	if ( !player.IsPlayer() )
@@ -13737,8 +13739,6 @@ void function ViperOnDamaged( entity ent, var damageInfo )
 		DamageInfo_SetDamage( damageInfo, 0 )
 		return
 	}
-
-	float damage 		= DamageInfo_GetDamage( damageInfo )
 	entity inflictor 	= DamageInfo_GetInflictor( damageInfo )
 
 	if ( IsValid( inflictor ) && inflictor.GetTeam() == ent.GetTeam() )
@@ -13747,10 +13747,14 @@ void function ViperOnDamaged( entity ent, var damageInfo )
 		return
 	}
 
+	float damage 		= DamageInfo_GetDamage( damageInfo )
+
 	float extraDamage = ViperGetExtraDamage( ent, damageInfo )
 	float calcDamage = damage + extraDamage - ent.GetTitanSoul().GetShieldHealth()
 
 	float frac = ( ent.GetHealth().tofloat() - calcDamage ) / ent.GetMaxHealth().tofloat()
+	print(damage)
+	print(calcDamage)
 
 	//make sure this entity NEVER dies
 	if ( calcDamage >= ent.GetHealth() )
@@ -13762,6 +13766,11 @@ void function ViperOnDamaged( entity ent, var damageInfo )
 			DamageInfo_SetDamage( damageInfo, ent.GetHealth() + 1 )
 			Remote_CallFunction_NonReplay( player, "ServerCallback_BossTitanDoomed", ent.GetEncodedEHandle() )
 			ent.SetInvulnerable()
+		}
+		else {
+			print("damage removed")
+			DamageInfo_SetDamage( damageInfo, 0 )
+			return
 		}
 	}
 	//go into stage 2
@@ -15755,11 +15764,11 @@ void function CreateCoreLightFX1()
 	file.coreGlowFX1 = StartParticleEffectOnEntityWithPos_ReturnEntity( core, fxID, FX_PATTACH_CUSTOMORIGIN_FOLLOW, -1, <0,0,0>, <0,0,0> )
 }
 
-function LifeBoats_PodLoop( player, lifeboat )
+function LifeBoats_PodLoop( lifeboat, player )
 {
 	expect entity( player )
 	Roguelike_UnlockAchievement( player, "loop" )
-	thread PickStartPoint( "sp_crashsite", "Waking_Up" )
+	thread PickStartPoint( "sp_crashsite", "Battery2_Path" )
 }
 
 void function LifeBoats_PodSetup()
@@ -16955,8 +16964,8 @@ array<SkyBoxLandSection> function Sky_CreateInitialLandScape( entity skyRig )
 	return landModels
 }
 
-const float DRIFT_WORLD_CENTER_MAXSPEED = 100
-const float DRIFT_WORLD_CENTER_ACC 		= 10
+const float DRIFT_WORLD_CENTER_MAXSPEED = 750
+const float DRIFT_WORLD_CENTER_ACC 		= 75
 void function DriftWorldCenterWithPlayer( entity player )
 {
 	player.EndSignal( "OnDestroy" )

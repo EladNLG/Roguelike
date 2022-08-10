@@ -11,6 +11,8 @@ void function JumpKitParts_Init()
 
 void function OnInventoryChanged( entity player, string item, int oldCount, int newCount )
 {
+    if (!player.IsPlayer())
+        return
     float moveSpeedScale = 1.0
 
     moveSpeedScale += 0.1 * Roguelike_GetItemCount( player, "jumpkit_parts" )

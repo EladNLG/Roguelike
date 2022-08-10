@@ -9,20 +9,12 @@ struct
     bool isSelling = false
 } file
 
-global array<string> modRarityStrings = ["#RESPAWNSELECT_RESPAWN", "`2Uncommon", "`2Rare", "`2Epic","`2Legendary"]
-global table< int, array<int> > modRarityColors = {}
-
 void function ModSelectMenuInit()
 {
     
     //print("fuck oh shit fuckfuckfuck")
     var menu = GetMenu( "ModSelect" )
 	file.menu = menu
-    modRarityColors[0] <- [210, 210, 210, 255]
-    modRarityColors[1] <- [50, 255, 50, 255]
-    modRarityColors[2] <- [50, 50, 255, 255]
-    modRarityColors[3] <- [210, 0, 210, 255]
-    modRarityColors[4] <- [255, 175, 30, 255]
 	file.gridData.rows = 8
 	file.gridData.columns = 4
 	file.gridData.paddingVert = 5

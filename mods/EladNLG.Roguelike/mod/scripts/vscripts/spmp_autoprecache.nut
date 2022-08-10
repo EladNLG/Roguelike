@@ -74,20 +74,3 @@ void function PrecacheJack()
 	}
 	
 }
-
-#if SP
-bool function EntityHasWeapon(entity ent, string weaponName)
-{
-	if (IsWeaponOffhand(weaponName))
-	{
-		foreach (entity weapon in ent.GetOffhandWeapons())
-			if (weapon.GetWeaponClassName() == weaponName) return true
-	}
-	else
-	{
-		foreach (entity weapon in ent.GetMainWeapons())
-			if (weapon.GetWeaponClassName() == weaponName) return true
-	}
-	return false;
-}
-#endif

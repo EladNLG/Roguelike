@@ -442,7 +442,9 @@ bool function RandomlyPlaceShop(int s = 0, entity forceParent = null)
     string name = "Chest"
     if (xorshift_range( 0.0, 1.0, GetRoguelikeSeed() + 1 ) < 0.3333)
     {
-        shop.s.weights <- [0.0, 10.0, 2.0, 0.0, 0.0]
+        shop.s.weights <- {
+            uncommon = 10.0, 
+            legendary = 2.0}
         multiplier *= 2
         name = "Large Chest"
         Highlight_SetNeutralHighlight( shop, "roguelike_large_chest" )
@@ -481,18 +483,19 @@ function OpenChest( chest, player )
     string item = ""
     if ("weights" in chest.s)
     {
-        array arr = expect array( chest.s.weights )
-        array<float> arrF = []
-        foreach (var v in arr)
+        table arr = expect table( chest.s.weights )
+        table<string, float> arrF
+        foreach (var k, var v in arr)
         {
+            expect string(k)
             expect float(v)
-            arrF.append(v)
+            arrF[k] <- v
             //printt(v)
         }
         item = Roguelike_GetRandomItemWithCustomWeights( arrF )
     }
     else item = Roguelike_GetRandomItem()
-    CreateItem( item, chest.GetOrigin() + <0, 0, 30>, <0,0,0> )
+    CreateItem( item, chest.GetOrigin() + <0, 0, 30>, <0,0,0> ).SetParent(chest)
 
     // nobody stays in an area for more than 2 minutes... right?
     thread DestroyAfterDelay(chest, 120)
@@ -527,7 +530,7 @@ array<vector> function GetChestBounds(int s = 0)
             return [ < -2900, -5650, -500>, <5000, 4400, 400> ]
     }
 
-    return [ < -(1<<14) + 2000, -(1<<14) + 2000, -(1<<14) + 2000 >, < (1<<14) - 2000, (1<<14) - 2000, (1<<14) - 2000 > ]
+    return [ < -(1<<14) + 2000, -(1<<14) + 2000, -(1<<12) + 2000 >, < (1<<14) - 2000, (1<<14) - 2000, (1<<12) - 2000 > ]
 }
 
 int function GetChestSpawnAmount()

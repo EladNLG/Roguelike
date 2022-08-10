@@ -179,8 +179,8 @@ void function ItemDropGainedFocus( entity ent )
     
     file.curItem = ent
 
-    int rarity = ent.GetScriptName().slice( 10, 11 ).tointeger()
-    string itemId = ent.GetScriptName().slice( 12, ent.GetScriptName().len() )
+    string itemId = ent.GetScriptName().slice( 10, ent.GetScriptName().len() )
+    string rarity = Roguelike_GetItemRarity( itemId )
     int stacks = Roguelike_GetItemCount( GetLocalViewPlayer(), itemId )
     
     string drawbackPostfix = "\n\n"
@@ -246,7 +246,7 @@ void function ItemDropGainedFocus( entity ent )
     RuiSetString( file.flyoutRUI, "titleText", "`2%use% " + Roguelike_GetItemName(itemId) + postfix )
     RuiSetString( file.flyoutRUI, "descriptionText", Roguelike_GetItemDesc(itemId) + descPostfix )
 
-    RuiSetFloat3( file.flyoutRUI, "color", roguelikeRarityColors[rarity] )
+    RuiSetFloat3( file.flyoutRUI, "color", Roguelike_GetRarityColor( rarity ) )
 
     file.drawbackRUI = RuiCreate( $"ui/weapon_flyout.rpak", file.data.topoData[0].topo, RUI_DRAW_COCKPIT, -4 )
 
@@ -263,7 +263,7 @@ void function ItemDropGainedFocus( entity ent )
     RuiSetString( file.drawbackRUI, "titleText", "" )
     RuiSetString( file.drawbackRUI, "descriptionText", Roguelike_GetItemDrawbackDesc(itemId) + drawbackPostfix )
 
-    RuiSetFloat3( file.drawbackRUI, "color", roguelikeRarityColors[2] )
+    RuiSetFloat3( file.drawbackRUI, "color", Roguelike_GetRarityColor( RARITY_LEGENDARY ) )
     
 }
 

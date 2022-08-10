@@ -5,15 +5,16 @@ global function CreateItem
 global function RemoveFromTimer
 global function RestartTimer
 global function ColorToEscapeCode
+global function Roguelike_SyncPlayer
 
-array<asset> itemModels = [
-    $"models/weapons/ammoboxes/mags_cluster.mdl", 
-    $"models/weapons/ammoboxes/backpack_single.mdl",
-    $"models/weapons/ammoboxes/ammobox_01.mdl",
-    $"models/weapons/ammoboxes/ammobox_bigbullet.mdl",
-    $"models/weapons/ammoboxes/ammobox_bigclip.mdl",
+table<string, asset> itemModels = {
+    common = $"models/weapons/ammoboxes/mags_cluster.mdl", 
+    uncommon = $"models/weapons/ammoboxes/backpack_single.mdl",
+    legendary = $"models/weapons/ammoboxes/ammobox_01.mdl",
+    umbral = $"models/weapons/ammoboxes/ammobox_bigbullet.mdl",
+    titan = $"models/weapons/ammoboxes/ammobox_bigclip.mdl",
     //$"models/weapons/ammoboxes/ammobox_missle.mdl"
-]
+}
 
 int itemRollsLost = 0
 
@@ -36,12 +37,46 @@ void function ItemDrops_Init()
     if (IsLobby()) return
 	AddCallback_OnNPCKilled(  OnNPCKilled_DropItem )
     AddSpawnCallback( "player", PlayerConnected )
-    AddCallback_OnPlayerRespawned( PlayerRespawned )
+    AddCallback_OnPlayerRespawned( Roguelike_SyncPlayer )
+    AddCallback_OnRoguelikeInventoryChanged( void function( entity player, string item, int old, int new ) : ()
+    {
+        foreach ( p in GetPlayerArray() )
+        {
+            Remote_CallFunction_NonReplay( p, "ServerCallback_SetItemAmount", p.GetEncodedEHandle(), Roguelike_GetItemNumericId( item ), new )
+        }
+    } )
     
     AddClientCommandCallback( "give_item", GiveItem )
+    AddClientCommandCallback( "all_items", AllItems )
     #if SP
     AddCallback_OnLevelEnd( OnLevelEnd )
     #endif
+}
+
+bool function AllItems( entity player, array<string> args )
+{
+    if (GetConVarInt("sv_cheats") != 1)
+        return false
+
+    try
+    {
+        foreach (string item in Roguelike_GetAllItems())
+        {
+            Roguelike_GiveEntityItem( player, item, 1 )
+
+            string rarity = Roguelike_GetItemRarity( item )
+            Chat_Impersonate( player, format(
+                "\x1b[38;2;150;150;150mUsed cheats to obtain %i %s%s\x1b[38;2;150;150;150m (%i)", 
+                1, ColorToEscapeCode(Roguelike_GetRarityChatColor( rarity )), Roguelike_GetItemName( item ), Roguelike_GetItemCount(player, item)), false )
+        }
+    }
+    catch (ex)
+    {
+        printt(ex)   
+        //CodeWarning("Unknown Item.")
+        //return false
+    }
+    return true
 }
 
 bool function GiveItem( entity player, array<string> args )
@@ -60,10 +95,10 @@ bool function GiveItem( entity player, array<string> args )
             count = int(args[1])
         Roguelike_GiveEntityItem( player, item, count )
 
-        int rarity = Roguelike_GetItemRarity( args[0] )
+        string rarity = Roguelike_GetItemRarity( args[0] )
         Chat_Impersonate( player, format(
             "\x1b[38;2;150;150;150mUsed cheats to obtain %i %s%s\x1b[38;2;150;150;150m (%i)", 
-            count, ColorToEscapeCode(roguelikeChatRarityColors[rarity]), Roguelike_GetItemName( item ), Roguelike_GetItemCount(player, item)), false )
+            count, ColorToEscapeCode(Roguelike_GetRarityChatColor( rarity )), Roguelike_GetItemName( item ), Roguelike_GetItemCount(player, item)), false )
     }
     catch (ex)
     {
@@ -95,7 +130,7 @@ void function OnLevelEnd( string mapName, LevelTransitionStruct trans )
         SetConVarString("player_" + (index + 1) + "_name", player.GetPlayerName() )
         SetConVarString("player_" + (player.GetPlayerIndex() + 1) + "_items", GetItemConVarValue( player ) )
     }
-    SetConVarInt( "level_count", GetConVarInt("level_count") + 1 )
+    SetConVarInt( "level_count", levelCount + 1 )
     SetConVarInt( "roguelike_time", int( Time() - GetGlobalNetTime("difficultyStartTime") ) )
 }
 
@@ -140,7 +175,7 @@ void function PlayerConnected( entity player )
                 fatigueStr = "died from lack of blood."
         }
         Chat_Impersonate( player, format(
-            "\x1b[38;2;150;150;150mis %s%s\x1b[38;2;150;150;150m", ColorToEscapeCode(roguelikeChatRarityColors[RARITY_LEGENDARY]), fatigueStr), false )
+            "\x1b[38;2;150;150;150mis %s%s\x1b[38;2;150;150;150m", ColorToEscapeCode(Roguelike_GetRarityChatColor(RARITY_LEGENDARY)), fatigueStr), false )
     }
     float startTime = Time()
     //if (GetMapName() == "sp_crashsite")
@@ -161,10 +196,10 @@ void function PlayerConnected( entity player )
             SetGlobalNetTime("difficultyStartTime", startTime - GetConVarInt("roguelike_time"))
     }
 
-    //PlayerRespawned( player )
+    //Roguelike_SyncPlayer( player )
 }
 
-void function PlayerRespawned( entity player )
+void function Roguelike_SyncPlayer( entity player )
 {
     //print("Pain")
     //print(TraceLine(player.GetOrigin(), player.GetOrigin() + <0,0, -1> * 500, [], TRACE_MASK_SOLID, TRACE_COLLISION_GROUP_NONE ).endPos)
@@ -193,17 +228,20 @@ void function OnNPCKilled_DropItem( entity npc, entity attacker, var damageInfo 
     }
     else itemRollsLost++*/
 
-    printt("Healing", attacker, "for", Roguelike_GetItemCount( attacker, "heal_on_kill") * 5 + "%", "(", 
-    int(attacker.GetMaxHealth() * 0.025 * Roguelike_GetItemCount( attacker, "heal_on_kill")), attacker.GetHealth() + int(attacker.GetMaxHealth() * 0.05 * Roguelike_GetItemCount( attacker, "heal_on_kill") ), ")")
+    if (attacker.IsTitan())
+        return
+    
+    printt("Healing", attacker, "for", Roguelike_GetItemCount( attacker, "heal_on_kill") * 5 + "%", "(",     
+    20 * Roguelike_GetItemCount( attacker, "heal_on_kill"), attacker.GetHealth() + 20 * Roguelike_GetItemCount( attacker, "heal_on_kill"), ")")
     if ( IsAlive( attacker) && Roguelike_GetItemCount( attacker, "heal_on_kill") > 0)
-        attacker.SetHealth( minint( attacker.GetMaxHealth(), attacker.GetHealth() + int(attacker.GetMaxHealth() * 0.05 * Roguelike_GetItemCount( attacker, "heal_on_kill") ) ) )
+        attacker.SetHealth( minint( attacker.GetMaxHealth(), attacker.GetHealth() + 20 * Roguelike_GetItemCount( attacker, "heal_on_kill") ) )
 }
 
 entity function CreateItem( string item, vector origin, vector angles )
 {
     entity prop_dynamic = CreateEntity( "prop_dynamic" )
-    int rarity = Roguelike_GetItemRarity( item )
-    asset model = itemModels[rarity]
+    string rarity = Roguelike_GetItemRarity( item )
+    asset model = $"models/weapons/ammoboxes/mags_cluster.mdl"//itemModels[rarity]
     origin += <RandomFloatRange( -2, 2 ), RandomFloatRange( -2, 2 ), 0>
     angles += <0, RandomFloatRange( -15, 15 ), 0>
 	prop_dynamic.SetValueForModelKey( model )
@@ -220,7 +258,7 @@ entity function CreateItem( string item, vector origin, vector angles )
     prop_dynamic.SetOrigin( origin )
     prop_dynamic.SetAngles( angles )
 
-    prop_dynamic.SetScriptName( "item_drop_" + rarity + "_" + item )
+    prop_dynamic.SetScriptName( "item_drop_" + item )
 
 	prop_dynamic.SetUsable()
 	//prop_dynamic.SetUsableByGroup( "pilot" )
@@ -229,10 +267,10 @@ entity function CreateItem( string item, vector origin, vector angles )
     AddCallback_OnUseEntity( prop_dynamic, GrabItemCallback( item ) )
     foreach (entity player in GetPlayerArray())
     {
-        PlayerRespawned( player )
+        Roguelike_SyncPlayer( player )
     }
 
-    SetOutline( prop_dynamic, roguelikeRarityColors[rarity], 6.5 )
+    SetOutline( prop_dynamic, Roguelike_GetRarityColor( rarity ), 6.5 )
 
     // doesn't cause pop-up to be removed, also can be fustrating
     //thread DestroyAfterDelay(prop_dynamic, 30)
@@ -256,13 +294,13 @@ function GrabItemCallback( string item )
         expect entity( itemObj )
         Roguelike_GiveEntityItem( player, item )
         Roguelike_UnlockAchievement( player, "pickup" )
-        int rarity = Roguelike_GetItemRarity( item )
-        if (rarity == 2)
+        string rarity = Roguelike_GetItemRarity( item )
+        if (rarity == RARITY_LEGENDARY)
             Roguelike_UnlockAchievement( player, "pickup_legendary" )
         Chat_Impersonate( player, format(
             "\x1b[38;2;150;150;150mPicked up %s%s\x1b[38;2;150;150;150m (%i)", 
-            ColorToEscapeCode(roguelikeChatRarityColors[rarity]), Roguelike_GetItemName( item ), Roguelike_GetItemCount(player, item)), false )
-        PlayerRespawned( player )
+            ColorToEscapeCode(Roguelike_GetRarityChatColor( rarity )), Roguelike_GetItemName( item ), Roguelike_GetItemCount(player, item)), false )
+        //Roguelike_SyncPlayer( player )
 
         itemObj.Destroy()
     }

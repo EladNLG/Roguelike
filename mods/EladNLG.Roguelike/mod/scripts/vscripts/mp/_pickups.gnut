@@ -16,8 +16,8 @@ global function AddRoundsToTactical
 global function CreateScriptWeapon
 global function GetAllLeveledScriptWeapons
 global function TitanLoadoutWaitsForPickup  // Needed only to be global to spawn pickups from dev menu.
-global function RemoveNonPrecached
-global function IsWeaponOffhand
+//global function RemoveNonPrecached
+//global function IsWeaponOffhand
 
 #if DEV
 	global function Dev_ResetCollectiblesProgress_Level
@@ -81,79 +81,6 @@ struct
 	array<Collectible> collectibles
 	int testMapCollectibleValue
 } file
-
-array<string> function RemoveNonPrecached(array<string> weapons, bool removeAbilities = false, bool removeMainWeapons = false, bool removeNonNPCWeapons = false)
-{
-	array<string> result = []
-	foreach (string weapon in weapons)
-	{
-		if (WeaponIsPrecached(weapon))
-		{
-			if (removeAbilities || removeMainWeapons)
-			{
-				bool isOffhand = IsWeaponOffhand(weapon)
-				if ((isOffhand && removeAbilities) || (!isOffhand && removeMainWeapons))
-				{
-					continue
-				}
-			}
-			result.append(weapon)
-		}
-	}
-	if (removeNonNPCWeapons)
-	{
-		// wingman elite doesn't have NPC-Specific behaviour - so when an NPC fires it script thinks the player fired it and therefore predicts it :(
-		// So NPCs cannot use wingman elites
-		if (result.find("mp_weapon_wingman_n") >= 0) result.remove(result.find("mp_weapon_wingman_n"))
-		if (result.find("mp_weapon_arc_launcher") >= 0) result.remove(result.find("mp_weapon_arc_launcher"))
-	}
-	//print(GetArrayString(result))
-	return result
-}
-
-array<string> offhandWeapons = []
-array<string> nonOffhandWeapons = []
-
-bool function IsWeaponOffhand(string weapon)
-{
-	if (offhandWeapons.find(weapon) >= 0) return true
-	if (nonOffhandWeapons.find(weapon) >= 0) return false
-
-	// DUMMY SETUP
-	array<entity> potentialDummies = GetNPCArrayByClass("npc_soldier")
-	potentialDummies.extend( GetNPCArrayByClass("npc_spectre") )
-	potentialDummies.extend( GetNPCArrayByClass("npc_stalker") )
-	potentialDummies.extend( GetNPCArrayByClass("npc_super_spectre") )
-
-	entity dummy = potentialDummies[0]
-	entity oldWeapon = dummy.GetOffhandWeapon(0)
-
-	if (IsValid(dummy.GetOffhandWeapon(0)))
-	{
-		// _NoDelete so we can give it back
-		dummy.TakeOffhandWeapon_NoDelete(0)
-	}
-
-	try 
-	{
-		dummy.GiveOffhandWeapon(weapon, 0)
-		dummy.TakeOffhandWeapon(0)
-		offhandWeapons.append(weapon) // we cache the results because no weapon can be both offhand and non-offhand.
-		// so instead of using the weapondummy every time, which is expensiv >:( - we check if it exists in the 2 arrays and return a result accordingly
-		return true
-	}
-	catch (ex)
-	{
-		nonOffhandWeapons.append(weapon)
-	}
-
-	if (IsValid(oldWeapon) && IsValid(dummy))
-		dummy.GiveExistingOffhandWeapon(oldWeapon, 0)
-	else if (IsValid(oldWeapon))
-		oldWeapon.Destroy()
-	
-	return false
-}
 
 function Pickups_Init()
 {

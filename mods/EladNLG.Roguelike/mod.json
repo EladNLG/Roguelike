@@ -84,13 +84,13 @@
             "Path": "roguelike/items/sh_items.nut",
             "RunOn": "SERVER || CLIENT || UI",
             "ServerCallback": {
-                "After": "ShItems_Init"
+                "Before": "ShItems_Init"
             },
             "ClientCallback": {
-                "After": "ShItems_Init"
+                "Before": "ShItems_Init"
             },
             "UICallback": {
-                "After": "ShItems_Init"
+                "Before": "ShItems_Init"
             }
         },
         // item drop thing
@@ -270,6 +270,10 @@
             "ServerCallback": {
                 "After": "Upgrades_Init"
             }
+        },
+        {
+            "Path": "scoreboard/cl_roguelike_scoreboard.nut",
+            "RunOn": "CLIENT"
         }
     ],
     "ConVars":

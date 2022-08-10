@@ -5,7 +5,7 @@ global function GetLevel
 global function CalculateXPForLevel
 
 const int BASE_XP_PER_LEVEL = 250
-const float XP_PER_LEVEL_MULTIPLIER = 1.1
+const float XP_PER_LEVEL_MULTIPLIER = 1.3
 
 int xp = 0
 int level = 0
@@ -60,6 +60,8 @@ void function Levels_Init()
 
 void function OnLoadSaveGame( entity player )
 {
+    SetConVarInt( "level_count", levelCount )
+    Roguelike_RollItemsInShop()
     thread UpdateLevels()
 }
 
@@ -128,6 +130,11 @@ void function AddXP( int amount )
         level += 1
         xp -= CalculateXPForLevel( level - 1 )
     }
+    while ( xp < 0 )
+    {
+        level -= 1
+        xp += CalculateXPForLevel( level )
+    }
 
     foreach (player in GetPlayerArray())
     {
@@ -148,7 +155,23 @@ int function CalculatePlayerMaxHP( entity player )
             baseHP /= 5
     }
 
-    return int(baseHP + 0.3 * baseHP * level)
+    return maxint(1, int(baseHP + 0.3 * baseHP * level))
+}
+
+int function CalculatePlayerMaxShield( entity player )
+{
+    int baseHP = 1000
+
+    baseHP = int(RoundToNearestInt(baseHP * (1.0 - Roguelike_GetItemCount( player, "fatigue" ) * 0.2)))
+    baseHP = int(RoundToNearestInt(baseHP * (1.0 + Roguelike_GetItemCount( player, "shield" ) * CalculatePlayerMaxHP( player ) * 0.1)))
+
+    /*if (player.IsTitan())
+    {
+        if (player.GetTitanSoul().IsDoomed())
+            baseHP /= 5
+    }*/
+
+    return maxint(1, baseHP)
 }
 
 void function OnLevelUp()
@@ -157,14 +180,19 @@ void function OnLevelUp()
     {
         if (!IsAlive( player )) continue
         int baseHP = CalculatePlayerMaxHP(player)
-        if (baseHP <= 0)
-            player.Die()
+        
         float healthFrac = float(player.GetHealth()) / player.GetMaxHealth()
         if (baseHP > 524287)
             player.s.divisor <- float(baseHP) / 524287
         baseHP = int(min(baseHP, 524287))
         player.SetMaxHealth(baseHP)
         player.SetHealth( int(min(baseHP, baseHP * healthFrac)) )
+        
+        float shieldFrac = float(player.GetShieldHealth()) / player.GetShieldHealthMax()
+        int baseShield = CalculatePlayerMaxShield( player )
+        baseShield = int(min(baseShield, 524287))
+        player.SetMaxHealth(baseShield)
+        player.SetHealth( int(min(baseShield, baseShield * shieldFrac)) )
     }
 }
 

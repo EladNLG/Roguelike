@@ -16,6 +16,8 @@ global function HidePickupFlyout
 global function ShowPickupFlyout
 global function IsCurrentlyFocusedWeapon
 global function IsPickupFlyoutValid
+global function StopPickupPrompt
+global function ResumePickupPrompt
 
 #if HAS_WEAPON_PICKUP_HIGHLIGHT
 global function ServerCallback_RefreshWeaponHighlights
@@ -47,7 +49,7 @@ struct
 	var weaponFireRateLabelRui
 	var weaponModTopo
 	int modCount
-	bool shouldShowFlyout
+	bool shouldShowFlyout = true
 	array<var> modNameRuis
 	array<var> modDescRuis
 	array<string> unregisteredMods
@@ -78,7 +80,7 @@ void function ClDroppedWeaponFlyout_Init()
     var rui = RuiCreate( $"ui/basic_image.rpak", bgTopo, RUI_DRAW_HUD, -5)
 
     RuiSetFloat3( rui, "basicImageColor", <0.0, 0.0, 0.0>   )
-	RuiSetFloat( rui, "basicImageAlpha", 0.8)
+	RuiSetFloat( rui, "basicImageAlpha", 0.9)
 
 	{
 	
@@ -227,7 +229,8 @@ void function ClientCodeCallback_UseEntGainedFocus( entity ent )
 				RuiSetBool( rui, "isHighlighted", true )
 				file.lastWeaponRuiSet = rui
 			}*/
-			file.shouldShowFlyout = true
+			//file.shouldShowFlyout = true
+			file.focusedEnt = ent
 			WeaponPickupFlyout_UpdateInfo( ent, ent.GetWeaponClassName(), ent.GetMods() )
 
 			entity weapon = ent
@@ -260,7 +263,6 @@ void function ClientCodeCallback_UseEntGainedFocus( entity ent )
 		// #endif
 	}
 
-	file.focusedEnt = ent
 	if ( GetWeaponFlyoutAliveTime() < 0.5 && IsWeaponFlyoutVisible() )
 	{
 		HidePickupFlyout( 2.0 )
@@ -283,6 +285,16 @@ void function ClientCodeCallback_UseEntGainedFocus( entity ent )
 	#if SP
 	ScriptCallback_UpdateOnscreenHint()
 	#endif
+}
+
+void function StopPickupPrompt()
+{
+	file.shouldShowFlyout = false
+}
+
+void function ResumePickupPrompt()
+{
+	file.shouldShowFlyout = true
 }
 
 vector function WorldToScreenPos( vector position )
@@ -375,7 +387,7 @@ bool function IsCurrentlyFocusedWeapon( entity ent )
 
 void function DestroyPickupFlyout()
 {
-	file.shouldShowFlyout = false
+	//file.shouldShowFlyout = false
 	if ( file.flyoutRUI == null )
 		return
 
@@ -477,12 +489,12 @@ void function WeaponPickupFlyout_UpdateInfo( entity weaponEnt, string weapon, ar
 		RuiSetFloat2( rui, "msgPos", <0.02 * horzMultiplier, offset + 0.015, 0> )
 		RuiSetFloat3( rui, "msgColor", <0.3, 0.3, 0.3> )
 		RuiSetString( rui, "msgText", "Light Mag" )
-		RuiSetFloat( rui, "msgFontSize", 120.0 )
+		RuiSetFloat( rui, "msgFontSize", 90.0 )
 		RuiSetFloat( rui, "msgAlpha", 0.9 )
-		RuiSetFloat( rui, "thicken", 0.5 )
+		RuiSetFloat( rui, "thicken", 2 )
 		file.modNameRuis.append(rui)
 	
-		rui = RuiCreate( RUI_TEXT_LEFT, topo, RUI_DRAW_HUD, -4 )
+		/*rui = RuiCreate( RUI_TEXT_LEFT, topo, RUI_DRAW_HUD, -4 )
 		RuiSetInt( rui, "maxLines", 1 )
 		RuiSetInt( rui, "lineNum", 0 )
 		RuiSetFloat2( rui, "msgPos", <0.02 * horzMultiplier, offset + 0.115, 0> )
@@ -491,7 +503,7 @@ void function WeaponPickupFlyout_UpdateInfo( entity weaponEnt, string weapon, ar
 		RuiSetFloat( rui, "msgFontSize", 80.0 )
 		RuiSetFloat( rui, "msgAlpha", 0.9 )
 		RuiSetFloat( rui, "thicken", 0.5 )
-		file.modDescRuis.append(rui)
+		file.modDescRuis.append(rui)*/
 	}
 
 
@@ -536,18 +548,21 @@ void function WeaponPickupFlyout_UpdateInfo( entity weaponEnt, string weapon, ar
 	for (int i = 0; i < file.modNameRuis.len(); i++)
 	{
 		var nameRui = file.modNameRuis[i]
-		var descRui = file.modDescRuis[i]
+		//var descRui = file.modDescRuis[i]
 
 		if (i >= mods.len())
 		{
 			RuiSetString( nameRui, "msgText", "" )
-			RuiSetString( descRui, "msgText", "" )
+			//RuiSetString( descRui, "msgText", "" )
 		}
 		else
 		{
 			string m = mods[i]
-			RuiSetString( nameRui, "msgText", ShopData_GetModName(m) )
-			RuiSetString( descRui, "msgText", ShopData_GetModDesc(m) )
+			string desc = ShopData_GetModDesc(m)
+			if (desc.find("\n") == null)
+				desc = "\n" + desc
+			RuiSetString( nameRui, "msgText", ShopData_GetModName(m) + ": `1" + desc )
+			//RuiSetString( descRui, "msgText", ShopData_GetModDesc(m) )
 			RuiSetFloat3( nameRui, "msgColor", colors[ShopData_GetModValue(m)] )
 		}
 	}

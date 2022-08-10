@@ -387,7 +387,7 @@ function RemoteFunctions_Init()
 	Remote_RegisterFunction( "ServerCallback_TitanEmbark" ) // used purely to play a single line of dialog
 	Remote_RegisterFunction( "ServerCallback_DogFight" )
 	Remote_RegisterFunction( "ServerCallback_Announcement" )
-	Remote_RegisterFunction( "ServerCallback_GameModeAnnouncement" )
+	//Remote_RegisterFunction( "ServerCallback_GameModeAnnouncement" )
 
 	Remote_RegisterFunction( "ServerCallback_ScoreEvent" )
 
@@ -421,10 +421,10 @@ function RemoteFunctions_Init()
 	Remote_RegisterFunction( "ServerCallback_UpdateTitanModel" )
 
 	// DEV ONLY
-	Remote_RegisterFunction( "ServerCallback_MVUpdateModelBounds" )
-	Remote_RegisterFunction( "ServerCallback_MVEnable" )
-	Remote_RegisterFunction( "ServerCallback_MVDisable" )
-	Remote_RegisterFunction( "ServerCallback_ModelViewerDisableConflicts" )
+	//Remote_RegisterFunction( "ServerCallback_MVUpdateModelBounds" )
+	//Remote_RegisterFunction( "ServerCallback_MVEnable" )
+	//Remote_RegisterFunction( "ServerCallback_MVDisable" )
+	//Remote_RegisterFunction( "ServerCallback_ModelViewerDisableConflicts" )
 
 	Remote_RegisterFunction( "ServerCallback_Test" )
 

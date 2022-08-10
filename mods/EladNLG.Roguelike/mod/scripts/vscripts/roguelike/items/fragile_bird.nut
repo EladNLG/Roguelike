@@ -17,7 +17,7 @@ void function Player_Update( entity player )
     bool isWallRunning = true
     while ( true )
     {
-        wait 0.1
+        wait 0.09
         if (player.IsTitan()) continue
 
         float airAcceleration = 500 // base air accel

@@ -45,7 +45,7 @@ int function ScaleRewardWithDifficulty( int reward )
     float multiplier = 1.0
     if (GetMapName() == "sp_crashsite" && Flag( "neural_link_complete" ) && !Flag( "spawn_final_enemies" ))
         multiplier *= 0.15
-    return int( reward * (1 + 0.2 * roguelikeDifficulty) * multiplier)
+    return int( reward * (1 + 0.15 * roguelikeDifficulty) * multiplier)
 }
 
 void function OnNPCKilled_AddMoney( entity npc, entity attacker, var damageInfo )

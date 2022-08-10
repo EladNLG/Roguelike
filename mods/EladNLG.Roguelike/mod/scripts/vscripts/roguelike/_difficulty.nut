@@ -7,6 +7,7 @@ global function GetChestCost
 global function ForceDifficultyCallbacks
 
 global int roguelikeDifficulty = 0
+global int levelCount = 0
 
 struct
 {
@@ -16,6 +17,7 @@ struct
 void function Difficulty_Init()
 {
     if (IsLobby()) return
+    levelCount = GetConVarInt( "level_count" )
     AddCallback_OnDifficultyIncreased( DifficultyIncreased )
     //AddCallback_OnDamageEvent( DamageEvent )
     AddCallback_EntitiesDidLoad( Difficulty_Update )
@@ -26,7 +28,7 @@ void function Difficulty_Init()
 void function ForceDifficultyCallbacks()
 {
     float time = Time() - GetGlobalNetTime("difficultyStartTime")
-    float timePerDifficulty = TIME_PER_DIFFICULTY / pow(GetLevelCountMultiplier(), GetConVarInt( "level_count" ))
+    float timePerDifficulty = TIME_PER_DIFFICULTY / pow(GetLevelCountMultiplier(), levelCount)
     roguelikeDifficulty = int(time * 3 / timePerDifficulty)
     foreach (void functionref( int, int ) callback in file.difficultyCallbacks)
         callback( roguelikeDifficulty, roguelikeDifficulty / 3 )
@@ -66,10 +68,14 @@ void function ScaleDamageWithEntityLevel( entity ent, var damageInfo )
 
 int function GetChestCost(float multiplier = 1.0)
 {
-    float timePerDifficulty = TIME_PER_DIFFICULTY / pow(GetLevelCountMultiplier(), GetConVarInt( "level_count" ))
-    int initialDifficulty = int(GetConVarInt("roguelike_time") * 3 / timePerDifficulty)
     //print(50 * (1 + 0.2 * initialDifficulty) * multiplier)
-    return int(50 * (1 + 0.2 * initialDifficulty) * multiplier)
+    return int(50 * (1 + 0.2 * GetInitialDifficulty()) * multiplier)
+}
+
+int function GetInitialDifficulty()
+{
+    float timePerDifficulty = TIME_PER_DIFFICULTY / pow(GetLevelCountMultiplier(), levelCount)
+    return int(GetConVarInt("roguelike_time") * 3 / timePerDifficulty)
 }
 
 void function Difficulty_Update()
@@ -83,7 +89,7 @@ void function Difficulty_Update()
     while (true)
     {
         float time = Time() - GetGlobalNetTime("difficultyStartTime")
-        float timePerDifficulty = TIME_PER_DIFFICULTY / pow(GetLevelCountMultiplier(), GetConVarInt( "level_count" ))
+        float timePerDifficulty = TIME_PER_DIFFICULTY / pow(GetLevelCountMultiplier(), levelCount)
         roguelikeDifficulty = int(time * 3 / timePerDifficulty)
         //print(roguelikeDifficulty)
         while (lastDifficulty < roguelikeDifficulty)

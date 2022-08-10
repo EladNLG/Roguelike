@@ -17,6 +17,13 @@ void function OnDamageEvent( entity ent, var damageInfo )
     entity attacker = DamageInfo_GetAttacker( damageInfo )
     entity weapon = DamageInfo_GetWeapon( damageInfo )
     entity projectile = DamageInfo_GetInflictor( damageInfo )
+
+    if (ent.IsPlayer())
+    {
+        int scavStacks = Roguelike_GetItemCount( ent, "blood_scavenger" )
+        AddMoney( ent, int(scavStacks * DamageInfo_GetDamage( damageInfo ) * 0.25) )
+    }
+
     if (!IsValid(weapon) && IsValid(attacker) && IsValid(projectile) && projectile.IsProjectile() && (attacker.IsNPC() || attacker.IsPlayer()))
     {
         array<entity> weapons = attacker.GetMainWeapons()
@@ -68,10 +75,14 @@ void function OnDamageEvent( entity ent, var damageInfo )
             DamageInfo_SetDamage( damageInfo, 1 )
             ent.SetHealth(ent.GetMaxHealth())
             Roguelike_GiveEntityItem( ent, "emergency_soda", -1 )
-            if (!ent.IsPlayer()) return
-            Chat_Impersonate( ent, format(
+            if (!ent.IsPlayer()) {
+                Chat_ServerBroadcast( format(
+                    "\x1b[38;2;150;150;150mUsed their %s%s\x1b[38;2;150;150;150m to save their life (%i remaining)", 
+                    ColorToEscapeCode(Roguelike_GetRarityChatColor(RARITY_LEGENDARY)), Roguelike_GetItemName( "emergency_soda" ), Roguelike_GetItemCount(ent, "emergency_soda")) )
+            }
+            else Chat_Impersonate( ent, format(
             "\x1b[38;2;150;150;150mUsed their %s%s\x1b[38;2;150;150;150m to save their life (%i remaining)", 
-            ColorToEscapeCode(roguelikeChatRarityColors[RARITY_LEGENDARY]), Roguelike_GetItemName( "emergency_soda" ), Roguelike_GetItemCount(ent, "emergency_soda")), false )
+            ColorToEscapeCode(Roguelike_GetRarityChatColor(RARITY_LEGENDARY)), Roguelike_GetItemName( "emergency_soda" ), Roguelike_GetItemCount(ent, "emergency_soda")), false )
         }
     }
 

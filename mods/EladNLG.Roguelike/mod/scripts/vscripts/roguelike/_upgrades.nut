@@ -29,7 +29,9 @@ array<string> loadouts = [
 void function Upgrades_Init()
 {
     AddClientCommandCallback( "choose", OnChoose )
+    #if SP
     AddCallback_OnLevelEnd( OnLevelEnd )
+    #endif
 }
 
 void function OnLevelEnd( string map, LevelTransitionStruct trans )

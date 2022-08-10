@@ -1,6 +1,8 @@
 global function WeaponDisplay_Init
 global function DisplayWeapon
 global function StopDisplay
+global function PauseDisplay
+global function ResumeDisplay
 
 const RUI_TEXT_LEFT = $"ui/cockpit_console_text_top_left.rpak"
 const RUI_TEXT_RIGHT = $"ui/cockpit_console_text_top_right.rpak"
@@ -28,7 +30,7 @@ struct
     var weaponBGTopo
 	var weaponModTopo
 	int modCount
-	bool shouldShowFlyout
+	bool shouldShowFlyout = true
 	array<var> modNameRuis
 	array<var> modDescRuis
 	array<string> unregisteredMods
@@ -43,7 +45,7 @@ void function WeaponDisplay_Init()
     var rui = RuiCreate( $"ui/basic_image.rpak", bgTopo, RUI_DRAW_HUD, -5)
 
     RuiSetFloat3( rui, "basicImageColor", <0.0, 0.0, 0.0>   )
-	RuiSetFloat( rui, "basicImageAlpha", 0.8)
+	RuiSetFloat( rui, "basicImageAlpha", 0.9)
 
 	{
 	
@@ -171,12 +173,12 @@ void function DisplayWeapon( entity weapon )
 		RuiSetFloat2( rui, "msgPos", <0.02 * horzMultiplier, offset + 0.015, 0> )
 		RuiSetFloat3( rui, "msgColor", <0.3, 0.3, 0.3> )
 		RuiSetString( rui, "msgText", "Light Mag" )
-		RuiSetFloat( rui, "msgFontSize", 120.0 )
+		RuiSetFloat( rui, "msgFontSize", 90.0 )
 		RuiSetFloat( rui, "msgAlpha", 0.9 )
-		RuiSetFloat( rui, "thicken", 0.5 )
+		RuiSetFloat( rui, "thicken",2 )
 		file.modNameRuis.append(rui)
 	
-		rui = RuiCreate( RUI_TEXT_LEFT, topo, RUI_DRAW_HUD, -4 )
+		/*rui = RuiCreate( RUI_TEXT_LEFT, topo, RUI_DRAW_HUD, -4 )
 		RuiSetInt( rui, "maxLines", 1 )
 		RuiSetInt( rui, "lineNum", 0 )
 		RuiSetFloat2( rui, "msgPos", <0.02 * horzMultiplier, offset + 0.115, 0> )
@@ -185,7 +187,7 @@ void function DisplayWeapon( entity weapon )
 		RuiSetFloat( rui, "msgFontSize", 80.0 )
 		RuiSetFloat( rui, "msgAlpha", 0.9 )
 		RuiSetFloat( rui, "thicken", 0.5 )
-		file.modDescRuis.append(rui)
+		file.modDescRuis.append(rui)*/
 	}
 
 
@@ -230,18 +232,21 @@ void function DisplayWeapon( entity weapon )
 	for (int i = 0; i < file.modNameRuis.len(); i++)
 	{
 		var nameRui = file.modNameRuis[i]
-		var descRui = file.modDescRuis[i]
+		//var descRui = file.modDescRuis[i]
 
 		if (i >= mods.len())
 		{
 			RuiSetString( nameRui, "msgText", "" )
-			RuiSetString( descRui, "msgText", "" )
+			//RuiSetString( descRui, "msgText", "" )
 		}
 		else
 		{
 			string m = mods[i]
-			RuiSetString( nameRui, "msgText", ShopData_GetModName(m) )
-			RuiSetString( descRui, "msgText", ShopData_GetModDesc(m) )
+			string desc = ShopData_GetModDesc(m)
+			if (desc.find("\n") == null)
+				desc = "\n" + desc
+			RuiSetString( nameRui, "msgText", ShopData_GetModName(m) + ": `1" + desc )
+			//RuiSetString( descRui, "msgText",  )
 			RuiSetFloat3( nameRui, "msgColor", colors[ShopData_GetModValue(m)] )
 		}
 	}
@@ -250,6 +255,17 @@ void function DisplayWeapon( entity weapon )
 void function StopDisplay()
 {
     file.shouldShowFlyout = false
+	file.focusedEnt = null
+}
+
+void function PauseDisplay()
+{
+    file.shouldShowFlyout = false
+}
+
+void function ResumeDisplay()
+{
+	file.shouldShowFlyout = true
 }
 
 string function GetArrayString( array<string> mods )

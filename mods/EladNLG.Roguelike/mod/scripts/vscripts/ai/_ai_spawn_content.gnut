@@ -5,8 +5,10 @@ global const PROTOTYPE_DEFAULT_TITAN_RODEO_SLOTS = 3  // Todo: remove and set th
 global function CommonNPCOnSpawned
 global function ShouldSpawn
 global function AiSpawnContent_Init
-#if SERVER && SP
+#if SERVER
 global function GenerateNPCMods
+global function RemoveNonPrecached
+global function IsWeaponOffhand
 #endif
 global function GetArrayString
 global function FixupTitle
@@ -161,7 +163,7 @@ function CommonNPCOnSpawned( entity npc )
 	{
 		UpdateTitanMinimapStatusToOtherPlayers( npc )
 		CommonNPCTitanOnSpawned( npc )
-//		Assert( npc.Dev_GetAISettingByKeyField( "footstep_type" ) != "", "NPC " + npc + " has no footstep type set" )
+	//		Assert( npc.Dev_GetAISettingByKeyField( "footstep_type" ) != "", "NPC " + npc + " has no footstep type set" )
 	}
 	else
 	{
@@ -415,7 +417,7 @@ function CommonNPCOnSpawned( entity npc )
 
 	}
 	
-	#if SERVER && SP
+	#if SERVER
 	switch (npc.GetClassName())
 	{
 		case "npc_marvin":
@@ -440,6 +442,8 @@ function CommonNPCOnSpawned( entity npc )
 	}
 	#endif
 
+	Roguelike_GiveEntityItem( npc, "emergency_soda" )
+
 	thread AssaultLinkedMoveTarget( npc )
 
 	FixupTitle( npc )
@@ -452,7 +456,96 @@ function CommonNPCOnSpawned( entity npc )
 	Difficulty_UpdateNPC( npc )
 }
 
-#if SERVER && SP
+#if SERVER
+
+array<string> function RemoveNonPrecached(array<string> weapons, bool removeAbilities = false, bool removeMainWeapons = false, bool removeNonNPCWeapons = false)
+{
+	array<string> result = []
+	foreach (string weapon in weapons)
+	{
+		if (WeaponIsPrecached(weapon))
+		{
+			if (removeAbilities || removeMainWeapons)
+			{
+				bool isOffhand = IsWeaponOffhand(weapon)
+				if ((isOffhand && removeAbilities) || (!isOffhand && removeMainWeapons))
+				{
+					continue
+				}
+			}
+			result.append(weapon)
+		}
+	}
+	if (removeNonNPCWeapons)
+	{
+		// wingman elite doesn't have NPC-Specific behaviour - so when an NPC fires it script thinks the player fired it and therefore predicts it :(
+		// So NPCs cannot use wingman elites
+		if (result.find("mp_weapon_wingman_n") >= 0) result.remove(result.find("mp_weapon_wingman_n"))
+		if (result.find("mp_weapon_arc_launcher") >= 0) result.remove(result.find("mp_weapon_arc_launcher"))
+	}
+	//print(GetArrayString(result))
+	return result
+}
+
+array<string> offhandWeapons = []
+array<string> nonOffhandWeapons = []
+
+bool function IsWeaponOffhand(string weapon)
+{
+	if (offhandWeapons.find(weapon) >= 0) return true
+	if (nonOffhandWeapons.find(weapon) >= 0) return false
+
+	// DUMMY SETUP
+	array<entity> potentialDummies = GetNPCArrayByClass("npc_soldier")
+	potentialDummies.extend( GetNPCArrayByClass("npc_spectre") )
+	potentialDummies.extend( GetNPCArrayByClass("npc_stalker") )
+	potentialDummies.extend( GetNPCArrayByClass("npc_super_spectre") )
+
+	entity dummy = potentialDummies[0]
+	entity oldWeapon = dummy.GetOffhandWeapon(0)
+
+	if (IsValid(dummy.GetOffhandWeapon(0)))
+	{
+		// _NoDelete so we can give it back
+		dummy.TakeOffhandWeapon_NoDelete(0)
+	}
+
+	try 
+	{
+		dummy.GiveOffhandWeapon(weapon, 0)
+		dummy.TakeOffhandWeapon(0)
+		offhandWeapons.append(weapon) // we cache the results because no weapon can be both offhand and non-offhand.
+		// so instead of using the weapondummy every time, which is expensiv >:( - we check if it exists in the 2 arrays and return a result accordingly
+		return true
+	}
+	catch (ex)
+	{
+		nonOffhandWeapons.append(weapon)
+	}
+
+	if (IsValid(oldWeapon) && IsValid(dummy))
+		dummy.GiveExistingOffhandWeapon(oldWeapon, 0)
+	else if (IsValid(oldWeapon))
+		oldWeapon.Destroy()
+	
+	return false
+}
+
+bool function EntityHasWeapon(entity ent, string weaponName)
+{
+	if (IsWeaponOffhand(weaponName))
+	{
+		foreach (entity weapon in ent.GetOffhandWeapons())
+			if (weapon.GetWeaponClassName() == weaponName) return true
+	}
+	else
+	{
+		foreach (entity weapon in ent.GetMainWeapons())
+			if (weapon.GetWeaponClassName() == weaponName) return true
+	}
+	return false;
+}
+
 void function GenerateNPCMods( entity weapon, int index = -1 )
 {
 	if (!IsValid(weapon)) {
@@ -525,7 +618,9 @@ void function GenerateNPCMods( entity weapon, int index = -1 )
 	int modCount = [ 3, 4, 5, 6, 7 ][GetRandomIndexFromWeightedArray( [ 50.0, 25.0, 12.5, 6.25, 3.125 ] )]
 	// one mod
 	for (int i = 0; i < modCount; i++) {
-		float selected = RandomFloat( maxWeight )
+		if (maxWeight < 0)
+			break
+		float selected = xorshift_range( 0, maxWeight, GetRoguelikeSeed() + 5 )
 		string addedMod = ""
 		foreach (string m in primaryMods)
 		{
@@ -574,9 +669,6 @@ void function GenerateNPCMods( entity weapon, int index = -1 )
 	{
 		result.remove(indexesToRemove[i] - i)
 	}
-    //float timePerDifficulty = TIME_PER_DIFFICULTY / pow(GetLevelCountMultiplier(), GetConVarInt( "level_count" ))
-
-	//weapon.SetScriptName("" + int(GetConVarInt("roguelike_time") * 3 / timePerDifficulty))
 
 	if (result.len() < 1) printl("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	SetModsUntilItWorks(weapon, result)

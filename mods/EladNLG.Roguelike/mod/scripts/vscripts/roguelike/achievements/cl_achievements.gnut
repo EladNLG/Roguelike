@@ -1,6 +1,9 @@
 global function ServerCallback_UnlockAchievement
 global function Roguelike_OnAchievementsSetUp
 global function Roguelike_IsAchievementNumUnlocked
+#if MP
+global function GetAspectRatioFixTopo
+#endif
 
 struct 
 {

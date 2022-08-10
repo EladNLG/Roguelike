@@ -251,15 +251,6 @@ void function CodeCallback_DamagePlayerOrNPC( entity ent, var damageInfo )
 	if ( damageMultiplier != 1.0 )
 		DamageInfo_ScaleDamage( damageInfo, damageMultiplier )
 
-	// Added via AddEntityCallback_OnDamaged
-	foreach ( callbackFunc in ent.e.entDamageCallbacks )
-	{
-		callbackFunc( ent, damageInfo )
-	}
-	#if VERBOSE_DAMAGE_PRINTOUTS
-		printt( "    after AddEntityCallback_OnDamaged callbacks:", DamageInfo_GetDamage( damageInfo ) )
-	#endif
-
 	// use AddDamageCallbackSourceID( "classname", function ) to registed functions
 	int damageSourceId = DamageInfo_GetDamageSourceIdentifier( damageInfo )
 	if ( damageSourceId in shGlobal.damageSourceIdCallbacks )
@@ -269,14 +260,7 @@ void function CodeCallback_DamagePlayerOrNPC( entity ent, var damageInfo )
 			callbackFunc( ent, damageInfo )
 		}
 	}
-	#if VERBOSE_DAMAGE_PRINTOUTS
-		printt( "    after damageSourceID callbacks:", DamageInfo_GetDamage( damageInfo ) )
-	#endif
-	if ( DamageInfo_GetDamage( damageInfo ) == 0 )
-		return
-
-	RunClassDamageFinalCallbacks( ent, damageInfo )
-
+	
 	foreach ( callbackFunc in file.onDamageCallbacks )
 	{
 		callbackFunc( ent, damageInfo )
@@ -284,6 +268,23 @@ void function CodeCallback_DamagePlayerOrNPC( entity ent, var damageInfo )
 	}
 
 	ScaleDamageWithEntityLevel( ent, damageInfo )
+
+	// Added via AddEntityCallback_OnDamaged
+	foreach ( callbackFunc in ent.e.entDamageCallbacks )
+	{
+		callbackFunc( ent, damageInfo )
+	}
+	#if VERBOSE_DAMAGE_PRINTOUTS
+		printt( "    after AddEntityCallback_OnDamaged callbacks:", DamageInfo_GetDamage( damageInfo ) )
+	#endif
+
+	#if VERBOSE_DAMAGE_PRINTOUTS
+		printt( "    after damageSourceID callbacks:", DamageInfo_GetDamage( damageInfo ) )
+	#endif
+	if ( DamageInfo_GetDamage( damageInfo ) == 0 )
+		return
+
+	RunClassDamageFinalCallbacks( ent, damageInfo )
 
 	#if VERBOSE_DAMAGE_PRINTOUTS
 		printt( "    after class damage final callbacks:", DamageInfo_GetDamage( damageInfo ) )

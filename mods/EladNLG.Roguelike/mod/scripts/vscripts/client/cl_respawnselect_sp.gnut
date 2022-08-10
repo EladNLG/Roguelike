@@ -12,7 +12,14 @@ struct
 } file
 
 var function GetAspectRatioFixTopo()
-{
+{	
+	if (file.aspectRatioFixTopo == null)
+    {
+        float right = (GetScreenSize()[1] / 9.0) * 16.0
+        float down = GetScreenSize()[1]
+        float xOffset = (GetScreenSize()[0] - right) / 2
+        file.aspectRatioFixTopo = RuiTopology_CreatePlane( <xOffset, 0, 0>, <right, 0, 0>, <0, down, 0>, false )
+    }
 	return file.aspectRatioFixTopo
 }
 
@@ -23,11 +30,6 @@ void function ClRespawnselect_SP_Init()
 	AddCallback_OnPlayerLifeStateChanged( Callback_PlayerLifestateChanged )
 	file.respawnHintRui = RuiCreate( $"ui/respawn_hint.rpak", clGlobal.topoFullScreen, RUI_DRAW_HUD, RUI_SORT_SCREENFADE + 100 )
 	RuiSetResolutionToScreenSize( file.respawnHintRui )
-
-	float right = (GetScreenSize()[1] / 9.0) * 16.0
-	float down = GetScreenSize()[1]
-	float xOffset = (GetScreenSize()[0] - right) / 2
-	file.aspectRatioFixTopo = RuiTopology_CreatePlane( <xOffset, 0, 0>, <right, 0, 0>, <0, down, 0>, false )
 
 	DisableDeathBlur()
 }
@@ -87,7 +89,7 @@ void function DisplayRespawnPrompt( string hint )
 void function AnimateRunOver( string hint )
 {
 	float startTime = Time()
-	var deathMessage = RuiCreate( $"ui/cockpit_console_text_center.rpak", file.aspectRatioFixTopo, RUI_DRAW_HUD, RUI_SORT_SCREENFADE + 150 )
+	var deathMessage = RuiCreate( $"ui/cockpit_console_text_center.rpak", GetAspectRatioFixTopo(), RUI_DRAW_HUD, RUI_SORT_SCREENFADE + 150 )
 	RuiSetInt( deathMessage, "maxLines", 2 )
     RuiSetInt( deathMessage, "lineNum", 0 )
     RuiSetFloat2( deathMessage, "msgPos", <0.0, 0.1, 0> )
@@ -96,7 +98,7 @@ void function AnimateRunOver( string hint )
     RuiSetFloat( deathMessage, "msgFontSize", 36.0 )
     RuiSetFloat( deathMessage, "msgAlpha", 0.0 )
     RuiSetFloat( deathMessage, "thicken", 0.0 )
-	var runOverRUI = RuiCreate( $"ui/cockpit_console_text_center.rpak", file.aspectRatioFixTopo, RUI_DRAW_HUD, RUI_SORT_SCREENFADE + 150 )
+	var runOverRUI = RuiCreate( $"ui/cockpit_console_text_center.rpak", GetAspectRatioFixTopo(), RUI_DRAW_HUD, RUI_SORT_SCREENFADE + 150 )
 	RuiSetInt( runOverRUI, "maxLines", 2 )
     RuiSetInt( runOverRUI, "lineNum", 0 )
     RuiSetFloat2( runOverRUI, "msgPos", <0.0, 0.1, 0> )

@@ -43,25 +43,23 @@ global function Roguelike_PrintPlayerInventory
 global function Roguelike_RegisterItem
 global function Roguelike_ReverseHyperbolicChanceFunc
 global function Roguelike_SetItemDrawbacks
+global function Roguelike_RegisterRarity
+global function Roguelike_GetRarityColor
+global function Roguelike_GetRarityChatColor
+global function Roguelike_GetAllRarities
 #if !UI
 global function Roguelike_RollForChanceFunc
 global function Roguelike_RollStackingForChanceFunc
 #endif
-global function GetRandomIndexFromWeightedArray
 global function AddCallback_OnRoguelikeInventoryChanged
+global function GetRandomIndexFromWeightedArray
 
-global const RARITY_COMMON = 0
-global const RARITY_UNCOMMON = 1
-global const RARITY_LEGENDARY = 2
-global const RARITY_UMBRAL = 3
-global const RARITY_TITAN = 4
-global const RARITY_CONTEXTUAL_ITEM = 5
-
-global array<vector> roguelikeRarityColors = [<0.7, 0.7, 0.7>, // common
-<0.1, 0.9, 0.1>, // uncommon
-<0.9, 0.1, 0.1>, // legendary
-<0.1, 0.1, 0.9>, // umbral
-<0.8, 0.4, 0.1>] // titan
+global const RARITY_COMMON = "common"
+global const RARITY_UNCOMMON = "uncommon"
+global const RARITY_LEGENDARY = "legendary"
+global const RARITY_UMBRAL = "umbral"
+global const RARITY_TITAN = "titan"
+global const RARITY_CONTEXTUAL_ITEM = "contextual"
 
 struct ItemStat
 {
@@ -72,6 +70,13 @@ struct ItemStat
     bool functionref( int ) obsoleteFunc = null
 }
 
+struct Rarity 
+{
+    string id
+    vector color
+    vector chatColor
+}
+
 struct RoguelikeItem
 {
     string id
@@ -79,7 +84,7 @@ struct RoguelikeItem
     string name
     string description
     string drawbackDescription = ""
-    int rarity
+    string rarity
     asset model = $""
     float weight = 1.0
     table<int, string> chanceFormats
@@ -94,9 +99,15 @@ struct RoguelikeInventory
 struct
 {
     table<string, RoguelikeItem> items
-    array<float> rarityWeights = [40.0, 5.0, 1.0, 0.0, 4.0]
+    table<string, float> rarityWeights = {
+        common = 40.0, 
+        uncommon = 5.0, 
+        legendary = 1.0, 
+        titan = 4.0
+    }
     table<entity, RoguelikeInventory> inventories
     array<void functionref(entity, string, int, int)> inventoryCallbacks
+    table<string, Rarity> rarities
 } file
 
 void function ShItems_Init()
@@ -112,6 +123,14 @@ void function ShItems_Init()
         printt("DROP CHANCE FOR RARITY", index, "-", weight / max * 100.0, "%")
     }
     #endif
+    
+    Roguelike_RegisterRarity( RARITY_COMMON, <0.7, 0.7, 0.7>, <0.8, 0.8, 0.8> )
+    Roguelike_RegisterRarity( RARITY_UNCOMMON, <0.1, 0.9, 0.1>, <0.3, 0.9, 0.3> )
+    Roguelike_RegisterRarity( RARITY_LEGENDARY, <0.9, 0.1, 0.1>, <0.9, 0.3, 0.3> )
+    Roguelike_RegisterRarity( RARITY_UMBRAL, <0.1, 0.1, 0.9>, <0.3, 0.3, 0.9> )
+    Roguelike_RegisterRarity( RARITY_TITAN, <0.8, 0.4, 0.1>, <0.8, 0.4, 0.1> )
+    Roguelike_RegisterRarity( RARITY_CONTEXTUAL_ITEM, <0.2, 0.2, 0.2>, <0.2, 0.2, 0.2> )
+
 
     // Ammo Pack
     Roguelike_RegisterItem( "ammo_pack", "Ammo Pack", "Upon kill:\n`215`0%% (`2+15`0%% per stack) chance to restore 10% of the magazine", RARITY_COMMON )
@@ -147,7 +166,7 @@ void function ShItems_Init()
     //
 
     // Blood Scavenger
-    Roguelike_RegisterItem( "blood_scavenger", "Blood Scavenger", "Upon taking damage:\nAdd cash equivalent to `250`0%% (`2+50`0%% per stack) of the damage taken.", RARITY_UNCOMMON )
+    Roguelike_RegisterItem( "blood_scavenger", "Blood Scavenger", "Upon taking damage:\nAdd cash equivalent to `225`0%% (`2+25`0%% per stack) of the damage taken.", RARITY_UNCOMMON )
 
     // adrenaline shot
     func1 = Roguelike_LinearChanceFunc( 0.5, 0.25 )
@@ -218,9 +237,9 @@ void function ShItems_Init()
     //Roguelike_RegisterItem( "last_stand", "The Last Stand", "Their death comes quick...", RARITY_UMBRAL )
     //Roguelike_SetItemDrawbacks( "last_stand", "\nBUT it is delayed.")
 
-    Roguelike_RegisterItem( "heal_on_kill", "Heart Pumper", "On Kill:\nHeal for `25`0%% of your maximum health.", RARITY_COMMON)
-    func1 = Roguelike_LinearChanceFunc( 5, 5 )
-    Roguelike_AddItemStat( "heal_on_kill", "Heal Amount", func1, "`2%.1f`0%%%%")
+    Roguelike_RegisterItem( "heal_on_kill", "Heart Pumper", "On Kill:\nHeal for `220`0HP.", RARITY_COMMON)
+    func1 = Roguelike_LinearChanceFunc( 20, 20 )
+    Roguelike_AddItemStat( "heal_on_kill", "Heal Amount", func1, "`2%.1f`0")
 
     Roguelike_RegisterItem( "loan", "Business Card", "Take a loan...", RARITY_UMBRAL)
     Roguelike_SetItemDrawbacks( "loan", "\n\nVERY HIGH INTEREST.\nNOTE: Your blood CAN AND WILL be sold to pay the loan, if needed." )
@@ -228,11 +247,15 @@ void function ShItems_Init()
     Roguelike_SetItemAchievement( "loan", "pickup_legendary" )
     #endif
     Roguelike_RegisterItem("fatigue", "Fatigue", "", RARITY_CONTEXTUAL_ITEM)
-    Roguelike_SetItemDrawbacks("fatigue", "-`220%%`0 Health & Movement Speed per stack. 5 stacks, and you die.")
+    Roguelike_SetItemDrawbacks("fatigue", "-`220%%`0 Health & Movement Speed per stack.")
 
     Roguelike_RegisterItem( "max_hp", "Meat Armor", "+`25`0%% maximum health.", RARITY_COMMON )
     func1 = Roguelike_LinearChanceFunc( 10, 10 )
     Roguelike_AddItemStat( "max_hp", "Health Bonus", func1, "`2%.0f`0%%%%")
+
+    Roguelike_RegisterItem( "shield", "Shield Generator", "Gain shield equivalent to `210`0%% of your max health.", RARITY_UNCOMMON )
+    func1 = Roguelike_LinearChanceFunc( 10, 10 )
+    Roguelike_AddItemStat( "shield", "Shield Bonus", func1, "`2%.0f`0%%%%")
 
 
     //Roguelike_RegisterItem( "self_dmg", "Ibuprofen", "Kills the pain at the beginning.", RARITY_UMBRAL )
@@ -245,7 +268,7 @@ void function AddCallback_OnRoguelikeInventoryChanged( void functionref( entity,
     file.inventoryCallbacks.append( callback )
 }
 
-void function Roguelike_RegisterItem( string id, string name, string description, int rarity, float weight = 1.0, asset model = $"" )
+void function Roguelike_RegisterItem( string id, string name, string description, string rarity, float weight = 1.0, asset model = $"" )
 {
     if (id in file.items)
         throw "This item already exists."
@@ -280,7 +303,7 @@ string function Roguelike_GetItemDrawbackDesc( string item )
     return file.items[item].drawbackDescription
 }
 
-int function Roguelike_GetItemRarity( string item )
+string function Roguelike_GetItemRarity( string item )
 {
     if ( !( item in file.items ))
         throw "Name was requested for unknown item \"" + item + "\""
@@ -301,20 +324,20 @@ bool function Roguelike_DoesItemHaveModel( string item )
     return file.items[item].model != $""
 }
 
-string function Roguelike_GetRandomItemWithCustomWeights( array<float> weights )
+string function Roguelike_GetRandomItemWithCustomWeights( table<string, float> weights )
 {
-    int rarity = GetRandomIndexFromWeightedArray( weights )
+    string rarity = GetRandomKeyFromWeightedTypedTable( weights )
     //print(rarity)
     return Roguelike_GetRandomItem( rarity )
 }
 
-string function Roguelike_GetRandomItem( int rarity = -1 )
+string function Roguelike_GetRandomItem( string rarity = "" )
 {
-    if (rarity == -1)
+    if (rarity == "")
     {
-        array<float> weights = file.rarityWeights
+        table<string, float> weights = file.rarityWeights
 
-        rarity = GetRandomIndexFromWeightedArray( weights )
+        rarity = GetRandomKeyFromWeightedTypedTable( weights )
     }
     array<RoguelikeItem> items
     foreach ( item in file.items )
@@ -331,6 +354,24 @@ string function Roguelike_GetRandomItem( int rarity = -1 )
     return items[xorshift_range_int( 0, items.len(), GetRoguelikeSeed() + 3 )].id
 }
 
+string function GetRandomKeyFromWeightedTypedTable( table<string, float> weights )
+{
+    float total = 0.0
+    foreach ( string key, float weight in weights )
+        total += weight
+
+    float random = xorshift_range( 0, total )
+    float current = 0.0
+
+    foreach ( key, item in weights )
+    {
+        current += item
+        if ( current > random )
+            return key
+    }
+
+    unreachable
+}
 
 int function GetRandomIndexFromWeightedArray( array<float> weights )
 {
@@ -348,7 +389,7 @@ int function GetRandomIndexFromWeightedArray( array<float> weights )
             return index
     }
 
-    unreachable
+    return -1
 }
 
 int function GetRandomIndexFromWeightedItemArray( array<RoguelikeItem> weights )
@@ -429,7 +470,14 @@ void function Roguelike_GiveEntityItem( entity player, string item, int count = 
     }
     else file.inventories[player].items[item] += count
 
-    foreach ( callback in file.inventoryCallbacks )
+    if (file.inventories[player].items[item] == 0)
+    {
+        delete file.inventories[player].items[item]
+        
+        foreach ( callback in file.inventoryCallbacks )
+            callback( player, item, -count, 0 )
+    }
+    else foreach ( callback in file.inventoryCallbacks )
         callback( player, item, file.inventories[player].items[item] - count, file.inventories[player].items[item] )
 
     //if (player.IsPlayer())
@@ -667,7 +715,7 @@ array<string> function Roguelike_GetAllItems()
 }
 
 
-array<string> function Roguelike_GetAllItemsOfRarity( int rarity )
+array<string> function Roguelike_GetAllItemsOfRarity( string rarity )
 {
     array<string> result = []
     foreach ( key, value in file.items )
@@ -681,5 +729,41 @@ array<int> function StringToCharArray( string str )
     array<int> result = []
     for ( int i = 0; i < str.len(); i++ )
         result.append( expect int( str[i] ) )
+    return result
+}
+
+void function Roguelike_RegisterRarity( string id, vector color, vector chatColor )
+{
+    Rarity rarity
+
+    rarity.id = id
+    rarity.color = color
+    rarity.chatColor = chatColor
+
+    file.rarities[id] <- rarity
+}
+
+vector function Roguelike_GetRarityColor( string id )
+{
+    if (!(id in file.rarities))
+        throw "Requested color for unknown rarity '" + id + "'"
+
+    return file.rarities[id].color
+}
+
+vector function Roguelike_GetRarityChatColor( string id )
+{
+    if (!(id in file.rarities))
+        throw "Requested color for unknown rarity '" + id + "'"
+
+    return file.rarities[id].chatColor
+}
+
+array<string> function Roguelike_GetAllRarities()
+{
+    array<string> result
+    foreach ( string key, Rarity val in file.rarities)
+        result.append(key)
+
     return result
 }
