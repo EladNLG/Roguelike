@@ -191,8 +191,8 @@ void function OnLevelUp()
         float shieldFrac = float(player.GetShieldHealth()) / player.GetShieldHealthMax()
         int baseShield = CalculatePlayerMaxShield( player )
         baseShield = int(min(baseShield, 524287))
-        player.SetMaxHealth(baseShield)
-        player.SetHealth( int(min(baseShield, baseShield * shieldFrac)) )
+        player.SetShieldHealthMax(baseShield)
+        player.SetShieldHealth( int(min(baseShield, baseShield * shieldFrac)) )
     }
 }
 
