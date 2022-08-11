@@ -253,7 +253,7 @@ void function ShItems_Init()
     func1 = Roguelike_LinearChanceFunc( 10, 10 )
     Roguelike_AddItemStat( "max_hp", "Health Bonus", func1, "`2%.0f`0%%%%")
 
-    Roguelike_RegisterItem( "shield", "Shield Generator", "Gain shield equivalent to `210`0%% of your max health.", RARITY_UNCOMMON )
+    Roguelike_RegisterItem( "shield", "Shield Generator", "Gain shield equivalent to `210`0%% of your max health.", RARITY_TITAN )
     func1 = Roguelike_LinearChanceFunc( 10, 10 )
     Roguelike_AddItemStat( "shield", "Shield Bonus", func1, "`2%.0f`0%%%%")
 

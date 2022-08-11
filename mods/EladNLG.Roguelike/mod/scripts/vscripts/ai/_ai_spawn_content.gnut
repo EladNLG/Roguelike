@@ -442,7 +442,8 @@ function CommonNPCOnSpawned( entity npc )
 	}
 	#endif
 
-	Roguelike_GiveEntityItem( npc, "emergency_soda" )
+	// :(
+	//Roguelike_GiveEntityItem( npc, "emergency_soda" )
 
 	thread AssaultLinkedMoveTarget( npc )
 

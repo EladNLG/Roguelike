@@ -151,7 +151,7 @@ int function CalculatePlayerMaxHP( entity player )
 
     if (player.IsTitan())
     {
-        if (player.GetTitanSoul().IsDoomed())
+        if (IsValid(player.GetTitanSoul()) && player.GetTitanSoul().IsDoomed())
             baseHP /= 5
     }
 

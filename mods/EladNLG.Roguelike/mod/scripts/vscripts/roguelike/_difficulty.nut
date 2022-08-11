@@ -38,6 +38,7 @@ void function ScaleDamageWithEntityLevel( entity ent, var damageInfo )
 {
     entity attacker = DamageInfo_GetAttacker( damageInfo )
     float damage = DamageInfo_GetDamage( damageInfo )
+    print(damage)
 
     if (DamageInfo_GetForceKill( damageInfo ))
         return
@@ -49,6 +50,7 @@ void function ScaleDamageWithEntityLevel( entity ent, var damageInfo )
         if ("divisor" in ent.s)
             damageScale /= expect float( ent.s.divisor )
         float baseDamage = DamageInfo_GetDamage( damageInfo )
+        print(baseDamage * damageScale)
         //print( "MAX DAMAGE LEVEL: " + (524287 / baseDamage) )
         if (baseDamage * damageScale > 524287)
         {
@@ -62,7 +64,7 @@ void function ScaleDamageWithEntityLevel( entity ent, var damageInfo )
         printt("DAMAGE", damage, ent.GetMaxHealth())
         if (damage * float(ent.GetMaxHealth()) / 100.0 > 524287)
             DamageInfo_SetDamage( damageInfo, 524287 )
-        else DamageInfo_ScaleDamage( damageInfo, float(ent.GetMaxHealth()) / 100.0)
+        else DamageInfo_ScaleDamage( damageInfo, float(ent.GetMaxHealth()) / ent.GetPlayerModHealth())
     }
 }
 

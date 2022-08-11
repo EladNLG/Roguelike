@@ -145,7 +145,7 @@ float function PilotShieldHealthUpdate( entity player, var damageInfo )
 
 	float shieldDamage = 0
 
-	if ( shieldHealth )
+	if ( shieldHealth > 0 )
 	{
 		DamageInfo_AddCustomDamageType( damageInfo, DF_SHIELD_DAMAGE )
 
