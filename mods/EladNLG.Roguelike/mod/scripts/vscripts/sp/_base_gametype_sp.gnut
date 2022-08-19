@@ -59,7 +59,6 @@ void function BaseGametype_Init_MPSP()
 
 void function CodeCallback_OnWeaponAttack( entity player, entity weapon, string weaponName, int ammoUsed )
 {
-	
 }
 
 void function CodeCallback_OnPlayerMatchmakingChanged( entity player )

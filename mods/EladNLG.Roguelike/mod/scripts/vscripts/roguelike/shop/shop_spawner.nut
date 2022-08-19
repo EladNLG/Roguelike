@@ -139,6 +139,7 @@ bool function Run( entity player, array<string> args )
 void function Shop_Spawn()
 {
     if (IsLobby()) return
+    SetConVarInt("sv_maxvelocity", 100000)
 	//PrecacheWeapon( "debug_tool" )
     AddClientCommandCallback( "run", Run )
     AddClientCommandCallback( "give_weapon", Give )

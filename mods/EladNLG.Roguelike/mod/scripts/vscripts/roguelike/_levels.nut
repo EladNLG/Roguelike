@@ -5,7 +5,7 @@ global function GetLevel
 global function CalculateXPForLevel
 
 const int BASE_XP_PER_LEVEL = 250
-const float XP_PER_LEVEL_MULTIPLIER = 1.3
+const float XP_PER_LEVEL_MULTIPLIER = 1.1
 
 int xp = 0
 int level = 0
@@ -85,7 +85,7 @@ void function Levels_Update()
                 Remote_CallFunction_Replay( player, "ServerCallback_SetXP", xp, level, XP_PER_LEVEL_MULTIPLIER, BASE_XP_PER_LEVEL )
                 OnLevelUp()
             }
-        if (xpot) AddXP( 3 )
+        if (xpot) AddXP( 30 )
         WaitFrame()
     }
 }

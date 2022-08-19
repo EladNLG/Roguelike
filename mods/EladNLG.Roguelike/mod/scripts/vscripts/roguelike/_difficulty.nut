@@ -28,7 +28,7 @@ void function Difficulty_Init()
 void function ForceDifficultyCallbacks()
 {
     float time = Time() - GetGlobalNetTime("difficultyStartTime")
-    float timePerDifficulty = TIME_PER_DIFFICULTY / pow(GetLevelCountMultiplier(), levelCount)
+    float timePerDifficulty = TIME_PER_DIFFICULTY / GetLevelCountMultiplier() / pow(1.15, levelCount)
     roguelikeDifficulty = int(time * 3 / timePerDifficulty)
     foreach (void functionref( int, int ) callback in file.difficultyCallbacks)
         callback( roguelikeDifficulty, roguelikeDifficulty / 3 )
@@ -61,10 +61,14 @@ void function ScaleDamageWithEntityLevel( entity ent, var damageInfo )
     }
     else
     {
+        if (ent.IsNPC() && typeof( ent.Dev_GetAISettingByKeyField( "Health" ) ) == "string") return
         printt("DAMAGE", damage, ent.GetMaxHealth())
+
+		float baseHealth = ent.IsNPC() ? float(ent.Dev_GetAISettingByKeyField( "Health" )) : ent.GetPlayerModHealth()
+
         if (damage * float(ent.GetMaxHealth()) / 100.0 > 524287)
             DamageInfo_SetDamage( damageInfo, 524287 )
-        else DamageInfo_ScaleDamage( damageInfo, float(ent.GetMaxHealth()) / ent.GetPlayerModHealth())
+        else DamageInfo_ScaleDamage( damageInfo, float(ent.GetMaxHealth()) / baseHealth)
     }
 }
 
@@ -76,7 +80,7 @@ int function GetChestCost(float multiplier = 1.0)
 
 int function GetInitialDifficulty()
 {
-    float timePerDifficulty = TIME_PER_DIFFICULTY / pow(GetLevelCountMultiplier(), levelCount)
+    float timePerDifficulty = TIME_PER_DIFFICULTY / GetLevelCountMultiplier() / pow(1.15, levelCount)
     return int(GetConVarInt("roguelike_time") * 3 / timePerDifficulty)
 }
 
@@ -91,7 +95,7 @@ void function Difficulty_Update()
     while (true)
     {
         float time = Time() - GetGlobalNetTime("difficultyStartTime")
-        float timePerDifficulty = TIME_PER_DIFFICULTY / pow(GetLevelCountMultiplier(), levelCount)
+        float timePerDifficulty = TIME_PER_DIFFICULTY / GetLevelCountMultiplier() / pow(1.15, levelCount)
         roguelikeDifficulty = int(time * 3 / timePerDifficulty)
         //print(roguelikeDifficulty)
         while (lastDifficulty < roguelikeDifficulty)

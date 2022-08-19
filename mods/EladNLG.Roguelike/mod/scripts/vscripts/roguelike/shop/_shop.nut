@@ -57,26 +57,26 @@ void function OnNPCKilled_AddMoney( entity npc, entity attacker, var damageInfo 
             case "npc_drone":
             case "npc_soldier":
                 AddMoney( attacker, ScaleRewardWithDifficulty(15) );
-                AddXP( ScaleRewardWithDifficulty(30) )
+                AddXP( 30 )
                 break
             //case "npc_marvin":
             case "npc_titan":
                 AddMoney( attacker, ScaleRewardWithDifficulty(35) );
-                AddXP( ScaleRewardWithDifficulty(100) )
+                AddXP( 100 )
                 break
             case "npc_spectre":
                 AddMoney( attacker, ScaleRewardWithDifficulty(20) );
-                AddXP( ScaleRewardWithDifficulty(40) )
+                AddXP( 40 )
                 break
             case "npc_super_spectre":
                 AddMoney( attacker, ScaleRewardWithDifficulty(50) );
-                AddXP( ScaleRewardWithDifficulty(100) )
+                AddXP( 100 )
                 break
             case "npc_turret_mega":
             case "npc_turret_sentry":
             case "npc_stalker":
                 AddMoney( attacker, ScaleRewardWithDifficulty(35) );
-                AddXP( ScaleRewardWithDifficulty(70) )
+                AddXP( 70 )
                 break
             case "npc_prowler":
                 AddMoney( attacker, ScaleRewardWithDifficulty(25) );
@@ -84,11 +84,11 @@ void function OnNPCKilled_AddMoney( entity npc, entity attacker, var damageInfo 
                 break
             case "npc_frag_drone":
                 AddMoney( attacker, ScaleRewardWithDifficulty(5) );
-                AddXP( ScaleRewardWithDifficulty(10) )
+                AddXP( 10 )
                 break
             case "npc_marvin":
                 AddMoney( attacker, ScaleRewardWithDifficulty(5) );
-                AddXP( ScaleRewardWithDifficulty(75) )
+                AddXP( 75 )
         }
     }
 }
@@ -97,40 +97,14 @@ void function AddMoney( entity player, int amount )
 {
     if ( player.IsPlayer() )
     {
-        int curMoney = player.GetPlayerNetInt( "roguelikeCash" )
+        int curMoney = GetMoney( player )
         curMoney += amount
-        int cashStacks = player.GetPlayerNetInt( "roguelikeCashStacks" )
-        int cashStacksStacks = player.GetPlayerNetInt( "roguelikeCashStacksStacks" )
-        while (curMoney > 1023)
-        {
-            curMoney -= 1024
-            cashStacks++
-            while (cashStacks > 1023)
-            {
-                cashStacks -= 1024
-                cashStacksStacks++
-            }
-            while (cashStacks < 0)
-            {
-                cashStacks += 1024
-                cashStacksStacks--
-            }
-        }
-        while (curMoney < 0)
-        {
-            curMoney += 1024
-            cashStacks--
-            while (cashStacks > 1023)
-            {
-                cashStacks -= 1024
-                cashStacksStacks++
-            }
-            while (cashStacks < 0)
-            {
-                cashStacks += 1024
-                cashStacksStacks--
-            }
-        }
+        if (curMoney < 0)
+            curMoney = 0
+        int cashStacks = curMoney / 1024
+        int cashStacksStacks = cashStacks / 1024
+        cashStacks = cashStacks % 1024
+        curMoney = curMoney % 1024
         player.SetPlayerNetInt( "roguelikeCashStacks", cashStacks )
         player.SetPlayerNetInt( "roguelikeCashStacksStacks", int(min(cashStacksStacks, 1023)) )
         player.SetPlayerNetInt( "roguelikeCash", curMoney );
@@ -143,40 +117,14 @@ void function RemoveMoney( entity player, int amount )
 {
     if ( player.IsPlayer() )
     {
-        int curMoney = player.GetPlayerNetInt( "roguelikeCash" )
+        int curMoney = GetMoney( player )
         curMoney -= amount
-        int cashStacks = player.GetPlayerNetInt( "roguelikeCashStacks" )
-        int cashStacksStacks = player.GetPlayerNetInt( "roguelikeCashStacksStacks" )
-        while (curMoney > 1023)
-        {
-            curMoney -= 1024
-            cashStacks++
-            while (cashStacks > 1023)
-            {
-                cashStacks -= 1024
-                cashStacksStacks++
-            }
-            while (cashStacks < 0)
-            {
-                cashStacks += 1024
-                cashStacksStacks--
-            }
-        }
-        while (curMoney < 0)
-        {
-            curMoney += 1024
-            cashStacks--
-            while (cashStacks > 1023)
-            {
-                cashStacks -= 1024
-                cashStacksStacks++
-            }
-            while (cashStacks < 0)
-            {
-                cashStacks += 1024
-                cashStacksStacks--
-            }
-        }
+        if (curMoney < 0)
+            curMoney = 0
+        int cashStacks = curMoney / 1024
+        int cashStacksStacks = cashStacks / 1024
+        cashStacks = cashStacks % 1024
+        curMoney = curMoney % 1024
         player.SetPlayerNetInt( "roguelikeCashStacks", cashStacks )
         player.SetPlayerNetInt( "roguelikeCashStacksStacks", cashStacksStacks )
         player.SetPlayerNetInt( "roguelikeCash", curMoney );

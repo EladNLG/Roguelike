@@ -178,7 +178,7 @@ void function DifficultyRUI_Update()
             clGlobal.levelEnt.EndSignal("RoguelikeTimerOff")
             calledEnd = true
         }
-        float timePerDifficulty = TIME_PER_DIFFICULTY / pow(GetLevelCountMultiplier(), GetConVarInt( "level_count" ))
+        float timePerDifficulty = TIME_PER_DIFFICULTY / GetLevelCountMultiplier() / pow(1.15, GetConVarInt("level_count"))
         float time = Time() - GetGlobalNetTime("difficultyStartTime")
         float seconds = time % 60
         int minutes = int(time) / 60

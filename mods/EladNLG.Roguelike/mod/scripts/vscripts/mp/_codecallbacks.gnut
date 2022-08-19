@@ -261,13 +261,13 @@ void function CodeCallback_DamagePlayerOrNPC( entity ent, var damageInfo )
 		}
 	}
 	
+	ScaleDamageWithEntityLevel( ent, damageInfo )
+	
 	foreach ( callbackFunc in file.onDamageCallbacks )
 	{
 		callbackFunc( ent, damageInfo )
 		if (DamageInfo_GetDamage( damageInfo ) <= 0) return
 	}
-
-	ScaleDamageWithEntityLevel( ent, damageInfo )
 
 	// Added via AddEntityCallback_OnDamaged
 	foreach ( callbackFunc in ent.e.entDamageCallbacks )

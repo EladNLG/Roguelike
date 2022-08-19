@@ -2,7 +2,7 @@ untyped
 global function Roguelike_SetUpRemoteFuncs
 global function Roguelike_GetProcCoefficent
 global function GetLevelCountMultiplier
-global const float TIME_PER_DIFFICULTY = 240
+global float TIME_PER_DIFFICULTY = 240
 
 struct
 {
@@ -11,18 +11,18 @@ struct
 
 float function GetLevelCountMultiplier()
 {
-    switch (GetConVarInt("roguelike_difficulty"))
+    /*switch (GetConVarInt("roguelike_difficulty"))
     {
         case 0:
-            return 1.1
+            return 0.85
         case 1:
-            return 1.15
+            return 1
         case 2: 
-            return 1.2
+            return 1.15
         case 3:
-            return 1.25
-    }
-    return 1.1
+            return 1.3
+    }*/
+    return 0.85 + GetConVarInt("roguelike_difficulty") * 0.15
 }
 
 void function Roguelike_SetUpRemoteFuncs()

@@ -68,24 +68,6 @@ void function OnDamageEvent( entity ent, var damageInfo )
     
     //if (DamageInfo_GetForceKill(damageInfo)) return
 
-    if (sodaStacks > 0 && !ent.IsTitan())
-    {
-        if (DamageInfo_GetDamage(damageInfo) > ent.GetHealth())
-        {
-            DamageInfo_SetDamage( damageInfo, 1 )
-            ent.SetHealth(ent.GetMaxHealth())
-            Roguelike_GiveEntityItem( ent, "emergency_soda", -1 )
-            if (!ent.IsPlayer()) {
-                Chat_ServerBroadcast( format(
-                    "\x1b[38;2;150;150;150mUsed their %s%s\x1b[38;2;150;150;150m to save their life (%i remaining)", 
-                    ColorToEscapeCode(Roguelike_GetRarityChatColor(RARITY_LEGENDARY)), Roguelike_GetItemName( "emergency_soda" ), Roguelike_GetItemCount(ent, "emergency_soda")) )
-            }
-            else Chat_Impersonate( ent, format(
-            "\x1b[38;2;150;150;150mUsed their %s%s\x1b[38;2;150;150;150m to save their life (%i remaining)", 
-            ColorToEscapeCode(Roguelike_GetRarityChatColor(RARITY_LEGENDARY)), Roguelike_GetItemName( "emergency_soda" ), Roguelike_GetItemCount(ent, "emergency_soda")), false )
-        }
-    }
-
     if (!attacker.IsTitan() && ent.IsTitan())
     {
         try
@@ -115,6 +97,41 @@ void function OnDamageEvent( entity ent, var damageInfo )
                 DamageInfo_SetDamage( damageInfo, 524287 )
             }
             break
+    }
+
+    if (sodaStacks > 0 && !ent.IsTitan())
+    {
+        if (DamageInfo_GetDamage(damageInfo) > ent.GetHealth())
+        {
+            DamageInfo_SetDamage( damageInfo, 1 )
+            ent.SetHealth(ent.GetMaxHealth())
+            Roguelike_GiveEntityItem( ent, "emergency_soda", -1 )
+            if (!ent.IsPlayer()) {
+                Chat_ServerBroadcast( format(
+                    "\x1b[38;2;150;150;150mUsed their %s%s\x1b[38;2;150;150;150m to save their life (%i remaining)", 
+                    ColorToEscapeCode(Roguelike_GetRarityChatColor(RARITY_LEGENDARY)), Roguelike_GetItemName( "emergency_soda" ), Roguelike_GetItemCount(ent, "emergency_soda")) )
+            }
+            else Chat_Impersonate( ent, format(
+            "\x1b[38;2;150;150;150mUsed their %s%s\x1b[38;2;150;150;150m to save their life (%i remaining)", 
+            ColorToEscapeCode(Roguelike_GetRarityChatColor(RARITY_LEGENDARY)), Roguelike_GetItemName( "emergency_soda" ), Roguelike_GetItemCount(ent, "emergency_soda")), false )
+
+            StatusEffect_AddTimed( ent, eStatusEffect.stim_visual_effect, 0.99, 2.0, 1.0 )
+            StatusEffect_AddTimed( ent, eStatusEffect.speed_boost, 0.25, 2.0, 1.0 )
+            
+            thread void function( entity ent ) { 
+                WaitFrame()
+                ent.SetInvulnerable()
+                if (ent.IsPlayer()) {
+                    EmitSoundOnEntityOnlyToPlayer( ent, ent, "pilot_stimpack_deactivate_1P" )
+                    EmitSoundOnEntityExceptToPlayer( ent, ent, "pilot_stimpack_deactivate_3P" )
+                }
+                else EmitSoundOnEntity( ent, "pilot_stimpack_deactivate_3P" )
+
+                wait 2.0
+                
+                ent.ClearInvulnerable() 
+            }(ent)
+        }
     }
 
     int hatStacks = Roguelike_GetItemCount( attacker, "ukulele" )
