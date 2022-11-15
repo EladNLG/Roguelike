@@ -135,7 +135,7 @@ void function OnDamageEvent( entity ent, var damageInfo )
     }
 
     int hatStacks = Roguelike_GetItemCount( attacker, "ukulele" )
-    if (hatStacks > 0 && RandomFloat(1) < 0.2)
+    if (hatStacks > 0 && RandomFloat(1) < 0.2 && DamageInfo_GetDamageSourceIdentifier(damageInfo) != eDamageSourceId.ukulele)
     {
         float outerRadius = attacker.IsTitan() ? TITAN_TOP_HAT_RADIUS : PILOT_TOP_HAT_RADIUS
         outerRadius *= 1.0 + 0.1 * (hatStacks - 1)
@@ -153,7 +153,7 @@ void function OnDamageEvent( entity ent, var damageInfo )
 			0.0,																	// distanceFromAttacker
 			0.0,																	// explosionForce
 			DF_NO_SELF_DAMAGE | DF_ELECTRICAL,											// scriptDamageFlags
-			eDamageSourceId.invalid )												// scriptDamageSourceIdentifier
+			eDamageSourceId.ukulele )												// scriptDamageSourceIdentifier
     }
 }
 

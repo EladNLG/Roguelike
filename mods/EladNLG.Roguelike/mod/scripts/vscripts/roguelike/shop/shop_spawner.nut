@@ -7,7 +7,7 @@ global function GetShopSpawnLocation
 global entity s2s_mover = null
 // model to represent the interactable shop
 const asset SHOP_INTERACTABLE_MODEL = $"models/beacon/crane_room_monitor_console.mdl"
-const asset CHEST_INTERACTABLE_MODEL = $"models/containers/pelican_case_large.mdl"
+const asset CHEST_INTERACTABLE_MODEL = $"models/containers/pelican_case_large.mdl" //$"models/containers/pelican_case_large.mdl"
 const asset CHEST_INTERACTABLE_MODEL_OPEN = $"models/containers/pelican_case_large_open.mdl"
 // placeholder for the shop, will be replaced by the above.
 //const asset SHOP_INTERACTABLE_MODEL = $"models/humans/grunts/imc_grunt_rifle.mdl"
@@ -152,6 +152,8 @@ void function Shop_Spawn()
     //PrecacheModel( $"models/weapons/ammoboxes/ammobox_missle.mdl" )
     PrecacheModel( $"models/weapons/ammoboxes/backpack_single.mdl" )
     PrecacheModel( $"models/weapons/ammoboxes/mags_cluster.mdl" )
+    PrecacheModel( $"models/containers/pelican_case_large.mdl" )
+    PrecacheModel( CHEST_INTERACTABLE_MODEL )
     PrecacheModel( $"models/containers/pelican_case_large_open.mdl" )
 
     entity shop = CreatePropDynamic( SHOP_INTERACTABLE_MODEL, GetShopSpawnLocation(), GetShopSpawnAngles(), 6 )
@@ -426,7 +428,11 @@ bool function RandomlyPlaceShop(int s = 0, entity forceParent = null)
     shop.SetModel( CHEST_INTERACTABLE_MODEL )
     shop.SetOrigin( tr.endPos )
     shop.SetAngles( <0, RandomFloatRange(0, 180), 0> )
+    shop.Solid()
     shop.kv.solid = 6
+    shop.kv.solidity = 0
+    shop.kv.triangle_collision = 1
+    shop.kv.collide_titan = 1
     if ( forceParent != null ) shop.SetParent(forceParent)
     else if (tr.hitEnt.GetClassName() != "worldspawn") 
     {

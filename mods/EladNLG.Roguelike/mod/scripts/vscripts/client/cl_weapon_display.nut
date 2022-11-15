@@ -121,6 +121,11 @@ void function TrackWeaponPos( var topo, var bgTopo )
             	<GetScreenSize()[0] * 0.2, 0, 0>, <0, GetScreenSize()[0] * 0.2 / 16.0 * 9.0, 0>)
 			RuiTopology_UpdatePos( bgTopo, <GetScreenSize()[0], GetScreenSize()[1], 0>, 
            		<GetScreenSize()[0] * 0.2, 0, 0>, <0, GetScreenSize()[0] * 0.2 / 16.0 * 9.0, 0>)
+
+			foreach (var rui in file.modNameRuis)
+				RuiDestroy(rui)
+			   
+			file.modNameRuis.clear()
 	
 			continue
 		}

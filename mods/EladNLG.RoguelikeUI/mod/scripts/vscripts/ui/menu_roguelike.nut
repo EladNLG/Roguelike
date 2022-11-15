@@ -3,6 +3,8 @@ globalize_all_functions
 global bool allowMP = true
 global bool allowSP = true
 
+float startTime = 0.0
+
 array<var> function AddRoguelikeMenu( ComboStruct comboStruct )
 {
     AddComboButtonHeader( comboStruct, 0, "ROGUELIKE" )
@@ -15,7 +17,13 @@ array<var> function AddRoguelikeMenu( ComboStruct comboStruct )
     Hud_AddEventHandler( result[0], UIE_CLICK, OpenNewRunMenu )// NewRun )
     Hud_AddEventHandler( result[1], UIE_CLICK, AdvanceMenuEventHandler(GetMenu("Logbook")) )
     Hud_AddEventHandler( result[3], UIE_CLICK, PlayCampaign )
+    
     return result
+}
+
+void function Roguelike_OnLoadingScreen()
+{
+
 }
 
 void function OpenNewRunMenu(var button)
@@ -35,6 +43,13 @@ void function PlayCampaign(var button) {
 void function NewRun( var button )
 {
     int seed = int( Hud_GetUTF8Text( Hud_GetChild( GetMenu( "StartRun"), "SetSeed") ) )
+    bool resetScript = false
+    if (!NSIsModEnabled( "TF|Roguelike" ))
+    {
+        resetScript = true
+        NSSetModEnabled( "TF|Roguelike", true )
+        NSReloadMods() // do this now so we don't have to worry about TF|Roguelike not being enabled
+    }
     SetConVarInt( "player_xp", 0 )
     SetConVarInt( "player_level", 0 )
     SetConVarInt( "roguelike_time", 0 )
@@ -46,12 +61,7 @@ void function NewRun( var button )
     SetConVarString( "player_3_items", "" )
     SetConVarString( "player_4_items", "" )
     SetConVarInt( "roguelike_difficulty", int( Hud_GetDialogListSelectionValue( GetDifficultyButton() ) ) )
-    if (!NSIsModEnabled( "TF|Roguelike" ))
-    {
-        NSSetModEnabled( "TF|Roguelike", true )
-        NSReloadMods() // do this now so we don't have to worry about TF|Roguelike not being enabled
-        ClientCommand( "uiscript_reset; map sp_crashsite" )
-    }
+    if (resetScript) ClientCommand( "uiscript_reset; map sp_crashsite" )
     else ClientCommand( "map sp_crashsite" )
 }
 

@@ -154,6 +154,7 @@ void function RestartUpdateWhenHUDOn()
 }
 
 bool signalledHideTimer = false
+float roguelikeRealTime = 0.0
 void function DifficultyRUI_Update()
 {
     if (IsLobby()) return
@@ -187,7 +188,8 @@ void function DifficultyRUI_Update()
         float difficultyFrac = time % timePerDifficulty / timePerDifficulty
         float timeSinceLastDifChange = time % (timePerDifficulty / 3)
 
-        RuiSetString( file.timeRUI, "msgText", format("%02i:%02i", minutes, int(fabs(seconds))) )
+        //print(FrameTime())
+        RuiSetString( file.timeRUI, "msgText", format("%02i:%02i.%01i", minutes, int(fabs(seconds)), int(fabs(seconds % 1.0 * 10)) ) )
 
         BasicImageBar_SetFillFrac( file.difficultyBar, difficultyFrac )
         vector curColor = difficultyColors[int(max(min(difficulty, difficultyColors.len() - 1),0))]

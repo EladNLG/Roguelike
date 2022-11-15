@@ -54,8 +54,8 @@ void function RegisterRemoteFunctions()
         RegisterNetworkedVariableChangeCallback_int( "roguelikeCash", CashAmountChanged )
         #endif
     }
-    getconsttable()[ "eDamageSourceId" ][ "ukelele" ] <- 4903274 // random number to avoid conflict with other mods
-    RegisterWeaponDamageSourceName( "ukelele", "Ukelele" )
+    getconsttable()[ "eDamageSourceId" ][ "ukulele" ] <- 4903274 // random number to avoid conflict with other mods
+    RegisterWeaponDamageSourceName( "ukulele", "Ukulele" )
     file.procCoefficent[4903274] <- 0.2
 }
 

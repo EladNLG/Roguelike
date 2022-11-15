@@ -16,7 +16,6 @@ void function AmmoPack_OnNPCKilled( entity npc, entity attacker, var damageInfo 
     //    attacker.SetHealth(int(min(attacker.GetHealth() + 0.02 * attacker.GetMaxHealth() * healStacks, attacker.GetMaxHealth())))
     //}
 
-    print(eDamageSourceId.ukelele)
     if (!attacker.IsPlayer()) return
 
     entity weapon = DamageInfo_GetWeapon( damageInfo )
@@ -54,10 +53,9 @@ void function AmmoPack_OnNPCKilled( entity npc, entity attacker, var damageInfo 
     int roll = Roguelike_RollStackingForChanceFunc(Roguelike_LinearChanceFunc(20, 20, 300), stacks)
     for (int i = 0; i < roll && i < 3; i++)
     {
-        if (weapon.GetWeaponPrimaryClipCountMax() > 0)
-            weapon.SetWeaponPrimaryClipCount( min( weapon.GetWeaponPrimaryClipCount() + max( weapon.GetWeaponPrimaryClipCountMax() / 5, 1 ),
-                weapon.GetWeaponPrimaryClipCountMax() ) )
-        else if (weapon.GetWeaponSettingInt( eWeaponVar.ammo_stockpile_max ) > 0)weapon.SetWeaponPrimaryAmmoCount( minint( weapon.GetWeaponSettingInt( eWeaponVar.ammo_stockpile_max ), weapon.GetWeaponPrimaryAmmoCount() + weapon.GetWeaponSettingInt( eWeaponVar.ammo_stockpile_max ) / 5 ) )
+        if (weapon.GetWeaponSettingInt( eWeaponVar.ammo_stockpile_max ) > 0)
+            weapon.SetWeaponPrimaryAmmoCount( minint( weapon.GetWeaponPrimaryAmmoCount() + maxint( weapon.GetWeaponPrimaryClipCountMax() / 5, 1 ),
+                weapon.GetWeaponSettingInt( eWeaponVar.ammo_stockpile_max ) ) )
     }
         
 }

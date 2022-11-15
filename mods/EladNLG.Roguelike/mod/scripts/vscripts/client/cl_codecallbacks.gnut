@@ -95,7 +95,7 @@ void function ClDroppedWeaponFlyout_Init()
 		RuiSetFloat( rui, "thicken", 0.5 )
 		file.weaponNameRui = rui
 
-		rui = RuiCreate( RUI_TEXT_RIGHT, topo, RUI_DRAW_HUD, -4 )
+		/*rui = RuiCreate( RUI_TEXT_RIGHT, topo, RUI_DRAW_HUD, -4 )
 		RuiSetInt( rui, "maxLines", 1 )
 		RuiSetInt( rui, "lineNum", 0 )
 		RuiSetFloat2( rui, "msgPos", <1.0 - 0.02 * horzMultiplier, -0.15, 0> )
@@ -137,7 +137,7 @@ void function ClDroppedWeaponFlyout_Init()
 		RuiSetFloat( rui, "msgFontSize", 90.0 )
 		RuiSetFloat( rui, "msgAlpha", 0.9 )
 		RuiSetFloat( rui, "thicken", 0.0 )
-		file.weaponFireRateLabelRui = rui
+		file.weaponFireRateLabelRui = rui*/
 	}
 
 	file.weaponModTopo = topo
@@ -317,6 +317,11 @@ void function TrackWeaponPos( var topo, var bgTopo )
             	<GetScreenSize()[0] * 0.2, 0, 0>, <0, GetScreenSize()[0] * 0.2 / 16.0 * 9.0, 0>)
 			RuiTopology_UpdatePos( bgTopo, <GetScreenSize()[0], GetScreenSize()[1], 0>, 
            		<GetScreenSize()[0] * 0.2, 0, 0>, <0, GetScreenSize()[0] * 0.2 / 16.0 * 9.0, 0>)
+
+			foreach (var rui in file.modNameRuis)
+				RuiDestroy(rui)
+			
+			file.modNameRuis.clear()
 	
 			continue
 		}
@@ -507,7 +512,7 @@ void function WeaponPickupFlyout_UpdateInfo( entity weaponEnt, string weapon, ar
 	}
 
 
-	if (!weaponEnt.IsWeaponOffhand())
+	/*if (!weaponEnt.IsWeaponOffhand())
 	{
 		RuiSetString( file.weaponLevelRui, "msgText", AbbreviateNumber(ScaleDamageWithWeaponLevel(weaponEnt)) )
 		RuiSetString( file.weaponLevelLabelRui, "msgText", "DAMAGE" )
@@ -542,7 +547,7 @@ void function WeaponPickupFlyout_UpdateInfo( entity weaponEnt, string weapon, ar
 			}
 			RuiSetString( file.weaponLevelLabelRui, "msgText", "CHARGES" )
 		}
-	}
+	}*/
 	RuiSetString( file.weaponNameRui, "msgText", GetWeaponInfoFileKeyField_GlobalString(weapon, "shortprintname") )
 
 	for (int i = 0; i < file.modNameRuis.len(); i++)

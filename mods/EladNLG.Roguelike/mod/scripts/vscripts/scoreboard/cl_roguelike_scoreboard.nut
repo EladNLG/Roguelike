@@ -66,8 +66,8 @@ void function Roguelike_InitScoreboard()
 
 void function Roguelike_ShowScoreboard()
 {
-	PauseDisplay()
-	StopPickupPrompt()
+	//PauseDisplay()
+	//StopPickupPrompt()
     array<string> items = Roguelike_GetPlayerItems( GetLocalClientPlayer() )
 	print(items.len())
 
@@ -116,8 +116,8 @@ void function Roguelike_ShowScoreboard()
 
 void function Roguelike_HideScoreboard()
 {
-	ResumeDisplay()
-	ResumePickupPrompt()
+	//ResumeDisplay()
+	//ResumePickupPrompt()
     array<string> items = Roguelike_GetPlayerItems( GetLocalClientPlayer() )
 
 	thread RuiSetFloatOverTime( file.bgRui, "basicImageAlpha", 0.70, 0.0, 0.1 )
