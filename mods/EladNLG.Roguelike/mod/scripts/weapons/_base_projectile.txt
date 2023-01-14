@@ -1,3 +1,4 @@
+#base "_base_weapon.txt"
 "WeaponData"
 {
     Mods

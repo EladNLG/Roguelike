@@ -1,9 +1,24 @@
-#base "_base_weapon.txt"
 #base "_base_hitscan.txt"
 "WeaponData"
 {
     Mods
     {
-        
+        burst_orientation_3
+        {
+            "burst_fire_count"								"3"
+            "burst_fire_delay"								"0.25"
+        }
+        burst_orientation_4
+        {
+            "burst_fire_count"								"4"
+            "burst_fire_delay"								"0.25"
+        }
+        mag_dump
+        {
+            "damage_near_value"   									"*1.25"
+            "damage_far_value"   									"*1.25"
+            "burst_fire_count"								"99999"
+            "burst_fire_delay"								"0.25"
+        }  
     }
 }

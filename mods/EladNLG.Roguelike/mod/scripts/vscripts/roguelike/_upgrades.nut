@@ -64,8 +64,6 @@ Choice ornull function UnlockLoadout()
             break
     }
 
-    print(choices.len())
-
     if (choices.len() == 1)
     {
         SetBTLoadoutUnlocked( BTLoadoutToIndex( choices[0] ) )

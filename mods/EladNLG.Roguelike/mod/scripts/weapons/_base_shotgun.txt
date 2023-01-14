@@ -11,5 +11,26 @@
             "explosionradius" 								"50"
 	        "impulse_force"   								"5000"
         }
+
+        burst_orientation_3
+        {
+            "burst_fire_count"								"3"
+            "burst_fire_delay"								"0.666"
+            "fire_rate"                     "*5"
+        }
+        burst_orientation_4
+        {
+            "burst_fire_count"								"4"
+            "burst_fire_delay"								"0.666"
+            "fire_rate"                     "*5"
+        }
+        mag_dump
+        {
+            "damage_near_value"   									"*1.25"
+            "damage_far_value"   									"*1.25"
+            "burst_fire_count"								"99999"
+            "burst_fire_delay"								"0.666"
+            "fire_rate"                     "*5"
+        }
     }
 }

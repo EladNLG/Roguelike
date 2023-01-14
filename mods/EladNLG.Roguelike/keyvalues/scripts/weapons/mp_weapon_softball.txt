@@ -7,5 +7,17 @@
 	//"regen_ammo_stockpile_drain_rate_when_charging"	"0.0"
 	Mods
 	{
+        burst_orientation_3
+        {
+            "fire_rate"                     "*7"
+        }
+        burst_orientation_4
+        {
+            "fire_rate"                     "*7"
+        }
+        mag_dump
+        {
+            "fire_rate"                     "*7"
+        }
 	}
 }

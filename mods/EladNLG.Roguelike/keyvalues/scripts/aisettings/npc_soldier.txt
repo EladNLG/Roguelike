@@ -1,0 +1,7 @@
+npc_soldier
+{
+	MeleeDamageMax			30		[$mp]
+	MeleeDamageMin			30		[$mp]
+	MeleeDamageMax			30		[$sp]
+	MeleeDamageMin			30		[$sp]
+}

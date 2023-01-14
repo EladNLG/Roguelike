@@ -13,11 +13,11 @@ void function HealthRegen_Init()
 {
 	if ( IsSingleplayer() )
 	{
-		file.healthRegenRate = 1.0
+		file.healthRegenRate = 0.25
 	}
 	else
 	{
-		file.healthRegenRate = 6.0
+		file.healthRegenRate = 0.25
 		AddCallback_PlayerClassChanged( HealthRegen_OnPlayerClassChangedMP )
 		RegisterSignal( "PilotHealthRegenThink" )
 	}
@@ -33,7 +33,7 @@ void function PilotHealthRegenThinkSP( entity player )
 	while ( IsValid( player ) )
 	{
 		startTime = Time()
-		wait 0.0001
+		wait 0.05
 		deltaTime = Time() - startTime
 
 		if ( !IsAlive( player ) )
@@ -47,10 +47,10 @@ void function PilotHealthRegenThinkSP( entity player )
 
 		//Assert( IsTestMap() || player.GetPlayerSettings() == DEFAULT_PILOT_SETTINGS, "for now, we should all be pilot_solo at all times, or in a test map." )
 
-		if ( player.GetHealth() == player.GetMaxHealth() )
-			continue
+		//if ( player.GetHealth() == player.GetMaxHealth() )
+		//	continue
 
-		float healthRegenRate = 5.0 * (1.0 + Roguelike_GetItemCount( player, "heal_mod" ) * 0.25)
+		float healthRegenRate = 4.0 * (1.0 + Roguelike_GetItemCount( player, "heal_mod" ) * 0.25) * (1.0 + 0.3 * GetLevel())
 		float healthRegenStartDelay = 0.0//GraphCapped( player.GetHealth(), 0, player.GetMaxHealth(), 3.0, 0.8 )
 
 		//printt( "recentDamage " + recentDamage + " delay " + healthRegenStartDelay + " rate " + healthRegenRate )
@@ -60,12 +60,15 @@ void function PilotHealthRegenThinkSP( entity player )
 		//	continue
 		//}
 
-		healthToRegen += healthRegenRate * HEALTH_REGEN_TICK_TIME
+		healthToRegen += healthRegenRate * 0.05
+		//print(healthToRegen)
 		//print(healthToRegen)
 		int healthToAdd = int(healthToRegen)
 		healthToRegen -= float(healthToAdd)
 
-		player.SetHealth( min( player.GetMaxHealth(), player.GetHealth() + healthToAdd ) )
+		player.SetHealth( min( player.GetMaxHealth() * (1.0 - (player.GetPlayerNetFloat( "hardDamage" ) / 100.0)), player.GetHealth() + healthToAdd ) )
+		if (Time() - player.p.lastDamageTime >= 4.0)
+        	player.SetPlayerNetFloatOverTime( "hardDamage", 0.0, 5.0 * (player.GetPlayerNetFloat( "hardDamage" ) / 100.0) )
 	}
 }
 
@@ -130,7 +133,7 @@ void function PilotHealthRegenThinkMP( entity player )
 
 void function HealthRegen_OnPlayerClassChangedMP( entity player )
 {
-	thread PilotHealthRegenThinkMP( player )
+	thread PilotHealthRegenThinkSP( player )
 }
 
 float function PilotShieldHealthUpdate( entity player, var damageInfo )

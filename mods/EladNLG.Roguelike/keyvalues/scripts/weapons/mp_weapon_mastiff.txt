@@ -2,6 +2,12 @@
 #base "_base_projectile.txt"
 WeaponData
 {
+    "deploy_time"           "0.4"
+	"bolt_bounce_frac"								"0.000"
+	"projectile_damage_reduction_per_bounce"		"0.0"
+	"projectile_damages_owner"						"0"
+	"projectile_ricochet_max_count"					"0"
+    "OnProjectileCollision"             "OnProjectileCollision_weapon_sniper"
     Mods
     {
         knockback

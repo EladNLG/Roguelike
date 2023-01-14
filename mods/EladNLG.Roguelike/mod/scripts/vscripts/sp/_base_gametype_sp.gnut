@@ -393,7 +393,9 @@ function PostDeathThread_SP( entity player, damageInfo )
 	if ( showedDeathHint )
 		reloadExtraDelay = 3.2
 
-	ReloadForMissionFailure( reloadExtraDelay )
+	if (damageSource == eDamageSourceId.fall)
+		ReloadForMissionFailure( reloadExtraDelay )
+	else DisconnectForMissionFailure( reloadExtraDelay )
 }
 
 

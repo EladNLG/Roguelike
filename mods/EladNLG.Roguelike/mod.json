@@ -75,6 +75,29 @@
                 "After": "Shop_Spawn"
             }
         },
+        // ARMOR UTILITY STUFF
+        {
+            "Path": "roguelike/armor/sh_armor.nut",
+            "RunOn": "CLIENT || UI || SERVER"
+        },
+        {
+            "Path": "roguelike/armor/_armor.nut",
+            "RunOn": "SERVER",
+            "ServerCallback":{
+                "After": "_Armor_Init"
+            }
+        },
+        {
+            "Path": "roguelike/armor/cl_armor.nut",
+            "RunOn": "CLIENT",
+            "ClientCallback": {
+                "After": "ClArmor_Init"
+            }
+        },
+        {
+            "Path": "roguelike/armor/ui_armor.nut",
+            "RunOn": "UI"
+        },
         // calls UI script to open the shop menu when the shop interact remote func is called.
         {
             "Path": "roguelike/shop/cl_shop.nut",
@@ -113,6 +136,15 @@
             "Path": "roguelike/shop/ui_shop.nut",
             "RunOn": "UI"
         },
+        // INVENTORY
+        {
+            "Path": "ui/menu_inventory.nut",
+            "RunOn": "UI",
+            "UICallback":
+            {
+                "Before": "Inventory_Init"
+            }
+        },
         // SHOP MENU
         {
             "Path": "ui/menu_shop_test.gnut",
@@ -126,6 +158,11 @@
         {
             "Path": "ui/menu_mod_select.gnut",
             "RunOn": "UI"
+        },
+        // ARMOR UI UTILITY STUFF
+        {
+            "Path": "roguelike/armor/armor_panel.nut",
+            "RunOn": "CLIENT || UI"
         },
         // UI DATA REQUEST HANDLING
         {
@@ -288,42 +325,22 @@
             "DefaultValue": "0",
             "Flags": 16384 // FCVAR_CHEAT | FCVAR_GAMEDLL | FCVAR_ARCHIVE
         },
-        // we support up to 4 players.
+        // these are userinfos, meaning they could be modified by the client thru vscript.
+        // this is a co-op mode tho, so we don't really care..?
         {
-            "Name": "player_1_name",
-            "DefaultValue": ""
-        },
-        {
-            "Name": "player_2_name",
-            "DefaultValue": ""
-        },
-        {
-            "Name": "player_3_name",
-            "DefaultValue": ""
-        },
-        {
-            "Name": "player_4_name",
-            "DefaultValue": ""
-        },
-        {
-            "Name": "player_1_items",
+            "Name": "player_name",
             "DefaultValue": "",
-            "Flags": 16388
+            "Flags": 512
         },
         {
-            "Name": "player_2_items",
+            "Name": "player_items",
             "DefaultValue": "",
-            "Flags": 16388
+            "Flags": 512
         },
         {
-            "Name": "player_3_items",
+            "Name": "player_armor",
             "DefaultValue": "",
-            "Flags": 16388
-        },
-        {
-            "Name": "player_4_items",
-            "DefaultValue": "",
-            "Flags": 16388
+            "Flags": 512
         },
         {
             "Name": "roguelike_time",

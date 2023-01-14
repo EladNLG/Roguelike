@@ -15,6 +15,7 @@ struct
 
 void function Roguelike_InitScoreboard()
 {
+	return
 	float right = (GetScreenSize()[1] / 9.0) * 16.0
 	float down = GetScreenSize()[1]
 	float xOffset = (GetScreenSize()[0] - right) / 2
@@ -66,6 +67,8 @@ void function Roguelike_InitScoreboard()
 
 void function Roguelike_ShowScoreboard()
 {
+	RunUIScript("OpenInventory")
+	return
 	//PauseDisplay()
 	//StopPickupPrompt()
     array<string> items = Roguelike_GetPlayerItems( GetLocalClientPlayer() )
@@ -111,11 +114,12 @@ void function Roguelike_ShowScoreboard()
 	foreach (var rui in  file.playerItemRUIs)
 		batch.append(rui)
 	thread RuiBatchSetFloatOverTime( batch, "msgAlpha", 0.0, 0.9, 0.1)
-
+	//RunUIScript( "ServerCallback_OpenShop" )
 }
 
 void function Roguelike_HideScoreboard()
 {
+	return
 	//ResumeDisplay()
 	//ResumePickupPrompt()
     array<string> items = Roguelike_GetPlayerItems( GetLocalClientPlayer() )
@@ -130,6 +134,7 @@ void function Roguelike_HideScoreboard()
 	print("=-=-=-=-=-=-=-=-=-=")
 	thread RuiBatchSetFloatOverTime( batch, "msgAlpha", 0.9, 0.0, 0.1)
 	//thread RuiBatchSetFloatOverTime( file.playerItemCountRUIs, "msgAlpha", 0.9, 0.0, 0.1)
+	//RunUIScript( "ServerCallback_OpenShop" )
 }
 
 void function RuiSetFloatOverTime( var rui, string param, float start, float end, float time )

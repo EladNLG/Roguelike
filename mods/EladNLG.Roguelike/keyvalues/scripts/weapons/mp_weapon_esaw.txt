@@ -15,11 +15,13 @@ WeaponData
 
         it_never_ends
         {
-            "fire_rate_max"         "++80"
-            "fire_rate_max_time_speedup"        "*9"
-            "ammo_clip_size"                "*3"
-            "ammo_stockpile_max"            "*3"
-            "ammo_default_total"            "*2"
+            "burst_or_looping_fire_sound_start_1p"          ""
+            "fire_sound_1_player_1p"						"weapon_devotion_firstshot_1p"
+            "fire_rate_max"         "++150"
+            "fire_rate_max_time_speedup"        "*16"
+            "ammo_clip_size"                "*0"
+            "ammo_stockpile_max"            "*30"
+            "ammo_default_total"            "*30"
         }
     }
 }

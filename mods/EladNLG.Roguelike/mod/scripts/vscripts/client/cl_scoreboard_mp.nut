@@ -296,6 +296,7 @@ function ScoreboardFadeOut()
 void function ShowScoreboardMP()
 {
 	thread Roguelike_ShowScoreboard()
+	return
 	entity localPlayer = GetLocalClientPlayer()
 
 	file.scoreboardBg = RuiCreate( $"ui/scoreboard_background.rpak", clGlobal.topoFullScreen, RUI_DRAW_HUD, 0 )
@@ -805,6 +806,7 @@ void function UpdateScoreboardForGamemode( entity player, var rowRui, var scoreH
 void function HideScoreboardMP()
 {
 	thread Roguelike_HideScoreboard()
+	return
 	ScoreboardFadeOut()
 	wait( 0.1 )
 	file.hasFocus = false

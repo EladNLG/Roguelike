@@ -20,12 +20,14 @@ void function InitScoreboardSP()
 
 void function ShowScoreboardSP()
 {
+	RunUIScript("OpenInventory")
 	Roguelike_ShowScoreboard()
 	//GetLocalClientPlayer().ClientCommand( "ToggleObjective" )
 }
 
 void function HideScoreboardSP()
 {
+	RunUIScript("OpenInventory")
 	Roguelike_HideScoreboard()
 	//GetLocalClientPlayer().ClientCommand( "ToggleObjective" )
 }

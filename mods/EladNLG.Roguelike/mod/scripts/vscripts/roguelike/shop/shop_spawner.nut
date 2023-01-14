@@ -5,6 +5,7 @@ global function RandomlyPlaceShop
 global function GetShopSpawnLocation
 
 global entity s2s_mover = null
+global const float ARMOR_CHEST_MULTIPLIER = 3.0
 // model to represent the interactable shop
 const asset SHOP_INTERACTABLE_MODEL = $"models/beacon/crane_room_monitor_console.mdl"
 const asset CHEST_INTERACTABLE_MODEL = $"models/containers/pelican_case_large.mdl" //$"models/containers/pelican_case_large.mdl"
@@ -16,6 +17,8 @@ const asset CHEST_INTERACTABLE_MODEL_OPEN = $"models/containers/pelican_case_lar
 struct
 {
     entity shop
+    array<entity> triggers
+    array<entity> invalidShops
 } file
 
 int function Roguelike_GetStartPoint()
@@ -139,6 +142,9 @@ bool function Run( entity player, array<string> args )
 void function Shop_Spawn()
 {
     if (IsLobby()) return
+
+    file.triggers.extend(GetEntArrayByClass_Expensive( "trigger_out_of_bounds" ))
+    file.triggers.extend(GetEntArrayByClass_Expensive( "trigger_hurt" ))
     SetConVarInt("sv_maxvelocity", 100000)
 	//PrecacheWeapon( "debug_tool" )
     AddClientCommandCallback( "run", Run )
@@ -369,15 +375,15 @@ void function Roguelike_DebugDrawBox( vector mins, vector maxs, int r, int g, in
     DebugDrawLine(minZ, maxX, r, g, b, !drawThroughWorld, duration)
     DebugDrawLine(minZ, maxY, r, g, b, !drawThroughWorld, duration)
 
-    DebugDrawLine(mins, maxZ, r, g, b, !drawThroughWorld, duration)
-    DebugDrawLine(minX, maxs, r, g, b, !drawThroughWorld, duration)
-    DebugDrawLine(minY, maxs, r, g, b, !drawThroughWorld, duration)
-    DebugDrawLine(minZ, maxs, r, g, b, !drawThroughWorld, duration)
+    //DebugDrawLine(mins, maxZ, r, g, b, !drawThroughWorld, duration)
+    //DebugDrawLine(minX, maxs, r, g, b, !drawThroughWorld, duration)
+    //DebugDrawLine(minY, maxs, r, g, b, !drawThroughWorld, duration)
+    //DebugDrawLine(minZ, maxs, r, g, b, !drawThroughWorld, duration)
 
-    DebugDrawLine(maxs, minZ, r, g, b, !drawThroughWorld, duration)
-    DebugDrawLine(maxX, mins, r, g, b, !drawThroughWorld, duration)
-    DebugDrawLine(maxY, mins, r, g, b, !drawThroughWorld, duration)
-    DebugDrawLine(maxZ, mins, r, g, b, !drawThroughWorld, duration)
+    //DebugDrawLine(maxs, minZ, r, g, b, !drawThroughWorld, duration)
+    //DebugDrawLine(maxX, mins, r, g, b, !drawThroughWorld, duration)
+    //DebugDrawLine(maxY, mins, r, g, b, !drawThroughWorld, duration)
+    //DebugDrawLine(maxZ, mins, r, g, b, !drawThroughWorld, duration)
 }
 
 bool function RandomlyPlaceShop(int s = 0, entity forceParent = null)
@@ -422,6 +428,8 @@ bool function RandomlyPlaceShop(int s = 0, entity forceParent = null)
             return false
         }
     }
+    
+    if (tr.hitEnt.GetScriptName() == "roguelike_chest") return false
 
     //PrintTraceResults( tr )
     entity shop = CreateEntity( "prop_dynamic" )
@@ -429,16 +437,20 @@ bool function RandomlyPlaceShop(int s = 0, entity forceParent = null)
     shop.SetOrigin( tr.endPos )
     shop.SetAngles( <0, RandomFloatRange(0, 180), 0> )
     shop.Solid()
+    foreach (entity trigger in file.triggers)
+    {
+        if (trigger.IsTouching(shop))
+        {
+            shop.Destroy()
+            return false
+        }
+    }
     shop.kv.solid = 6
     shop.kv.solidity = 0
     shop.kv.triangle_collision = 1
     shop.kv.collide_titan = 1
     if ( forceParent != null ) shop.SetParent(forceParent)
-    else if (tr.hitEnt.GetClassName() != "worldspawn") 
-    {
-        if (tr.hitEnt.GetScriptName() == "roguelike_chest") return false
-        shop.SetParent( tr.hitEnt )
-    }
+    else shop.SetParent( tr.hitEnt )
     //if (RandomFloat(1.0) < 0.1)
     shop.kv.rendercolor = "255 255 255"
     DispatchSpawn( shop )
@@ -447,7 +459,9 @@ bool function RandomlyPlaceShop(int s = 0, entity forceParent = null)
     //shop.SetUsableByGroup( "pilot" )
     float multiplier = 1
     string name = "Chest"
-    if (xorshift_range( 0.0, 1.0, GetRoguelikeSeed() + 1 ) < 0.3333)
+    bool customUseCallback = false
+    float rand = xorshift_range( 0.0, 1.0, GetRoguelikeSeed() + 1 )
+    if (rand< 0.3333)
     {
         shop.s.weights <- {
             uncommon = 10.0, 
@@ -456,13 +470,24 @@ bool function RandomlyPlaceShop(int s = 0, entity forceParent = null)
         name = "Large Chest"
         Highlight_SetNeutralHighlight( shop, "roguelike_large_chest" )
     }
+    else if (rand < 0.5) // 16.6666% chance
+    {
+        Highlight_SetNeutralHighlight( shop, "roguelike_armor_chest" )
+        name = "Armor Chest"
+        multiplier = ARMOR_CHEST_MULTIPLIER
+        AddCallback_OnUseEntity( shop, SpawnArmor )
+        customUseCallback = true
+    }
     else Highlight_SetNeutralHighlight( shop, "roguelike_chest" )
     shop.s.multiplier <- multiplier
     shop.SetUsePrompts( "Hold %use% to open " + name + " (" + GetChestCost(multiplier) + "$)", "Press %use% to open " + name + " (" + GetChestCost(multiplier) + "$)" )
+    
+    DebugDrawLine(shop.GetOrigin(), shop.GetOrigin() + <0, 0, 32>, 0, 255, 0, false, 999.9)
     //DispatchSpawn( shop )
     //Highlight_SetNeutralHighlight( shop, "roguelike_chest" )
 
-    AddCallback_OnUseEntity( shop, OpenChest )
+    if (!customUseCallback)
+        AddCallback_OnUseEntity( shop, OpenChest )
     return true
 }
 
@@ -471,6 +496,7 @@ function OpenChest( chest, player )
     expect entity( player )
     expect entity( chest )
     float multiplier = expect float( chest.s.multiplier )
+
     if (GetMoney( player ) < GetChestCost(multiplier))
     {
         EmitSoundOnEntity( player, "coop_sentrygun_deploymentdeniedbeep" )
@@ -532,9 +558,11 @@ array<vector> function GetChestBounds(int s = 0)
             }
             return [< -2000, -8000, -2000>, <2000, 8000, 1000> ]
         case "sp_crashsite":
-            return [ < -(1<<14) + 2000, -(1<<14) + 2000, 0 >, < (1<<14) - 2000, (1<<14) - 2000, 1500 > ]
+            return [ < -(1<<14) + 2000, -(1<<14) + 2000, 0 >, < (1<<14) - 2000, (1<<14) - 2000, 1300 > ]
         case "mp_thaw":
             return [ < -2900, -5650, -500>, <5000, 4400, 400> ]
+        case "sp_boomtown":
+            return [ < -12000, -4000, 2000 >, < 10000, 14000, 3000 > ]
     }
 
     return [ < -(1<<14) + 2000, -(1<<14) + 2000, -(1<<12) + 2000 >, < (1<<14) - 2000, (1<<14) - 2000, (1<<12) - 2000 > ]
@@ -569,7 +597,8 @@ array<vector> function GetChestSpawnBanBounds()
     switch (GetMapName())
     {
         case "sp_training":
-            return [ < -14000, -13000, -60>, < 14000, -7600, 300> ]
+            return [ < -14000, -13000, -100>, < 14000, -7600, 300>,
+                     < -4500, -11000, -150 >, < 1500, 4000, 10000 > ]
         case "sp_crashsite":
             return [ < -1350, -1600, 350>, <5000, 5000, 1500>,
                      < -3600, -8000, 0>, < -870, -1600, 2500>]

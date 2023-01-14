@@ -371,9 +371,9 @@ bool function ShowDeathHintSP( entity player, var damageInfo )
 		return true
 	}
 
-	SetHintViewedRecently( 0 ) // push out old hints
+	Remote_CallFunction_NonReplay( player, "ServerCallback_ShowDeathHint", hints[0] ) // push out old hints
 
-	return false
+	return true
 }
 
 array<DeathHintGroup> function GetHintGroupForSPDeath( entity player, var damageInfo )

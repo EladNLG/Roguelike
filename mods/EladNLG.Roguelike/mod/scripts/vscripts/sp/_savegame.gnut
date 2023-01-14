@@ -10,6 +10,7 @@ global function CodeCallback_OnSavedSaveGame
 global function InitSaveGame
 global function LoadSaveTimeDamageMultiplier
 global function ReloadForMissionFailure
+global function DisconnectForMissionFailure
 global function GetLastCheckPointLoadTime
 global function SafeForCheckPoint
 global function SafeToSpawnAtOrigin
@@ -295,6 +296,7 @@ void function ClearPlayerVelocityOnContext( entity player )
 void function CodeCallback_OnLoadSaveGame()
 {
 	printt( "SaveGame: OnLoadSaveGame" )
+	SetConVarInt("sv_quota_stringcmdspersecond", 1000)
 	file.loadSaveTime = Time()
 
 	UpdateCollectiblesAfterLoadSaveGame()
@@ -530,14 +532,38 @@ void function ReloadForMissionFailure_Thread( float extraDelay )
 
 	waitthread WaitForRespawnNowOrTimePass( player, 2.8 + extraDelay )
 
-	if ( GetConVarInt( "sv_cheats") == 0) ServerCommand( "disconnect" )
-	else ReloadFromSave_RestartFallback()
+	/*if ( GetConVarInt( "sv_cheats") == 0) ServerCommand( "disconnect" )
+	else */ReloadFromSave_RestartFallback()
 }
 
 void function WaitForRespawnNowOrTimePass( entity player, float delay )
 {
 	player.EndSignal( "RespawnNow" )
 	wait delay
+}
+
+void function DisconnectForMissionFailure( float extraDelay = 0 )
+{
+	thread DisconnectForMissionFailure_Thread( extraDelay )
+}
+
+void function DisconnectForMissionFailure_Thread( float extraDelay )
+{
+	FlagClear( "SaveGame_Enabled" ) // no more saving, you have lost
+	FlagSet( "MissionFailed" )
+
+	Signal( file.signalDummy, "StopSearchingForSafeSave" )
+
+	entity player = GetFirstPlayer()
+	if ( IsValid( player ) )
+		EmitSoundOnEntityOnlyToPlayer( player, player, "4_second_fadeout" )
+
+	wait 5
+
+	waitthread WaitForRespawnNowOrTimePass( player, 2.8 + extraDelay )
+
+	if ( GetConVarInt( "sv_cheats") == 0) ServerCommand( "disconnect" )
+	else ReloadFromSave_RestartFallback()
 }
 
 void function SkipReloadDelay_Thread( entity player )

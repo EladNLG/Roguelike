@@ -21,7 +21,7 @@ void function OnDamageEvent( entity ent, var damageInfo )
     if (ent.IsPlayer())
     {
         int scavStacks = Roguelike_GetItemCount( ent, "blood_scavenger" )
-        AddMoney( ent, int(scavStacks * DamageInfo_GetDamage( damageInfo ) * 0.25) )
+        AddMoney( ent, ScaleRewardWithDifficulty(int(scavStacks * (DamageInfo_GetDamage( damageInfo ) / float(ent.GetMaxHealth()))) * 25, 0.2))
     }
 
     if (!IsValid(weapon) && IsValid(attacker) && IsValid(projectile) && projectile.IsProjectile() && (attacker.IsNPC() || attacker.IsPlayer()))

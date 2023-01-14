@@ -6,4 +6,20 @@
 	//"regen_ammo_refill_rate"						"1.0"
 	//"regen_ammo_stockpile_max_fraction"				"0.1"
 	//"regen_ammo_stockpile_drain_rate_when_charging"	"0.0"
+	"bolt_spread_max"					"0.04"
+	"pass_through_damage_preserved_scale"			"1"
+	Mods
+	{
+		wide
+		{
+			"projectiles_per_shot"				"7"
+		}
+        mass_destruction
+        {
+			"bolt_bounce_frac"								"1.0"
+	        "projectile_ricochet_max_count"					"5000"
+	        "pass_through_depth"							"5000"
+			"projectile_launch_speed"						"*0.25"
+        }
+	}
 }

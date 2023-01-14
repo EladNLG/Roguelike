@@ -36,13 +36,14 @@ void function ItemDrops_Init()
 {
     if (IsLobby()) return
 	AddCallback_OnNPCKilled(  OnNPCKilled_DropItem )
-    AddSpawnCallback( "player", PlayerConnected )
+    AddCallback_OnClientConnected( PlayerConnected )
     AddCallback_OnPlayerRespawned( Roguelike_SyncPlayer )
-    AddCallback_OnRoguelikeInventoryChanged( void function( entity player, string item, int old, int new ) : ()
+    AddCallback_OnRoguelikeItemGained( void function( entity player, string item, int old, int new ) : ()
     {
+        printt(getstackinfos(3)[ "func" ], getstackinfos(2)[ "func" ])
         foreach ( p in GetPlayerArray() )
         {
-            Remote_CallFunction_NonReplay( p, "ServerCallback_SetItemAmount", p.GetEncodedEHandle(), Roguelike_GetItemNumericId( item ), new )
+            Remote_CallFunction_NonReplay( p, "ServerCallback_SetItemAmount", Roguelike_GetItemNumericId( item ), new, getstackinfos(3)[ "func" ] != "SetItemsForPlayerFromString" && getstackinfos(2)[ "func" ] == "Roguelike_GiveEntityItem" )
         }
     } )
     
@@ -125,31 +126,26 @@ void function OnLevelEnd( string mapName, LevelTransitionStruct trans )
         if (index > 3) break
         if (player.s.hasLoan)
             CheckLoan(player)
-        AddXP( GetMoney( player ) )
+        AddXP( float(GetMoney( player )) )
         RemoveMoney( player, GetMoney( player ) )
-        SetConVarString("player_" + (index + 1) + "_name", player.GetPlayerName() )
-        SetConVarString("player_" + (player.GetPlayerIndex() + 1) + "_items", GetItemConVarValue( player ) )
+        //SetConVarString("player_" + (index + 1) + "_name", player.GetPlayerName() )
+        //SetConVarString("player_" + (player.GetPlayerIndex() + 1) + "_items", GetItemConVarValue( player ) )
     }
-    SetConVarInt( "level_count", levelCount + 1 )
+    switch (mapName)
+    {
+        case "sp_hub_timeshift":
+            break
+
+        default:
+            SetConVarInt( "level_count", levelCount + 1 )
+            break
+    }
     SetConVarInt( "roguelike_time", int( Time() - GetGlobalNetTime("difficultyStartTime") ) )
 }
 
 void function PlayerConnected( entity player )
 {
-    for (int i = 0; i < 4; i++)
-    {
-        if (GetConVarString("player_" + (i + 1) + "_name") == player.GetPlayerName() )
-            { SetItemsForPlayerFromString(player, GetConVarString("player_" + (i + 1) + "_items")); break; }
-    }
-    for (int i = 0; i < 4; i++)
-    {
-        if (GetConVarString("player_" + (i + 1) + "_name") == "")
-        {
-            SetConVarString("player_" + (i + 1) + "_name", player.GetPlayerName() )
-            //SetItemsForPlayerFromString(player, "")
-            break
-        }
-    }
+    SetItemsForPlayerFromString(player, expect string(player.GetUserInfoString("player_items", ""))); 
 
     player.s.hasLoan <- 0
     if (Roguelike_GetItemCount( player, "loan") > 0)
@@ -210,10 +206,10 @@ void function Roguelike_SyncPlayer( entity player )
         //print(item)
         foreach ( p in GetPlayerArray() )
         {
-            Remote_CallFunction_NonReplay( p, "ServerCallback_SetItemAmount", p.GetEncodedEHandle(), Roguelike_GetItemNumericId( item ), Roguelike_GetItemCount( player, item ) )
+            Remote_CallFunction_NonReplay( p, "ServerCallback_SetItemAmount", Roguelike_GetItemNumericId( item ), Roguelike_GetItemCount( player, item ), false )
         }
     }
-    SetConVarString("player_" + (player.GetPlayerIndex() + 1) + "_items", GetItemConVarValue( player ) )
+    //SetConVarString("player_" + (player.GetPlayerIndex() + 1) + "_items", GetItemConVarValue( player ) )
 }
 
 void function OnNPCKilled_DropItem( entity npc, entity attacker, var damageInfo )
@@ -227,9 +223,7 @@ void function OnNPCKilled_DropItem( entity npc, entity attacker, var damageInfo 
         itemRollsLost = 0
     }
     else itemRollsLost++*/
-
-    if (attacker.IsTitan())
-        return
+    return
     
     printt("Healing", attacker, "for", Roguelike_GetItemCount( attacker, "heal_on_kill") * 5 + "%", "(",     
     20 * Roguelike_GetItemCount( attacker, "heal_on_kill"), attacker.GetHealth() + 20 * Roguelike_GetItemCount( attacker, "heal_on_kill"), ")")
@@ -292,6 +286,7 @@ function GrabItemCallback( string item )
     return function( itemObj, player ) : ( item ) {
         expect entity( player )
         expect entity( itemObj )
+        EmitSoundAtPosition( TEAM_ANY, itemObj.GetOrigin(), "wpn_pickup_Pistol_1P" )
         Roguelike_GiveEntityItem( player, item )
         Roguelike_UnlockAchievement( player, "pickup" )
         string rarity = Roguelike_GetItemRarity( item )
@@ -309,20 +304,6 @@ function GrabItemCallback( string item )
 string function ColorToEscapeCode( vector color )
 {
     return "\x1b[38;2;" + int(color.x * 255) + ";" + int(color.y * 255) + ";" + int(color.z * 255) + "m"
-}
-
-string function GetItemConVarValue( entity player )
-{
-    string result = ""
-    int len = Roguelike_GetPlayerItems(player).len()
-    foreach ( index, item in Roguelike_GetPlayerItems(player))
-    {
-        int itemId = Roguelike_GetItemNumericId( item )
-        int amount = Roguelike_GetItemCount( player, item )
-        result += itemId + " " + amount
-        if (index < len - 1) result += " "
-    }
-    return result
 }
 
 void function SetItemsForPlayerFromString(entity player, string str)

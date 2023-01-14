@@ -8,14 +8,7 @@ function RemoteFunctions_Init()
 	Remote_BeginRegisteringFunctions()
 	_RegisteringFunctions = true
 
-	try
-	{
-		compilestring( "InitCustomNetworkVars()" )()
-	}
-	catch ( error )
-	{
-		print( "Error in InitCustomNetworkVars: " + error )
-	}
+	InitCustomNetworkVars()
 	switch ( GetMapName() )
 	{
 		case "sp_grunt_arena":

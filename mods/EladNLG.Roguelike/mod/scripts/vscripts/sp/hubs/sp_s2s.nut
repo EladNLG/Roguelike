@@ -18300,7 +18300,7 @@ void function RecordRampRun( string filename )
 	var recording = file.player.StopRecordingAnimation()
 
 #if PC_PROG
-	SaveRecordedAnimation( recording, filename )
+	//SaveRecordedAnimation( recording, filename )
 #endif
 	printt( "RECORDING DONE" )
 }
@@ -18323,7 +18323,7 @@ void function RecordTrinity( string filename )
 	var recording = file.player.StopRecordingAnimation()
 
 #if PC_PROG
-	SaveRecordedAnimation( recording, filename )
+	//SaveRecordedAnimation( recording, filename )
 #endif
 	printt( "RECORDING DONE" )
 }
@@ -18345,7 +18345,7 @@ void function RecordStairRun( string filename )
 	var recording = file.player.StopRecordingAnimation()
 
 #if PC_PROG
-	SaveRecordedAnimation( recording, filename )
+	//SaveRecordedAnimation( recording, filename )
 #endif
 	printt( "RECORDING DONE" )
 }
@@ -18381,7 +18381,7 @@ printt( "RECORDING STARTED" )
 	var recording1 = file.player.StopRecordingAnimation()
 
 #if PC_PROG
-	SaveRecordedAnimation( recording1, filename1 )
+	//SaveRecordedAnimation( recording1, filename1 )
 #endif
 
 printt( "RECORDING DONE" )
@@ -18423,9 +18423,9 @@ printt( "RECORDING STARTED" )
 	var recording3 = file.player.StopRecordingAnimation()
 
 #if PC_PROG
-	SaveRecordedAnimation( recording1, filename1 )
-	SaveRecordedAnimation( recording2, filename2 )
-	SaveRecordedAnimation( recording3, filename3 )
+	//SaveRecordedAnimation( recording1, filename1 )
+	//SaveRecordedAnimation( recording2, filename2 )
+	//SaveRecordedAnimation( recording3, filename3 )
 #endif
 printt( "RECORDING DONE" )
 }

@@ -5,11 +5,29 @@
 	//"regen_ammo_refill_rate"						"1.0"
 	//"regen_ammo_stockpile_max_fraction"				"0.1"
 	//"regen_ammo_stockpile_drain_rate_when_charging"	"0.0"
+	SP_BASE
+	{
+		"ammo_default_total"							"50"
+		"ammo_stockpile_max"							"50"
+	}
+	MP_BASE
+	{
+		"ammo_default_total"							"50"
+		"ammo_stockpile_max"							"50"
+	}
 	Mods
 	{
-		delayed_shot
-		{
-			
-		}
+        burst_orientation_3
+        {
+            "fire_rate"                     "*7"
+        }
+        burst_orientation_4
+        {
+            "fire_rate"                     "*7"
+        }
+        mag_dump
+        {
+            "fire_rate"                     "*7"
+        }
 	}
 }

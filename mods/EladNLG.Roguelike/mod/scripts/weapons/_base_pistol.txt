@@ -1,6 +1,7 @@
+
 "WeaponData"
 {
-    "move_speed_modifier"   "1.2"
+    "move_speed_modifier"   "1.0"
     Mods
     {
         light_mag
@@ -12,6 +13,31 @@
         heavy_mag
         {
             "ammo_clip_size"    "*1.5"
+        }
+
+        burst_orientation_3
+        {
+            "damage_near_value"   									"*1.25"
+            "damage_far_value"   									"*1.25"
+            "burst_fire_count"								"3"
+            "burst_fire_delay"								"0.25"
+            "fire_rate"                     "*1.5"
+        }
+        burst_orientation_4
+        {
+            "damage_near_value"   									"*1.25"
+            "damage_far_value"   									"*1.25"
+            "burst_fire_count"								"4"
+            "burst_fire_delay"								"0.25"
+            "fire_rate"                     "*1.5"
+        }
+        mag_dump
+        {
+            "damage_near_value"   									"*3"
+            "damage_far_value"   									"*3"
+            "burst_fire_count"								"99999"
+            "burst_fire_delay"								"0.25"
+            "fire_rate"                     "*1.5"
         }
     }
 }

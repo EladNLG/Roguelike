@@ -13,6 +13,7 @@ global function Gauntlet_ChallengeLeaderboardGhosts
 #if DEV
 global function Gauntlet_Player_GhostRecordOrPlayback
 #endif
+global function SaveRecordedAnimation
 
 const float GAUNTLET_ENEMY_MISSED_TIME_PENALTY = 2.0
 const float GAUNTLET_TARGET_DISSOLVE_TIME = 1.0
@@ -1031,7 +1032,7 @@ void function Gauntlet_Player_StartRecordingGhost( entity player, GauntletInfo g
 		}
 
 		#if PC_PROG
-			SaveRecordedAnimation( recording, ghost.fileName )
+			//SaveRecordedAnimation( recording, ghost.fileName )
 			Dev_PrintMessage( player, "Anim Data Saved", "BAKE and CLEAR BUG REPRO NUM and RELOAD LEVEL to play it back.", 5.5 )
 			printt( "RECORDED ANIM SAVED:", ghost.fileName )
 
@@ -1053,3 +1054,8 @@ void function Gauntlet_Player_StartRecordingGhost_Hints( entity player, Gauntlet
 	Dev_PrintMessage( player, ghost.displayName, "FINISH Gauntlet and kill ALL TARGETS to SAVE GHOST.", 5.0 )
 }
 #endif //DEV
+
+void function SaveRecordedAnimation( var a, var b )
+{
+
+}

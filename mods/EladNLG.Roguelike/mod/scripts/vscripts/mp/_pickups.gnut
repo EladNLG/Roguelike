@@ -903,6 +903,11 @@ void function CreateWeaponPickup( entity ent )
 		weapon.SetVelocity( <0,0,0> )
 	}
 	GenerateNPCMods( weapon )
+	
+	int defaultTotal = weapon.GetWeaponSettingInt( eWeaponVar.ammo_default_total )
+	int clipSize = weapon.GetWeaponSettingInt( eWeaponVar.ammo_clip_size )
+
+	weapon.SetWeaponPrimaryAmmoCount( defaultTotal - clipSize )
 	#if DEV
 	if ( !IsTestMap() )
 	{

@@ -616,7 +616,7 @@ void function GenerateNPCMods( entity weapon, int index = -1 )
 		mods += m
 		mods += ", "
 	}
-	int modCount = [ 3, 4, 5, 6, 7 ][GetRandomIndexFromWeightedArray( [ 50.0, 25.0, 12.5, 6.25, 3.125 ] )]
+	int modCount = [ 3, 4, 5, 6, 7 ][GetRandomIndexFromWeightedArray( [ 75.0, 12.5, 6.25, 3.125, 1.625 ] )]
 	// one mod
 	for (int i = 0; i < modCount; i++) {
 		if (maxWeight < 0)
@@ -673,6 +673,12 @@ void function GenerateNPCMods( entity weapon, int index = -1 )
 
 	if (result.len() < 1) printl("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	SetModsUntilItWorks(weapon, result)
+	int defaultTotal = weapon.GetWeaponSettingInt( eWeaponVar.ammo_default_total )
+	int clipSize = weapon.GetWeaponSettingInt( eWeaponVar.ammo_clip_size )
+	
+	if (clipSize > 0)
+		weapon.SetWeaponPrimaryClipCount( clipSize )
+	weapon.SetWeaponPrimaryAmmoCount( defaultTotal - clipSize )
 	if (!IsValid(npc))
 		HighlightWeapon( weapon )
 }

@@ -108,11 +108,6 @@ void function OnShopTest_Open()
     RunClientScript("GetClientWeapons_ShopTest")
 }
 
-void function OpenShopTestMenu()
-{
-    print("fuck")
-    AdvanceMenu( GetMenu( "ShopTest" ) )
-}
 
 void function SetClientWeapons_ShopTest()
 {
@@ -228,4 +223,20 @@ void function SecondaryModMenuButton_OnClick(var button)
     SetIsSecondary_ModSelect(true)
     SetIsSelling_ModSelect(button == file.buttons[2][1])
     AdvanceMenu( GetMenu("ModSelect") )
+}
+
+void function UpdateClientMenuOpenState()
+{
+	for ( ;; )
+	{
+		WaitSignal( uiGlobal.signalDummy, "ActiveMenuChanged" )
+
+        int newState = 0
+        if ( IsDialogOnlyActiveMenu() )
+            newState = 2
+        else if ( uiGlobal.activeMenu != null)
+            newState = 1
+
+        RunMenuClientFunction( "Roguelike_OnPaused", newState != 0 )
+	}
 }

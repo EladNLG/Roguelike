@@ -1,0 +1,422 @@
+"resource/ui/menus/inventory.menu"
+{
+    "menu"
+	{
+		"ControlName"						"Frame"
+		"xpos"								"0"
+		"ypos"								"0"
+		"zpos"								"3"
+		"wide"								"f0"
+		"tall"								"f0"
+		"autoResize"						"1"
+		"pinCorner"							"0"
+		"visible"							"1"
+		"enabled"							"1"
+		"PaintBackgroundType"				"0"
+		"infocus_bgcolor_override"			"0 0 0 0"
+		"outoffocus_bgcolor_override"		"0 0 0 0"
+
+        Vignette
+		{
+				ControlName ImagePanel
+				InheritProperties MenuVignette
+		}
+		
+		MenuTitle
+		{
+			ControlName Label
+			InheritProperties MenuTitle
+			labelText "Inventory"
+			font		OxaniumBold_56
+		}
+		
+		"DarkenBackground"
+		{
+			"ControlName"			"Label"
+			"classname"				"ConnectingHUD"
+			"xpos"					"0"
+			"ypos"					"0"
+			"zpos"					"-1000"
+			"wide"					"%100"
+			"tall"					"%100"
+			"labelText"				""
+			"bgcolor_override"		"0 0 0 50"
+			"visible"				"1"
+			"paintbackground"		"1"
+		}
+
+		ButtonRowAnchor
+		{
+			ControlName Label
+			labelText ""
+
+			xpos 96
+	 		ypos 160
+		}
+        
+		FooterButtons
+		{
+			ControlName CNestedPanel
+			InheritProperties FooterButtons
+		}
+
+		"ButtonPrimary"
+		{
+			"ControlName"				"RuiButton"
+			"InheritProperties"			"LoadoutButtonLarge"
+			"classname"					"PilotLoadoutPanelButtonClass"
+			"scriptID"					"primary"
+			"wide"						"360"
+			"tall"						"200"
+			"xpos"						"100"
+			"ypos"						"200"
+			"pin_to_sibling"			"PrimaryName"
+			"pin_corner_to_sibling"		"TOP_LEFT"
+			"pin_to_sibling_corner"		"BOTTOM_LEFT"
+		}
+		
+		"ButtonSecondary"
+		{
+			"ControlName"				"RuiButton"
+			"InheritProperties"			"LoadoutButtonLarge"
+			"classname"					"PilotLoadoutPanelButtonClass"
+			"scriptID"					"primary"
+			"wide"						"360"
+			"tall"						"200"
+			"xpos"						"25"
+			"pin_to_sibling"			"ButtonPrimary"
+			"pin_corner_to_sibling"		"TOP_LEFT"
+			"pin_to_sibling_corner"		"TOP_RIGHT"
+		}
+		
+		"GridPanel"
+		{
+			"ControlName"				"CNestedPanel"
+			"xpos"						"0"
+			"ypos"						"25"
+			"wide"						"745"
+			"tall"						"720"
+			"visible"					"1"
+			"tabPosition"				"0"
+			"controlSettingsFile"		"resource/ui/menus/panels/weapon_grid.res"
+
+			pin_to_sibling				ButtonPrimary
+			pin_to_sibling_corner		BOTTOM_LEFT
+			pin_corner_to_sibling		TOP_LEFT
+		}
+
+		StatBG
+		{
+			"ControlName"				"RuiPanel"
+			"wide"						"800"
+			"tall"						"800"
+			"xpos"						"25"
+			//"xpos"						"-8"
+			"InheritProperties"			"LoadoutButtonLarge"
+			"visible"					"1"
+			"zpos"						"-1"
+			"pin_to_sibling"			ButtonSecondary
+			"pin_corner_to_sibling"		"TOP_LEFT"
+			"pin_to_sibling_corner"		"TOP_RIGHT"
+		}
+
+		MobLabel
+		{
+			ControlName				Label
+			xpos					-10
+			ypos					-425
+			visible					1
+			wide					128
+			enabled					1
+			auto_wide_tocontents	1
+			labelText				"Mobility"
+			textAlignment			north-west
+			auto_tall_tocontents	1
+			fgcolor_override 		"200 200 200 255"
+			//bgcolor_override 		"0 0 0 200"
+			font					OxaniumLight_27
+			pin_to_sibling				StatBG
+			pin_to_sibling_corner		BOTTOM_LEFT
+			pin_corner_to_sibling		BOTTOM_LEFT
+		}
+
+		MobVal
+		{
+			ControlName				Label
+			//xpos					35
+			ypos					-5
+			wide					128
+			auto_tall_tocontents	1
+			visible					1
+			enabled					1
+			//auto_wide_tocontents	1
+			labelText				"100"
+			textAlignment			north-west
+			auto_wide_tocontents	0
+			auto_tall_tocontents	0
+			fgcolor_override 		"255 255 255 255"
+			//bgcolor_override 		"0 0 0 200"
+			font					OxaniumBold_43
+			pin_to_sibling				MobLabel
+			pin_to_sibling_corner		BOTTOM_LEFT
+			pin_corner_to_sibling		TOP_LEFT
+		}
+			//auto_tall_tocontents	1
+			
+		ResLabel
+		{
+			ControlName				Label
+			xpos					30
+			ypos					0
+			visible					1
+			wide					128
+			enabled					1
+			auto_wide_tocontents	1
+			labelText				"Resilience"
+			textAlignment			north-west
+			auto_tall_tocontents	1
+			fgcolor_override 		"200 200 200 255"
+			//bgcolor_override 		"0 0 0 200"
+			font					OxaniumLight_27
+			pin_to_sibling				MobLabel
+			pin_to_sibling_corner		TOP_RIGHT
+			pin_corner_to_sibling		TOP_LEFT
+		}
+
+		ResVal
+		{
+			ControlName				Label
+			//xpos					35
+			ypos					-5
+			wide					128
+			auto_tall_tocontents	1
+			visible					1
+			enabled					1
+			//auto_wide_tocontents	1
+			labelText				"100"
+			textAlignment			north-west
+			auto_wide_tocontents	0
+			auto_tall_tocontents	0
+			fgcolor_override 		"255 255 255 255"
+			//bgcolor_override 		"0 0 0 200"
+			font					OxaniumBold_43
+			pin_to_sibling				ResLabel
+			pin_to_sibling_corner		BOTTOM_LEFT
+			pin_corner_to_sibling		TOP_LEFT
+		}
+
+		
+		RecLabel
+		{
+			ControlName				Label
+			xpos					30
+			ypos					0
+			visible					1
+			wide					128
+			enabled					1
+			auto_wide_tocontents	1
+			labelText				"Recovery"
+			textAlignment			north-west
+			auto_tall_tocontents	1
+			fgcolor_override 		"200 200 200 255"
+			//bgcolor_override 		"0 0 0 200"
+			font					OxaniumLight_27
+			pin_to_sibling				ResLabel
+			pin_to_sibling_corner		TOP_RIGHT
+			pin_corner_to_sibling		TOP_LEFT
+		}
+
+		RecVal
+		{
+			ControlName				Label
+			//xpos					35
+			ypos					-5
+			wide					128
+			auto_tall_tocontents	1
+			visible					1
+			enabled					1
+			//auto_wide_tocontents	1
+			labelText				"100"
+			textAlignment			north-west
+			auto_wide_tocontents	0
+			auto_tall_tocontents	0
+			fgcolor_override 		"255 255 255 255"
+			//bgcolor_override 		"0 0 0 200"
+			font					OxaniumBold_43
+			pin_to_sibling				RecLabel
+			pin_to_sibling_corner		BOTTOM_LEFT
+			pin_corner_to_sibling		TOP_LEFT
+		}
+
+		StrLabel
+		{
+			ControlName				Label
+			xpos					30
+			ypos					0
+			visible					1
+			wide					128
+			enabled					1
+			auto_wide_tocontents	1
+			labelText				"Strength"
+			textAlignment			north-west
+			auto_wide_tocontents	0
+			auto_tall_tocontents	1
+			fgcolor_override 		"200 200 200 255"
+			//bgcolor_override 		"0 0 0 200"
+			font					OxaniumLight_27
+			pin_to_sibling				RecLabel
+			pin_to_sibling_corner		TOP_RIGHT
+			pin_corner_to_sibling		TOP_LEFT
+		}
+
+		StrVal
+		{
+			ControlName				Label
+			//xpos					35
+			ypos					-5
+			wide					128
+			auto_tall_tocontents	1
+			visible					1
+			enabled					1
+			//auto_wide_tocontents	1
+			labelText				"100"
+			textAlignment			north-west
+			auto_wide_tocontents	0
+			auto_tall_tocontents	0
+			fgcolor_override 		"255 255 255 255"
+			//bgcolor_override 		"0 0 0 200"
+			font					OxaniumBold_43
+			pin_to_sibling				StrLabel
+			pin_to_sibling_corner		BOTTOM_LEFT
+			pin_corner_to_sibling		TOP_LEFT
+		}
+			//auto_tall_tocontents	1
+			
+		IntLabel
+		{
+			ControlName				Label
+			xpos					30
+			ypos					0
+			visible					1
+			wide					128
+			enabled					1
+			auto_wide_tocontents	1
+			labelText				"Intelligence"
+			textAlignment			north-west
+			auto_tall_tocontents	1
+			fgcolor_override 		"200 200 200 255"
+			//bgcolor_override 		"0 0 0 200"
+			font					OxaniumLight_27
+			pin_to_sibling				StrLabel
+			pin_to_sibling_corner		TOP_RIGHT
+			pin_corner_to_sibling		TOP_LEFT
+		}
+
+		IntVal
+		{
+			ControlName				Label
+			//xpos					35
+			ypos					-5
+			wide					128
+			auto_tall_tocontents	1
+			visible					1
+			enabled					1
+			//auto_wide_tocontents	1
+			labelText				"100"
+			textAlignment			north-west
+			auto_wide_tocontents	0
+			auto_tall_tocontents	0
+			fgcolor_override 		"255 255 255 255"
+			//bgcolor_override 		"0 0 0 200"
+			font					OxaniumBold_43
+			pin_to_sibling				IntLabel
+			pin_to_sibling_corner		BOTTOM_LEFT
+			pin_corner_to_sibling		TOP_LEFT
+		}
+
+		
+		DisLabel
+		{
+			ControlName				Label
+			xpos					30
+			ypos					0
+			visible					1
+			wide					128
+			enabled					1
+			//auto_wide_tocontents	1
+			labelText				"Discipline"
+			textAlignment			north-west
+			auto_wide_tocontents	0
+			auto_tall_tocontents	1
+			fgcolor_override 		"200 200 200 255"
+			//bgcolor_override 		"0 0 0 200"
+			font					OxaniumLight_27
+			pin_to_sibling				IntLabel
+			pin_to_sibling_corner		TOP_RIGHT
+			pin_corner_to_sibling		TOP_LEFT
+		}
+
+		DisVal
+		{
+			ControlName				Label
+			//xpos					35
+			ypos					-5
+			wide					128
+			auto_tall_tocontents	1
+			visible					1
+			enabled					1
+			//auto_wide_tocontents	1
+			labelText				"100"
+			textAlignment			north-west
+			auto_wide_tocontents	0
+			auto_tall_tocontents	0
+			fgcolor_override 		"255 255 255 255"
+			//bgcolor_override 		"0 0 0 200"
+			font					OxaniumBold_43
+			pin_to_sibling				DisLabel
+			pin_to_sibling_corner		BOTTOM_LEFT
+			pin_corner_to_sibling		TOP_LEFT
+		}
+
+
+		StatInfo
+		{
+			ControlName				Label
+			xpos					0
+			ypos					15
+			visible					1
+			wide					790
+			enabled					1
+			//auto_wide_tocontents	1
+			labelText				"Discipline"
+			textAlignment			north-west
+			auto_wide_tocontents	0
+			auto_tall_tocontents	1
+			fgcolor_override 		"200 200 200 255"
+			//bgcolor_override 		"0 0 0 200"
+			font					OxaniumBold_27
+			pin_to_sibling				MobVal
+			pin_to_sibling_corner		BOTTOM_LEFT
+			pin_corner_to_sibling		TOP_LEFT
+		}
+
+		"ArmorUI"
+		{
+			"ControlName"		"CNestedPanel"
+			xpos				0
+			ypos				0
+			wide				600
+			tall				600
+			visible				1
+			enabled				0
+			zpos				0
+			///pin_to_sibling Resilience
+			pin_corner_to_sibling TOP_LEFT
+			pin_to_sibling_corner BOTTOM_LEFT
+
+
+			controlSettingsFile	"resource/UI/Armor.res"
+		}
+
+    }
+}

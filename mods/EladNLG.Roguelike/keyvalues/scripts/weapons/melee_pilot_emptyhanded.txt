@@ -1,0 +1,17 @@
+"WeaponData"
+{
+    
+	"melee_raise_recovery_animtime_normal"			"0.4"
+	"melee_raise_recovery_animtime_quick"			"0.4"
+
+    SP_BASE
+    {
+		"melee_lunge_time"								"0.01"
+        "melee_damage"          "75" 
+    }
+    MP_BASE
+    {
+		"melee_lunge_time"								"0.01"
+        "melee_damage"          "125"
+    }
+}

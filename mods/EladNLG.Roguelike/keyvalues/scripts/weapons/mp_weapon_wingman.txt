@@ -12,5 +12,17 @@ WeaponData
         {
             "ammo_clip_size"            "*0.166"
         }
+        burst_orientation_3
+        {
+            "fire_rate"                     "*4"
+        }
+        burst_orientation_4
+        {
+            "fire_rate"                     "*4"
+        }
+        mag_dump
+        {
+            "fire_rate"                     "*4"
+        }
     }
 }

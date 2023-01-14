@@ -13,6 +13,8 @@ global function Roguelike_EntityHasItem
 global function Roguelike_ExponentialChanceFunc
 global function Roguelike_GetAllItems
 global function Roguelike_GetAllItemsOfRarity
+global function Roguelike_GetEntityArmor
+global function Roguelike_GetEntityStat
 global function Roguelike_GetItemCount
 global function Roguelike_GetItemDesc
 global function Roguelike_GetItemDrawbackDesc
@@ -30,6 +32,7 @@ global function Roguelike_GetIsItemStatDrawback
 global function Roguelike_GetPlayerItems
 global function Roguelike_GetRandomItem
 global function Roguelike_GetRandomItemWithCustomWeights
+global function Roguelike_GiveEntityArmor
 global function Roguelike_GiveEntityItem
 global function Roguelike_HyperbolicChanceFunc
 global function Roguelike_LinearChanceFunc
@@ -46,19 +49,24 @@ global function Roguelike_SetItemDrawbacks
 global function Roguelike_RegisterRarity
 global function Roguelike_GetRarityColor
 global function Roguelike_GetRarityChatColor
+global function Roguelike_GetRarityPickupColor
 global function Roguelike_GetAllRarities
 #if !UI
 global function Roguelike_RollForChanceFunc
 global function Roguelike_RollStackingForChanceFunc
 #endif
 global function AddCallback_OnRoguelikeInventoryChanged
+global function AddCallback_OnRoguelikeItemGained
 global function GetRandomIndexFromWeightedArray
 
 global const RARITY_COMMON = "common"
 global const RARITY_UNCOMMON = "uncommon"
+global const RARITY_RARE = "rare"
 global const RARITY_LEGENDARY = "legendary"
+global const RARITY_LEGENDARYARMOR = "legendarya"
 global const RARITY_UMBRAL = "umbral"
 global const RARITY_TITAN = "titan"
+global const RARITY_EXOTIC = "exotic"
 global const RARITY_CONTEXTUAL_ITEM = "contextual"
 
 struct ItemStat
@@ -75,6 +83,7 @@ struct Rarity
     string id
     vector color
     vector chatColor
+    vector pickupColor
 }
 
 struct RoguelikeItem
@@ -94,6 +103,7 @@ struct RoguelikeItem
 struct RoguelikeInventory
 {
     table<string, int> items
+    array<ArmorData> armor
 }
 
 struct
@@ -106,7 +116,8 @@ struct
         titan = 4.0
     }
     table<entity, RoguelikeInventory> inventories
-    array<void functionref(entity, string, int, int)> inventoryCallbacks
+    array<void functionref(entity)> inventoryCallbacks
+    array<void functionref(entity, string, int, int)> itemGainedCallbacks
     table<string, Rarity> rarities
 } file
 
@@ -124,122 +135,124 @@ void function ShItems_Init()
     }
     #endif
     
-    Roguelike_RegisterRarity( RARITY_COMMON, <0.7, 0.7, 0.7>, <0.8, 0.8, 0.8> )
-    Roguelike_RegisterRarity( RARITY_UNCOMMON, <0.1, 0.9, 0.1>, <0.3, 0.9, 0.3> )
-    Roguelike_RegisterRarity( RARITY_LEGENDARY, <0.9, 0.1, 0.1>, <0.9, 0.3, 0.3> )
-    Roguelike_RegisterRarity( RARITY_UMBRAL, <0.1, 0.1, 0.9>, <0.3, 0.3, 0.9> )
-    Roguelike_RegisterRarity( RARITY_TITAN, <0.8, 0.4, 0.1>, <0.8, 0.4, 0.1> )
-    Roguelike_RegisterRarity( RARITY_CONTEXTUAL_ITEM, <0.2, 0.2, 0.2>, <0.2, 0.2, 0.2> )
+    Roguelike_RegisterRarity( RARITY_COMMON, <0.7, 0.7, 0.7>, <0.8, 0.8, 0.8>, <0.4, 0.4, 0.4> )
+    Roguelike_RegisterRarity( RARITY_UNCOMMON, <0.1, 0.9, 0.1>, <0.3, 0.9, 0.3>, <0.2, 0.6, 0.2> )
+    Roguelike_RegisterRarity( RARITY_RARE, <0.3, 0.5, 0.9>, <0.3, 0.5, 0.9>, <0.2, 0.3, 0.6> )
+    Roguelike_RegisterRarity( RARITY_LEGENDARY, <0.9, 0.1, 0.1>, <0.9, 0.3, 0.3>, <0.6, 0.2, 0.2> )
+    Roguelike_RegisterRarity( RARITY_LEGENDARYARMOR, <0.6, 0.3, 0.9>, <0.6, 0.3, 0.9>, <0.4, 0.2, 0.6> )
+    Roguelike_RegisterRarity( RARITY_UMBRAL, <0.1, 0.1, 0.9>, <0.3, 0.3, 0.9>, <0.2, 0.2, 0.6> )
+    Roguelike_RegisterRarity( RARITY_TITAN, <0.8, 0.4, 0.1>, <0.8, 0.4, 0.1>, <0.5, 0.3, 0.05> )
+    Roguelike_RegisterRarity( RARITY_EXOTIC, <0.8, 0.8, 0.1>, <0.8, 0.8, 0.1>, <0.6, 0.6, 0.1> )
+    Roguelike_RegisterRarity( RARITY_CONTEXTUAL_ITEM, <0.2, 0.2, 0.2>, <0.2, 0.2, 0.2>, <0.1, 0.1, 0.1> )
 
 
     // Ammo Pack
-    Roguelike_RegisterItem( "ammo_pack", "Ammo Pack", "Upon kill:\n`215`0%% (`2+15`0%% per stack) chance to restore 10% of the magazine", RARITY_COMMON )
+    Roguelike_RegisterItem( "ammo_pack", "Ammo Pack", "Upon kill:\n15% (+15% per stack) chance to restore 10% of the magazine", RARITY_COMMON )
     float functionref( int ) func1 = Roguelike_LinearChanceFunc( 20, 20, 100 )
     float functionref( int ) func2 = Roguelike_LinearChanceFunc( 20, 20, 100, -100 )
 
     float functionref( int ) func3 = Roguelike_LinearChanceFunc( 20, 20, 100, -200 )
-    int index = Roguelike_AddItemStat( "ammo_pack", "Chance to Restore 20%% Ammo", func1, "`2%.0f`0%%%%" )
+    int index = Roguelike_AddItemStat( "ammo_pack", "Chance to Restore 20% Ammo", func1, "%.0f%%" )
     Roguelike_SetStatObsoleteFunc( "ammo_pack", index, Roguelike_Obsolete_IsGuranteed( func2 ) )
 
-    index = Roguelike_AddItemStat( "ammo_pack", "Chance to Restore 40%% Ammo", func2, "`2%.0f`0%%%%" )
+    index = Roguelike_AddItemStat( "ammo_pack", "Chance to Restore 40% Ammo", func2, "%.0f%%" )
     Roguelike_SetStatObsoleteFunc( "ammo_pack", index, Roguelike_Obsolete_Or( Roguelike_Obsolete_IsGuranteed( func3 ), Roguelike_Obsolete_WithinRange( func1, -1, 100 ) ) )
 
-    index = Roguelike_AddItemStat( "ammo_pack", "Chance to Restore a 60%% Ammo", func3, "`2%.0f`0%%%%" )
+    index = Roguelike_AddItemStat( "ammo_pack", "Chance to Restore a 60% Ammo", func3, "%.0f%%" )
     Roguelike_SetStatObsoleteFunc( "ammo_pack", index,  Roguelike_Obsolete_WithinRange( func2, -1, 100 ) )
 
     // Health Generator
 
-    Roguelike_RegisterItem( "heal_mod", "Health Generator", "+`225`0%% (+`250`0%% per stack) Regen Rate", RARITY_COMMON )
+    Roguelike_RegisterItem( "heal_mod", "Health Generator", "+25% (+50% per stack) Regen Rate", RARITY_COMMON )
 
     func1 = Roguelike_LinearChanceFunc( 25, 25 )
-    Roguelike_AddItemStat( "heal_mod", "Regen Rate", func1, "`2%+.0f`0%%%%" )
+    Roguelike_AddItemStat( "heal_mod", "Regen Rate", func1, "%+.0f%%" )
 
-    Roguelike_RegisterItem( "golden_shell", "Golden Shell", "Last bullet deals `215`0%% (+`215`0%% per stack) more damage", RARITY_COMMON )
+    Roguelike_RegisterItem( "golden_shell", "Golden Shell", "Last bullet deals 15% (+15% per stack) more damage", RARITY_COMMON )
 
     func1 = Roguelike_LinearChanceFunc( 15, 15 )
-    Roguelike_AddItemStat( "golden_shell", "Bonus Damage", func1, "`2%+.0f`0%%%%" )
+    Roguelike_AddItemStat( "golden_shell", "Bonus Damage", func1, "%+.0f%%" )
 
-    Roguelike_RegisterItem( "emergency_soda", "Emergency Soda", "Upon taking lethal damage:\n\nHeal to full health. Consume 1 stack of this item. This will `1NOT`0 work on OoB zones.", RARITY_LEGENDARY )
+    Roguelike_RegisterItem( "emergency_soda", "Emergency Soda", "^FFFFFF00Upon taking ^FF555500lethal^FFFFFF00 damage:\n^55FF5500Heal^0 to full health. ^FF555500Consume^0 1 stack of this item. This will NOT work on OoB zones.", RARITY_LEGENDARY )
     #if !UI
     Roguelike_SetItemAchievement( "emergency_soda", "dead" )
     #endif
     //
 
     // Blood Scavenger
-    Roguelike_RegisterItem( "blood_scavenger", "Blood Scavenger", "Upon taking damage:\nAdd cash equivalent to `225`0%% (`2+25`0%% per stack) of the damage taken.", RARITY_UNCOMMON )
+    Roguelike_RegisterItem( "blood_scavenger", "Blood Scavenger", "Upon taking damage:\nAdd cash equivalent to 25% (+25% per stack) of the damage taken.", RARITY_UNCOMMON )
 
     // adrenaline shot
     func1 = Roguelike_LinearChanceFunc( 0.5, 0.25 )
-    Roguelike_RegisterItem( "adrenaline_shot", "Adrenaline Shot", "Upon kill:\nGain a 70%% speed boost for `20.5`0s (`2+0.25`0s per stack).\nAdditional kills refresh the duration.", RARITY_UNCOMMON )
-    index = Roguelike_AddItemStat( "adrenaline_shot", "Boost Duration", func1, "`2%.2f`0s" )
+    Roguelike_RegisterItem( "adrenaline_shot", "Adrenaline Shot", "Upon kill:\nGain a 70% speed boost for 0.5s (+0.25s per stack).\nAdditional kills refresh the duration.", RARITY_UNCOMMON )
+    index = Roguelike_AddItemStat( "adrenaline_shot", "Boost Duration", func1, "%.2fs" )
 
     // send-back rounds
     func1 = Roguelike_LinearChanceFunc( 15, 15 )
-    Roguelike_RegisterItem( "send_back_rounds", "Send-Back Rounds", "Upon hitting an headshot:\n`215`0%% (`2+15`0%% per stack) chance to restore a bullet.", RARITY_UNCOMMON )
-    index = Roguelike_AddItemStat( "send_back_rounds", "Chance", func1, "`2%.0f`0%%" )
+    Roguelike_RegisterItem( "send_back_rounds", "Send-Back Rounds", "Upon hitting an headshot:\n15% (+15% per stack) chance to restore a bullet.", RARITY_UNCOMMON )
+    index = Roguelike_AddItemStat( "send_back_rounds", "Chance", func1, "%.0f%%" )
 
     func1 = Roguelike_HyperbolicChanceFunc( 8 )
     float reduction = func1(1)
     float reduction2nd = func1(2) - reduction
-    string res = format("%.1f`0%%%% (-`2%.1f`0%%%% per stack, hyperbolic)", reduction, reduction2nd)
-    Roguelike_RegisterItem( "blast_proc", "Blast Protection IV", "-`2" + res + " explosive damage.", RARITY_UNCOMMON )
-    index = Roguelike_AddItemStat( "blast_proc", "Damage Reduction", func1, "`2%.0f`0%%" )
+    string res = format("%.1f%% (-%.1f%% per stack, hyperbolic)", reduction, reduction2nd)
+    Roguelike_RegisterItem( "blast_proc", "Blast Protection IV", "-" + res + " explosive damage.", RARITY_UNCOMMON )
+    index = Roguelike_AddItemStat( "blast_proc", "Damage Reduction", func1, "%.0f%%" )
 
 
     // Leeching Hands
     // +20Hp/s when wallrunning
     func1 = Roguelike_LinearChanceFunc( 20, 20 )
-    Roguelike_RegisterItem( "leeching_hands", "Leeching Hands", "Heal for `220`0HP/s (`2+20`0HP/s per stack) while wallrunning.", RARITY_LEGENDARY )
-    index = Roguelike_AddItemStat( "leeching_hands", "Regen Rate", func1, "`2%.0f`0HP/s" )
+    Roguelike_RegisterItem( "leeching_hands", "Leeching Hands", "Heal for 20HP/s (+20HP/s per stack) while wallrunning.", RARITY_LEGENDARY )
+    index = Roguelike_AddItemStat( "leeching_hands", "Regen Rate", func1, "%.0fHP/s" )
 
     // FRAGILE BIRD
     // +15% airAcceleration, -50 hp/s when wallrunning
     func1 = Roguelike_LinearChanceFunc( 20, 20 )
     func2 = Roguelike_LinearChanceFunc( 30, 30, 0, 0, true )
-    Roguelike_RegisterItem( "fragile_bird", "Fragile Bird", "The air guides you.", RARITY_UMBRAL )
-    Roguelike_SetItemDrawbacks( "fragile_bird", "\nBUT the walls consume you." )
-    //index = Roguelike_AddItemStat( "fragile_bird", "Air Acceleration", func1, "`2%+.0f`0%%%%" )
-    //index = Roguelike_AddItemStat( "fragile_bird", "Health Loss while Wallrunning", func2, "`2%.0f`0%%%%HP/s", true )
+    Roguelike_RegisterItem( "fragile_bird", "Fragile Bird", "The air guides you. ^FF555500BUT the walls consume you.", RARITY_UMBRAL )
+    //index = Roguelike_AddItemStat( "fragile_bird", "Air Acceleration", func1, "%+.0f%%" )
+    //index = Roguelike_AddItemStat( "fragile_bird", "Health Loss while Wallrunning", func2, "%.0f%%HP/s", true )
 
     float amplifier = 25
     string chance = format("%.1f", Roguelike_HyperbolicChanceFunc( amplifier )(1) )
 
-    Roguelike_RegisterItem( "overclock_mechanism", "Overclock Mechanism", "Upon killing a titan as BT:\n`2" + chance
-         + "`0%% (`2" + chance + "`0%% per stack, hyperbolic) chance to overclock,\nresetting all cooldowns and refresh weapon ammo.", RARITY_TITAN )
+    Roguelike_RegisterItem( "overclock_mechanism", "Overclock Mechanism", "Upon killing a titan as BT:\n" + chance
+         + "% (" + chance + "% per stack, hyperbolic) chance to overclock,\nresetting all cooldowns and refresh weapon ammo.", RARITY_TITAN )
 
     //Roguelike_AddItemStat( "overclock_mechanism", "Overclock Chance", Roguelike_HyperbolicChanceFunc( amplifier ))
 
     Roguelike_RegisterItem( "infinite_charge", "Railgun Heat Shield", "As Northstar: You're able to charge the railgun INFINITELY.\nCharging it too much will reset the charge. Slightly reduce bonus damage per level.", RARITY_TITAN )
 
-    Roguelike_AddItemStat( "infinite_charge", "Damage Per Level Percentage", Roguelike_ReverseHyperbolicChanceFunc( 3 ), "`2%.0f`0%%%%" )
-    Roguelike_AddItemStat( "infinite_charge", "Max Charge Level", Roguelike_LinearChanceFunc( 6, 1 ), "`2%.0f`0" )
+    Roguelike_AddItemStat( "infinite_charge", "Damage Per Level Percentage", Roguelike_ReverseHyperbolicChanceFunc( 3 ), "%.0f%%" )
+    Roguelike_AddItemStat( "infinite_charge", "Max Charge Level", Roguelike_LinearChanceFunc( 6, 1 ), "%.0f" )
 
-    Roguelike_RegisterItem( "sticky_thermite", "Heat Combiner", "As Scorch:\nEach additional thermite instance deals\n`220`0% (+`220`0%% per stack) more damage than the last.", RARITY_TITAN )
+    Roguelike_RegisterItem( "sticky_thermite", "Heat Combiner", "As Scorch:\nEach thermite instance deals 20% (+20% per stack) more damage than the last.", RARITY_TITAN )
 
-    Roguelike_AddItemStat( "sticky_thermite", "Damage Bonus", Roguelike_LinearChanceFunc( 20, 20 ), "`2%.0f`0%%%%" )
+    Roguelike_AddItemStat( "sticky_thermite", "Damage Bonus", Roguelike_LinearChanceFunc( 20, 20 ), "%.0f%%" )
 
-    Roguelike_RegisterItem( "jumpkit_parts", "Elad's Jumpkit Parts", "`2+10`0%% (+`210`0%% per stack) Movement Speed.", RARITY_COMMON)
-    Roguelike_AddItemStat( "jumpkit_parts", "Movement Speed", Roguelike_LinearChanceFunc( 10, 10 ), "`2%+.0f`0%%%%" )
+    Roguelike_RegisterItem( "jumpkit_parts", "Elad's Jumpkit Parts", "+10% (+10% per stack) Movement Speed.", RARITY_COMMON)
+    Roguelike_AddItemStat( "jumpkit_parts", "Movement Speed", Roguelike_LinearChanceFunc( 10, 10 ), "%+.0f%%" )
     #if !UI
     Roguelike_SetItemAchievement( "jumpkit_parts", "gauntlet_leaderboard" )
     #endif
 
-    Roguelike_RegisterItem( "cockroach", "Acidic Cockroach", "`2+20`0%% (+`220`0%% per stack) damage to titans, as a pilot.", RARITY_COMMON )
-    Roguelike_AddItemStat( "cockroach", "Damage Bonus", Roguelike_LinearChanceFunc( 20, 20 ), "`2%+.0f`0%%%%" )
+    Roguelike_RegisterItem( "cockroach", "Acidic Cockroach", "+20% (+20% per stack) damage to titans, as a pilot.", RARITY_COMMON )
+    Roguelike_AddItemStat( "cockroach", "Damage Bonus", Roguelike_LinearChanceFunc( 20, 20 ), "%+.0f%%" )
 
-    Roguelike_RegisterItem( "unionizer", "Gun Unionizer", "+`220`0%% (+`220`0%% per stack) damage to bosses.", RARITY_UNCOMMON )
-    Roguelike_AddItemStat( "unionizer", "Damage Bonus", Roguelike_LinearChanceFunc( 20, 20 ), "`2%+.0f`0%%%%" )
+    Roguelike_RegisterItem( "unionizer", "Gun Unionizer", "+20% (+20% per stack) damage to bosses.", RARITY_UNCOMMON )
+    Roguelike_AddItemStat( "unionizer", "Damage Bonus", Roguelike_LinearChanceFunc( 20, 20 ), "%+.0f%%" )
 
-    Roguelike_RegisterItem( "ukulele", "Ukulele", "On Hit:\n25%% chance for a hit to cause area of effect damage.", RARITY_UNCOMMON)
-    Roguelike_AddItemStat( "ukulele", "Radius Multiplier", Roguelike_LinearChanceFunc( 100, 10 ), "`2%.0f`0%%%%" )
+    Roguelike_RegisterItem( "ukulele", "Ukulele", "On Hit:\n25% chance for a hit to cause area of effect damage.", RARITY_UNCOMMON)
+    Roguelike_AddItemStat( "ukulele", "Radius Multiplier", Roguelike_LinearChanceFunc( 100, 10 ), "%.0f%%" )
 
     // doesn't work for now
     //Roguelike_RegisterItem( "last_stand", "The Last Stand", "Their death comes quick...", RARITY_UMBRAL )
     //Roguelike_SetItemDrawbacks( "last_stand", "\nBUT it is delayed.")
 
-    Roguelike_RegisterItem( "heal_on_kill", "Heart Pumper", "On Kill:\nHeal for `220`0HP.", RARITY_COMMON)
+    Roguelike_RegisterItem( "heal_on_kill", "Heart Pumper", "On Kill:\nHeal for 20HP.", RARITY_COMMON)
     func1 = Roguelike_LinearChanceFunc( 20, 20 )
-    Roguelike_AddItemStat( "heal_on_kill", "Heal Amount", func1, "`2%.1f`0")
+    Roguelike_AddItemStat( "heal_on_kill", "Heal Amount", func1, "%.0f")
 
     Roguelike_RegisterItem( "loan", "Business Card", "Take a loan...", RARITY_UMBRAL)
     Roguelike_SetItemDrawbacks( "loan", "\n\nVERY HIGH INTEREST.\nNOTE: Your blood CAN AND WILL be sold to pay the loan, if needed." )
@@ -247,15 +260,15 @@ void function ShItems_Init()
     Roguelike_SetItemAchievement( "loan", "pickup_legendary" )
     #endif
     Roguelike_RegisterItem("fatigue", "Fatigue", "", RARITY_CONTEXTUAL_ITEM)
-    Roguelike_SetItemDrawbacks("fatigue", "-`220%%`0 Health & Movement Speed per stack.")
+    Roguelike_SetItemDrawbacks("fatigue", "-20% Health & Movement Speed per stack.")
 
-    Roguelike_RegisterItem( "max_hp", "Meat Armor", "+`25`0%% maximum health.", RARITY_COMMON )
+    Roguelike_RegisterItem( "max_hp", "Meat Armor", "+5% maximum health.", RARITY_COMMON )
     func1 = Roguelike_LinearChanceFunc( 10, 10 )
-    Roguelike_AddItemStat( "max_hp", "Health Bonus", func1, "`2%.0f`0%%%%")
+    Roguelike_AddItemStat( "max_hp", "Health Bonus", func1, "%.0f%%")
 
-    Roguelike_RegisterItem( "shield", "Shield Generator", "Gain shield equivalent to `210`0%% of your max health.", RARITY_TITAN )
+    Roguelike_RegisterItem( "shield", "Shield Generator", "Gain shield equivalent to 10% of your max health.", RARITY_TITAN )
     func1 = Roguelike_LinearChanceFunc( 10, 10 )
-    Roguelike_AddItemStat( "shield", "Shield Bonus", func1, "`2%.0f`0%%%%")
+    Roguelike_AddItemStat( "shield", "Shield Bonus", func1, "%.0f%%")
 
 
     //Roguelike_RegisterItem( "self_dmg", "Ibuprofen", "Kills the pain at the beginning.", RARITY_UMBRAL )
@@ -263,9 +276,13 @@ void function ShItems_Init()
     //Roguelike_SetChanceFunctions( "overclock_mechanism", [ Roguelike_HyperbolicChanceFunc( amplifier, 0 ), Roguelike_HyperbolicChanceFunc( amplifier, 1 ) ] )
 }
 
-void function AddCallback_OnRoguelikeInventoryChanged( void functionref( entity, string, int, int ) callback )
+void function AddCallback_OnRoguelikeInventoryChanged( void functionref( entity ) callback )
 {
     file.inventoryCallbacks.append( callback )
+}
+void function AddCallback_OnRoguelikeItemGained( void functionref( entity, string, int, int ) callback )
+{
+    file.itemGainedCallbacks.append( callback )
 }
 
 void function Roguelike_RegisterItem( string id, string name, string description, string rarity, float weight = 1.0, asset model = $"" )
@@ -463,6 +480,12 @@ void function Roguelike_GiveEntityItem( entity player, string item, int count = 
     {
         RoguelikeInventory inventory
         file.inventories[player] <- inventory
+        for (int i = 0; i < 5; i++)
+        {
+            ArmorData data
+            data.slot = i
+            file.inventories[player].armor.append(data)
+        }
     }
     if ( !(item in file.inventories[player].items) )
     {
@@ -474,14 +497,32 @@ void function Roguelike_GiveEntityItem( entity player, string item, int count = 
     {
         delete file.inventories[player].items[item]
         
-        foreach ( callback in file.inventoryCallbacks )
+        foreach ( callback in file.itemGainedCallbacks )
             callback( player, item, -count, 0 )
     }
-    else foreach ( callback in file.inventoryCallbacks )
+    else foreach ( callback in file.itemGainedCallbacks )
         callback( player, item, file.inventories[player].items[item] - count, file.inventories[player].items[item] )
 
-    //if (player.IsPlayer())
-    //    Roguelike_PrintPlayerInventory( player )
+    foreach (callback in file.inventoryCallbacks)
+        callback( player )
+    #if !UI
+    if (player.IsPlayer())
+    #endif
+        SetConVarString( "player_items", GetItemConVarValue( player ) )
+}
+
+string function GetItemConVarValue( entity player )
+{
+    string result = ""
+    int len = Roguelike_GetPlayerItems(player).len()
+    foreach ( index, item in Roguelike_GetPlayerItems(player))
+    {
+        int itemId = Roguelike_GetItemNumericId( item )
+        int amount = Roguelike_GetItemCount( player, item )
+        result += itemId + " " + amount
+        if (index < len - 1) result += " "
+    }
+    return result
 }
 
 string function Roguelike_GetItemFromNumericId( int id )
@@ -545,7 +586,7 @@ string function Roguelike_GetItemStatFormat( string itemName, int index )
     return file.items[itemName].stats[index].format
 }
 
-int function Roguelike_AddItemStat( string itemName, string statName, float functionref( int ) chanceFunc, string statFormat = "%.0f%%%%", bool isDrawback = false )
+int function Roguelike_AddItemStat( string itemName, string statName, float functionref( int ) chanceFunc, string statFormat = "%.0f%%", bool isDrawback = false )
 {
     if ( !( itemName in file.items ))
         throw "Stat was requested to be set for unknown item \"" + itemName + "\""
@@ -732,13 +773,14 @@ array<int> function StringToCharArray( string str )
     return result
 }
 
-void function Roguelike_RegisterRarity( string id, vector color, vector chatColor )
+void function Roguelike_RegisterRarity( string id, vector color, vector chatColor, vector pickupColor )
 {
     Rarity rarity
 
     rarity.id = id
     rarity.color = color
     rarity.chatColor = chatColor
+    rarity.pickupColor = pickupColor
 
     file.rarities[id] <- rarity
 }
@@ -759,6 +801,14 @@ vector function Roguelike_GetRarityChatColor( string id )
     return file.rarities[id].chatColor
 }
 
+vector function Roguelike_GetRarityPickupColor( string id )
+{
+    if (!(id in file.rarities))
+        throw "Requested color for unknown rarity '" + id + "'"
+
+    return file.rarities[id].pickupColor
+}
+
 array<string> function Roguelike_GetAllRarities()
 {
     array<string> result
@@ -766,4 +816,68 @@ array<string> function Roguelike_GetAllRarities()
         result.append(key)
 
     return result
+}
+
+ArmorData function Roguelike_GiveEntityArmor( entity player, ArmorData data )
+{
+    if ( !(player in file.inventories) )
+    {
+        RoguelikeInventory inventory
+        file.inventories[player] <- inventory
+        for (int i = 0; i < 5; i++)
+        {
+            ArmorData data
+            data.slot = i
+            file.inventories[player].armor.append(data)
+        }
+    }
+
+    ArmorData prev = file.inventories[player].armor[data.slot]
+    file.inventories[player].armor[data.slot] = data
+    
+    foreach (callback in file.inventoryCallbacks)
+        callback( player )
+
+    #if SERVER
+    if (player.IsPlayer())
+        ServerToClientStringCommand( player, "UpdateArmor " + ArmorDataToString(data) )
+    #elseif CLIENT
+    if (player == GetLocalClientPlayer())
+        SetConVarString( "player_armor", ArmorDataToString(Roguelike_GetEntityArmor(player, 0)) + "{"
+        + ArmorDataToString(Roguelike_GetEntityArmor(player, 1)) + "{"
+        + ArmorDataToString(Roguelike_GetEntityArmor(player, 2)) + "{"
+        + ArmorDataToString(Roguelike_GetEntityArmor(player, 3)) + "{"
+        + ArmorDataToString(Roguelike_GetEntityArmor(player, 4)) )
+    #endif
+
+    return prev
+}
+
+int function Roguelike_GetEntityStat( entity player, string stat )
+{
+    if ( !(player in file.inventories) )
+        return 0
+    
+    int result = 0
+    foreach (ArmorData armor in file.inventories[player].armor)
+        result += GetArmorStat( armor, stat )
+    
+    return result
+}
+
+ArmorData function Roguelike_GetEntityArmor( entity player, int slot )
+{
+    if ( !(player in file.inventories) )
+    {
+        RoguelikeInventory inventory
+        file.inventories[player] <- inventory
+        for (int i = 0; i < 5; i++)
+        {
+            ArmorData data
+            data.slot = i
+            file.inventories[player].armor.append(data)
+        }
+    }
+    
+    return file.inventories[player].armor[slot]
 }

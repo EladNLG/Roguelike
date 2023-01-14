@@ -17,7 +17,7 @@ struct
 void function Difficulty_Init()
 {
     if (IsLobby()) return
-    levelCount = GetConVarInt( "level_count" )
+    levelCount = GetConVarInt("level_count")
     AddCallback_OnDifficultyIncreased( DifficultyIncreased )
     //AddCallback_OnDamageEvent( DamageEvent )
     AddCallback_EntitiesDidLoad( Difficulty_Update )
@@ -38,7 +38,7 @@ void function ScaleDamageWithEntityLevel( entity ent, var damageInfo )
 {
     entity attacker = DamageInfo_GetAttacker( damageInfo )
     float damage = DamageInfo_GetDamage( damageInfo )
-    print(damage)
+    //print(damage)
 
     if (DamageInfo_GetForceKill( damageInfo ))
         return
@@ -46,11 +46,11 @@ void function ScaleDamageWithEntityLevel( entity ent, var damageInfo )
     if (attacker != ent && attacker.GetClassName() != "trigger_hurt")
     {
         int level = !attacker.IsPlayer() ? roguelikeDifficulty : GetLevel()
-        float damageScale = 1 + 0.2 * max(-4, level)
+        float damageScale = 1 + 0.125 * max(-4, level)
         if ("divisor" in ent.s)
             damageScale /= expect float( ent.s.divisor )
         float baseDamage = DamageInfo_GetDamage( damageInfo )
-        print(baseDamage * damageScale)
+        //print(baseDamage * damageScale)
         //print( "MAX DAMAGE LEVEL: " + (524287 / baseDamage) )
         if (baseDamage * damageScale > 524287)
         {
@@ -62,13 +62,29 @@ void function ScaleDamageWithEntityLevel( entity ent, var damageInfo )
     else
     {
         if (ent.IsNPC() && typeof( ent.Dev_GetAISettingByKeyField( "Health" ) ) == "string") return
-        printt("DAMAGE", damage, ent.GetMaxHealth())
 
 		float baseHealth = ent.IsNPC() ? float(ent.Dev_GetAISettingByKeyField( "Health" )) : ent.GetPlayerModHealth()
 
         if (damage * float(ent.GetMaxHealth()) / 100.0 > 524287)
             DamageInfo_SetDamage( damageInfo, 524287 )
         else DamageInfo_ScaleDamage( damageInfo, float(ent.GetMaxHealth()) / baseHealth)
+    }
+
+    if (attacker.IsPlayer() && IsAlive( attacker  ) && DistanceSqr( attacker.GetOrigin(), ent.GetOrigin() ) < 150 * 150 )
+    {
+        float frac = min(DamageInfo_GetDamage( damageInfo ), ent.GetHealth() )
+        frac /= 2.0
+
+        printt("healing", attacker, "for", frac)
+        attacker.SetHealth( min( attacker.GetMaxHealth() * (1.0 - (attacker.GetPlayerNetFloat( "hardDamage" ) / 100.0)), attacker.GetHealth() + frac ))
+    }
+    
+    if (ent.IsPlayer() && !ent.IsTitan())
+    {
+        float curHardDamage = ent.GetPlayerNetFloat( "hardDamage" )
+        curHardDamage += (DamageInfo_GetDamage( damageInfo ) ) / ent.GetMaxHealth() / 3.0 * 100.0
+        ent.SetPlayerNetFloat( "hardDamage", min(curHardDamage, 98.9) )
+        //curHardDamage)
     }
 }
 
@@ -80,7 +96,7 @@ int function GetChestCost(float multiplier = 1.0)
 
 int function GetInitialDifficulty()
 {
-    float timePerDifficulty = TIME_PER_DIFFICULTY / GetLevelCountMultiplier() / pow(1.15, levelCount)
+    float timePerDifficulty = TIME_PER_DIFFICULTY / GetLevelCountMultiplier() / pow(1.15, GetConVarInt( "level_count" ))
     return int(GetConVarInt("roguelike_time") * 3 / timePerDifficulty)
 }
 
@@ -127,7 +143,6 @@ void function PreventTimerOnCutscene()
             player = GetPlayerArray()[0]
         }
         player.WaitSignal("NewFirstPersonSequence")
-        print("\n\n\n\n\n\nAH SHIT")
         float startTime = Time()
         WaitFrame()
         foreach( P in GetPlayerArray() )
@@ -159,14 +174,15 @@ void function Difficulty_UpdateNPC( entity npc )
     if (typeof( npc.Dev_GetAISettingByKeyField( "Health" ) ) == "string") return
 
     int baseHealth = expect int( npc.Dev_GetAISettingByKeyField( "Health" ) )
+    baseHealth += int(baseHealth * 0.1 * GetConVarInt("roguelike_difficulty"))
 
     //printt("BASE HEALTH:", baseHealth)
     //printt("NEW BASE HEALTH:", baseHealth)
     //printt("HEALTH PER LEVEL:", int(0.3 * baseHealth))
     //printt("ROGUELIKE_DIFFICULTY:", roguelikeDifficulty)
     //printt("HEALTH FROM LEVELS:", int(0.3 * baseHealth) * roguelikeDifficulty)
-    int newBaseHealth = baseHealth + int(0.3 * baseHealth) * roguelikeDifficulty
-    //printt("NEW HEALTH:", newBaseHealth)
+    int newBaseHealth = baseHealth + int((0.3) * baseHealth) * roguelikeDifficulty
+    printt("NEW HEALTH:", newBaseHealth)
     baseHealth = int(clamp( newBaseHealth, 1, 524287))
 
     if (newBaseHealth > baseHealth)

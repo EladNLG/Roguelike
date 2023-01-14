@@ -57,7 +57,7 @@ void function ShopPrices_Init()
 
     ShopPrices_AddMod("condensed_gunpowder", "Condensed Gunpowder", "Proj. speed & damage increased. x2 recoil\nrandomness.", MODVALUE_UNCOMMON)
 
-    ShopPrices_AddMod("it_never_ends", "it never ends", "FASTER, AND `2FASTER`0, AND `2FASTER!`0", MODVALUE_PRESET)
+    ShopPrices_AddMod("it_never_ends", "it never ends", "FASTER, AND `0FASTER`1, AND `2FASTER!`1", MODVALUE_PRESET)
     ShopPrices_SetPresetMods( "it_never_ends", ["heavy_mag", "belt_fed", "burn_mod_esaw", "pas_fast_swap", "aog"])
 
     ShopPrices_AddMod("pm0", "Upgrade 1", "An upgraded,\nunreleased version of this tactical.", MODVALUE_RARE)
@@ -90,6 +90,14 @@ void function ShopPrices_Init()
     ShopPrices_AddMod("short_charge", "Short Charge", "`2half`0 charge time for slightly reduced damage.", MODVALUE_UNCOMMON)
 
     ShopPrices_AddMod("rcee", "RCEE", ":3", MODVALUE_LEGENDARY)
+    ShopPrices_AddMod("burst_orientation_3", "Burst Orientation x3", "Fires in a burst of\n3. Increased damage.", MODVALUE_LEGENDARY)
+    ShopPrices_AddMod("burst_orientation_4", "Burst Orientation x4", "Fires in a burst of\n4. Increased damage.", MODVALUE_LEGENDARY)
+    ShopPrices_AddMod("mag_dump", "Mag Dump", "Fires the mag in one burst.\nIncreased damage.", MODVALUE_LEGENDARY)
+    ShopPrices_AddMod("rcee", "RCEE", ":3", MODVALUE_LEGENDARY)
+
+    ShopPrices_AddMod("wide", "W I D E", "Adds more projectiles to\nthe spread pattern.", MODVALUE_EPIC)
+    ShopPrices_AddMod("mass_destruction", "Ricoshart", "What's that? Ricochet's a bad mod?", MODVALUE_PRESET)
+    ShopPrices_SetPresetMods("mass_destruction",  ["wide", "extended_ammo"])
 
 
     ShopPrices_AddMod("all_grapple", "Amped Tactical", "+1 charge.", MODVALUE_RARE)
@@ -136,6 +144,18 @@ void function RegisterRoguelikeHighlight()
     HighlightContext_SetEntityVisible(h, true)
     HighlightContext_SetParam(h, 0, <0, 0.4, 0>)
     HighlightContext_SetParam(h, 1, <0, 0.4, 0>)
+    
+    h = RegisterHighlight( "roguelike_armor_chest" )
+    HighlightContext_SetADSFade( h, false )
+    HighlightContext_SetFarFadeDistance( h, 5000 )
+	HighlightContext_SetRadius( h, 4 )
+    HighlightContext_SetOutline( h, HIGHLIGHT_OUTLINE_CUSTOM_COLOR )
+    HighlightContext_SetFill( h, HIGHLIGHT_FILL_CUSTOM_COLOR_FADED )
+    HighlightContext_SetDrawFunc( h, eHighlightDrawFunc.LOS_LINE )
+	HighlightContext_SetADSFade( h, false )
+    HighlightContext_SetEntityVisible(h, true)
+    HighlightContext_SetParam(h, 0, <0.2, 0, 0.4>)
+    HighlightContext_SetParam(h, 1, <0.2, 0, 0.4>)
 }
 #endif
 
@@ -193,7 +213,9 @@ void function ShopPrices_AddMod(string name, string displayName, string descript
 #if CLIENT || SERVER
 int function GetMoney( entity player )
 {
-    return player.GetPlayerNetInt( "roguelikeCash" ) + player.GetPlayerNetInt( "roguelikeCashStacks" ) * 1024 + player.GetPlayerNetInt( "roguelikeCashStacksStacks" ) * 1024 * 1024
+    if (!("money" in player.s))
+        return 0
+    return expect int( player.s.money )
 }
 #endif
 
@@ -245,6 +267,9 @@ float function GetModWeight( string modName, string weaponName )
 		case "jump_kit":
 			return 1000.0;
 			break;
+            
+	    case "mag_dump":
+            return 0.1666
 		// disable smart lock.. cause it doesn't work
 		case "smart_lock":
 		// same problem with this mod.
@@ -270,6 +295,7 @@ float function GetModWeight( string modName, string weaponName )
 			return 0.0;
 		// don't disable ricochet cause it's like the only thing that isn't a pure upgrade
 	}
+	if (modName.find("burst_orientation") != null) return 0.1666
 	if (modName.find("burn_mod") != null) return 1.0
 	if (modName.find("spree_lvl") != null) return 0.0
 	if (modName.find("sp_s2s_settings") != null) return 0.0

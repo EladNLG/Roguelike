@@ -4,10 +4,10 @@ global function AddXP
 global function GetLevel
 global function CalculateXPForLevel
 
-const int BASE_XP_PER_LEVEL = 250
-const float XP_PER_LEVEL_MULTIPLIER = 1.1
+const float BASE_XP_PER_LEVEL = 250
+global const float XP_PER_LEVEL_MULTIPLIER = 1.05
 
-int xp = 0
+float xp = 0
 int level = 0
 
 bool xpot = false
@@ -44,9 +44,8 @@ bool function OnTele( entity player, array<string> args )
 
 void function Levels_Init()
 {
-    xp = GetConVarInt( "player_xp" )
+    xp = GetConVarFloat( "player_xp" )
     level = GetConVarInt( "player_level" )
-    print("\nXP: " + xp + "\nLEVEL: " + level)
 
     #if SP
     AddCallback_OnLevelEnd( OnLevelEnd )
@@ -77,6 +76,7 @@ void function UpdateLevels()
 
 void function Levels_Update()
 {
+    int frameCount = 0
     while( true )
     {
         foreach (entity player in GetPlayerArray())
@@ -85,8 +85,12 @@ void function Levels_Update()
                 Remote_CallFunction_Replay( player, "ServerCallback_SetXP", xp, level, XP_PER_LEVEL_MULTIPLIER, BASE_XP_PER_LEVEL )
                 OnLevelUp()
             }
-        if (xpot) AddXP( 30 )
+        if (xpot && frameCount % 30 == 0) {
+            //AddXP( 600 )
+            AddMoney( GetPlayerArray()[0], 600 )
+        }
         WaitFrame()
+        frameCount++
     }
 }
 void function ClientConnected( entity player )
@@ -105,16 +109,15 @@ void function ClientConnected( entity player )
     } 
     if (Roguelike_GetStartPoint() < startPointMax)
     {
-        print("\n\nhello there.\nSTART POINT: " + Roguelike_GetStartPoint())
         Remote_CallFunction_NonReplay( player, "ServerCallback_HideTimer" )
     }
 
     OnLevelUp()
 }
 
-int function CalculateXPForLevel( int level )
+float function CalculateXPForLevel( int level )
 {
-    return int(BASE_XP_PER_LEVEL * /*pow( XP_PER_LEVEL_MULTIPLIER, level )*/ (1.0 + (level * (XP_PER_LEVEL_MULTIPLIER - 1.0))))
+    return BASE_XP_PER_LEVEL * pow(XP_PER_LEVEL_MULTIPLIER, level)
 }
 
 int function GetLevel()
@@ -122,16 +125,19 @@ int function GetLevel()
     return level
 }
 
-void function AddXP( int amount )
+void function AddXP( float amount )
 {
     xp += amount
-    while ( xp >= CalculateXPForLevel( level ) )
+    while ( CalculateXPForLevel( level ) - xp < 0.0001 )
     {
         level += 1
         xp -= CalculateXPForLevel( level - 1 )
+        if (xp < 0)
+            xp = 0
     }
     while ( xp < 0 )
     {
+        print("fuck2")
         level -= 1
         xp += CalculateXPForLevel( level )
     }
@@ -154,6 +160,8 @@ int function CalculatePlayerMaxHP( entity player )
         if (IsValid(player.GetTitanSoul()) && player.GetTitanSoul().IsDoomed())
             baseHP /= 5
     }
+    baseHP *= 100 + Roguelike_GetEntityStat( player, "resilience" )
+    baseHP /= 100
 
     return maxint(1, int(baseHP + 0.3 * baseHP * level))
 }
@@ -163,7 +171,7 @@ int function CalculatePlayerMaxShield( entity player )
     int baseHP = 1000
 
     baseHP = int(RoundToNearestInt(baseHP * (1.0 - Roguelike_GetItemCount( player, "fatigue" ) * 0.2)))
-    baseHP = int(RoundToNearestInt(baseHP * (1.0 + Roguelike_GetItemCount( player, "shield" ) * CalculatePlayerMaxHP( player ) * 0.1)))
+    baseHP = int(RoundToNearestInt(baseHP + Roguelike_GetItemCount( player, "shield" ) * CalculatePlayerMaxHP( player ) * 0.1))
 
     /*if (player.IsTitan())
     {
@@ -188,11 +196,16 @@ void function OnLevelUp()
         player.SetMaxHealth(baseHP)
         player.SetHealth( int(min(baseHP, baseHP * healthFrac)) )
         
-        float shieldFrac = float(player.GetShieldHealth()) / player.GetShieldHealthMax()
+        if (!player.IsTitan())
+            continue
+        float shieldFrac = float(player.GetShieldHealth()) / float(player.GetTitanSoul().GetShieldHealthMax())
         int baseShield = CalculatePlayerMaxShield( player )
         baseShield = int(min(baseShield, 524287))
-        player.SetShieldHealthMax(baseShield)
-        player.SetShieldHealth( int(min(baseShield, baseShield * shieldFrac)) )
+        print(baseShield)
+
+        player.GetTitanSoul().SetShieldHealthMax(baseShield)
+        player.GetTitanSoul().SetShieldHealth( int(min(baseShield, baseShield * shieldFrac)) )
+        
     }
 }
 

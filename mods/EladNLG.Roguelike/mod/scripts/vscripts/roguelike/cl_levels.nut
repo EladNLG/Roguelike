@@ -16,7 +16,7 @@ struct
     BarTopoData& dashBgBar
 } file
 
-global int roguelikeXP = 0
+global float roguelikeXP = 0
 global int roguelikeLevel = 0
 
 void function Levels_Init()
@@ -98,8 +98,8 @@ void function Levels_Update()
     while ( true )
     {
         WaitFrame()
-        int levelXP = CalculateXPForLevel( roguelikeLevel )
-        float xpFrac = float(roguelikeXP) / levelXP
+        float levelXP = CalculateXPForLevel( roguelikeLevel )
+        float xpFrac = roguelikeXP / levelXP
 
         RuiSetString( file.levelRUI, "msgText", "LEVEL " + (roguelikeLevel + 1) )
 
@@ -125,10 +125,10 @@ void function Levels_Update()
 
 }
 
-int BASE_XP_PER_LEVEL = 250
+float BASE_XP_PER_LEVEL = 250
 float XP_PER_LEVEL_MULTIPLIER = 1.1
 
-void function ServerCallback_SetXP( int newXP, int newLevel, float XP_PER_LEVEL = 1.05, int BASE_XP = 250 )
+void function ServerCallback_SetXP( float newXP, int newLevel, float XP_PER_LEVEL = 1.05, float BASE_XP = 250 )
 {
     roguelikeXP = newXP
     roguelikeLevel = newLevel
@@ -136,9 +136,9 @@ void function ServerCallback_SetXP( int newXP, int newLevel, float XP_PER_LEVEL 
     XP_PER_LEVEL_MULTIPLIER = XP_PER_LEVEL
 }
 
-int function CalculateXPForLevel( int level )
+float function CalculateXPForLevel( int level )
 {
-    return int(BASE_XP_PER_LEVEL * /*pow( XP_PER_LEVEL_MULTIPLIER, level )*/ (1.0 + (level * (XP_PER_LEVEL_MULTIPLIER - 1.0))))
+    return BASE_XP_PER_LEVEL * pow( XP_PER_LEVEL_MULTIPLIER, level )
 }
 
 const CONVERSATION_TIMEOUT	 					= 10.0

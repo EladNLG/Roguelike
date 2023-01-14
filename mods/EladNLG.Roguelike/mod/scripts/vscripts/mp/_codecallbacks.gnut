@@ -274,6 +274,11 @@ void function CodeCallback_DamagePlayerOrNPC( entity ent, var damageInfo )
 	{
 		callbackFunc( ent, damageInfo )
 	}
+	
+	#if SP
+	if (ent.IsPlayer())
+		SpPlayer_OnDamaged( ent, damageInfo )
+	#endif
 	#if VERBOSE_DAMAGE_PRINTOUTS
 		printt( "    after AddEntityCallback_OnDamaged callbacks:", DamageInfo_GetDamage( damageInfo ) )
 	#endif

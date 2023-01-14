@@ -10,6 +10,7 @@ global function SetProficiencyFromSPDifficulty
 global function SelectDifficulty
 global function GetLowestDifficultyThisMap
 global function UpdateMercTitanHealthForDifficulty
+global function SpPlayer_OnDamaged
 
 const float FRIENDLY_TVT_DAMAGE_SCALE = 0.2 // scale damage dealt by militia npc titans against IMC
 const float BT_TVT_DAMAGE_SCALE = 0.5 // scale damage dealt by BT npc against IMC titans
@@ -87,7 +88,7 @@ void function SPDifficulty_Init()
 	Assert( !IsMultiplayer() )
 
 	AddDamageCallback( "npc_titan", NPCTitan_OnDamaged )
-	AddDamageCallback( "player", SpPlayer_OnDamaged )
+	//AddDamageCallback( "player", SpPlayer_OnDamaged )
 
 	// titans are easier when player is doomed
 	AddSpawnCallback( "npc_titan", NPCTitan_OnSpawned )
@@ -150,12 +151,13 @@ void function NPCTitan_OnDamaged( entity titan, var damageInfo )
 
 void function SpPlayer_OnDamaged( entity player, var damageInfo )
 {
+	printt("--------- SPPLAYER_ONDAMAGED ---------")
 	// reduce incoming damage if you recently loaded a save
 	DamageInfo_ScaleDamage( damageInfo, LoadSaveTimeDamageMultiplier() )
 
 	entity attacker = DamageInfo_GetAttacker( damageInfo )
-	if ( attacker == player )
-		return
+	//if ( attacker == player )
+	//	return
 
 	if ( player.IsTitan() )
 	{
@@ -178,7 +180,8 @@ void function SpPlayer_OnDamaged( entity player, var damageInfo )
 		if ( !DamageAlwaysLethal( damageInfo ) )
 		{
 			float recentDamage = GetTotalDamageTakenInTime( player, 0.25 )
-			float maxDamageAllowed = max( 5, file.maxDamagePerHit * player.GetHealth() - recentDamage )
+			float maxDamageAllowed = max( 5, file.maxDamagePerHit * player.GetMaxHealth() - recentDamage )
+			print(file.maxDamagePerHit * player.GetMaxHealth())
 
 			// make it possible to beat a Titan
 			if ( DamageInfo_GetDamage( damageInfo ) > maxDamageAllowed )

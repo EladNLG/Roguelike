@@ -36,6 +36,11 @@
 	}
 	"stand"
 	{
-		speed 243
+		speed 225
+	}
+	
+	"crouch"
+	{
+		speed						100
 	}
 }

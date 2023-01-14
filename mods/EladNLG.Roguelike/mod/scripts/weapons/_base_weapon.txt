@@ -1,7 +1,7 @@
 WeaponData
 {
+	    "ammo_clip_random_loss_on_npc_drop"				"0.0"
     Mods
     {
-        
     }
 }

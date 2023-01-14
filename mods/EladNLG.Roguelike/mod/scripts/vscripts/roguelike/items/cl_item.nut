@@ -1,9 +1,11 @@
+untyped
 global function ClItem_Init
 global function ReplaceWithSeries
 global function ServerCallback_ObtainedItem
 global function ServerCallback_SetItemAmount
 global function ServerCallback_SetLoanAmount
-global function CashAmountChanged
+global function ServerCallback_SetCashAmount
+global bool isPaused = false
 
 const RUI_TEXT_RIGHT = $"ui/cockpit_console_text_top_right.rpak"
 const RUI_TEXT_LEFT = $"ui/cockpit_console_text_top_left.rpak"
@@ -43,6 +45,11 @@ struct
     var loanRUI
     int requiredToPay = 0
     BarTopoData& data
+    array<string> items
+    float lastItemPickupTime = -500
+    string curItemDisplay = ""
+    bool isFocused = true
+    bool isArmorInFocus = false
 } file
 
 void function ClItem_Init()
@@ -88,13 +95,13 @@ void function OnEntitiesDidLoad()
 float lastTimeCashChanged = 0
 int lastCashAmount = 0
 int curCashAmount = 0
-void function CashAmountChanged( entity player, int oldValue, int newValue, bool actuallyChanged )
+void function ServerCallback_SetCashAmount( int newValue )
 {
-    if (curCashAmount == GetMoney( player )) return
-    if ( player != GetLocalViewPlayer() ) return
+    if (newValue == GetMoney( GetLocalViewPlayer() )) return
+    lastCashAmount = int(GraphCapped(pow(Time() - lastTimeCashChanged, 0.5), 0, pow(1, 0.5), lastCashAmount, curCashAmount))
     lastTimeCashChanged = Time()
-    lastCashAmount = curCashAmount
-    curCashAmount = GetMoney( player )
+    curCashAmount = newValue
+    GetLocalViewPlayer().s.money <- newValue
 }
 
 void function MoneyRUI_Update()
@@ -108,7 +115,26 @@ void function MoneyRUI_Update()
         if (file.requiredToPay > 0)
             RuiSetString( file.loanRUI, "msgText", "REQUIRED TO PAY LOAN: " + file.requiredToPay)
         else RuiSetString( file.loanRUI, "msgText", "" )
-        RuiSetString( file.moneyRUI, "msgText", int(GraphCapped(sqrt(Time()), sqrt(lastTimeCashChanged), sqrt(lastTimeCashChanged + 1), lastCashAmount, curCashAmount)) + "$")
+        RuiSetString( file.moneyRUI, "msgText", int(GraphCapped(pow(Time() - lastTimeCashChanged, 0.5), 0, pow(1, 0.5), lastCashAmount, curCashAmount)) + "$")
+        Hud_SetVisible( HudElement("ItemUI"), file.curItem != null || (!file.isArmorInFocus && Time() - file.lastItemPickupTime <= 5.0 && file.items.len() > 0) )
+        if (file.curItem == null && !file.isArmorInFocus)
+        {
+            Hud_SetText( Hud_GetChild(HudElement("ItemUI"), "ItemPrompt"), "Picked Up" )
+            if (file.items.len() > 0 && file.curItemDisplay != file.items[0])
+            {
+                SetItemDisplay( file.items[0], Roguelike_GetItemCount( GetLocalClientPlayer(), file.items[0] ) - 1 )
+            }
+            if (Time() - file.lastItemPickupTime >= 5.0 && file.items.len() > 0)
+            {
+                file.items.remove(0)
+                if (file.items.len() > 0)
+                {
+                    file.lastItemPickupTime = Time()
+                    SetItemDisplay( file.items[0], Roguelike_GetItemCount( GetLocalClientPlayer(), file.items[0] ) - 1 )
+                }
+            }
+        }
+        else Hud_SetText( Hud_GetChild(HudElement("ItemUI"), "ItemPrompt"), "%+use%" )
         WaitFrame()
     }
 }
@@ -140,12 +166,15 @@ void function OnEntGainedFocus( entity ent )
 {
     if ( StartsWith( ent.GetScriptName(), "item_drop_" ) )
         ItemDropGainedFocus( ent )
+    else if (StartsWith( ent.GetScriptName(), "armor_" ))
+    {
+        ArmorDropGainedFocus( ent )
+        file.isArmorInFocus = true
+    }
     
     if ( ent.GetScriptName() == "roguelike_chest" )
         thread ChestGainedFocus( ent )
-
     //RuiSetResolutionToScreenSize( file.flyoutRUI )
-
 }
 
 void function ChestGainedFocus( entity ent )
@@ -166,105 +195,80 @@ void function ChestGainedFocus( entity ent )
 
 void function ItemDropGainedFocus( entity ent )
 {
-    if (file.flyoutRUI != null)
-    {
-        RuiDestroyIfAlive(file.flyoutRUI)
-        file.flyoutRUI = null
-    }
-    if (file.drawbackRUI != null)
-    {
-        RuiDestroyIfAlive(file.drawbackRUI)
-        file.drawbackRUI = null
-    }
-    
     file.curItem = ent
 
-    string itemId = ent.GetScriptName().slice( 10, ent.GetScriptName().len() )
-    string rarity = Roguelike_GetItemRarity( itemId )
-    int stacks = Roguelike_GetItemCount( GetLocalViewPlayer(), itemId )
+    string item = ent.GetScriptName().slice( 10, ent.GetScriptName().len() )
+    SetItemDisplay( item, Roguelike_GetItemCount( GetLocalClientPlayer(), item ) )
+}
+
+void function SetItemDisplay( string item, int stacks )
+{
+    string rarity = Roguelike_GetItemRarity( item )
+    int stacks = stacks
+
+    int statCount = Roguelike_GetItemStatCount( item )
     
-    string drawbackPostfix = "\n\n"
-    string descPostfix = "\n\n"
-    int descLines = GetCharCount(Roguelike_GetItemDesc(itemId), '\n') + 1
-    int drawbackDescLines = GetCharCount(Roguelike_GetItemDrawbackDesc(itemId), '\n') + 1
+    var itemUI = HudElement("ItemUI") 
+    Hud_SetVisible( itemUI, true )
+    Hud_EnableKeyBindingIcons( Hud_GetChild( itemUI, "ItemPrompt") )
+    var popupBG = Hud_GetChild(itemUI, "ArmorPopup")
 
-    print("descLines: " + descLines + " drawbackDescLines: " + drawbackDescLines)
-    while (descLines != drawbackDescLines)
+    Hud_SetText( Hud_GetChild(itemUI, "ItemDesc"), Roguelike_GetItemDesc(item) )
+    Hud_SetText( Hud_GetChild(itemUI, "ItemTitle"), Roguelike_GetItemName(item).toupper() )
+    Hud_SetColor( Hud_GetChild(itemUI, "ArmorTitleBG"), 
+        ColorVectorToArray(Roguelike_GetRarityPickupColor(rarity)) )
+    SetStatUI( Hud_GetChild(itemUI, "Stat1"), "Count", (stacks + 1).tostring(), true, stacks.tostring())
+
+    int visibleStats = 0
+    array<var> panels = [ Hud_GetChild(itemUI, "Stat2"), Hud_GetChild(itemUI, "Stat3"), Hud_GetChild(itemUI, "Stat4") ]
+    foreach ( var panel in panels )
     {
-        print("descLines: " + descLines + " drawbackDescLines: " + drawbackDescLines)
-        if (descLines > drawbackDescLines)
-        {
-            print("drawbackDescLines++")
-            drawbackPostfix += "\n"
-            drawbackDescLines++
-        }
-        else
-        {
-            print("descLines++")
-            descPostfix += "\n"
-            descLines++
-        }
+        Hud_SetVisible( panel, false )
     }
-
-    for (int i = 0; i < Roguelike_GetItemStatCount(itemId); i++)
+    for ( int i = 0; i < statCount && visibleStats < panels.len(); i++ )
     {
-        string statName = Roguelike_GetItemStatName(itemId, i)
-        string statFormat = Roguelike_GetItemStatFormat(itemId, i)
-        float functionref( int ) statFunc = Roguelike_GetItemStatFunc(itemId, i)
-        bool functionref( int ) obsoleteFunc = Roguelike_GetItemStatObsoleteFunc( itemId, i )
+        var panel = panels[visibleStats]
+        Hud_SetVisible( panel, true )
+        string statName = Roguelike_GetItemStatName(item, i)
+        string statFormat = Roguelike_GetItemStatFormat(item, i)
+        float functionref( int ) statFunc = Roguelike_GetItemStatFunc(item, i)
+        bool functionref( int ) obsoleteFunc = Roguelike_GetItemStatObsoleteFunc( item, i )
         if (obsoleteFunc != null)
         {
             if (obsoleteFunc(stacks + 1))
+            {
+                Hud_SetVisible( panel, false )
                 continue
+            }
         }
-        string str = statName + ": " + format(statFormat, statFunc(stacks))
-        if (statFunc(stacks + 1) != statFunc(stacks))
-            str += " -> " + format(statFormat, statFunc(stacks + 1))
-        if (Roguelike_GetIsItemStatDrawback(itemId, i))
-        {
-            drawbackPostfix += str + "\n"
-            descPostfix += "\n"
-        }
-        else
-        {
-            descPostfix += str + "\n"
-            drawbackPostfix += "\n"
-        }
+        visibleStats++
+        string newVal = format(statFormat, statFunc(stacks + 1))
+        string oldVal = format(statFormat, statFunc(stacks))
+        bool hasChange = statFunc(stacks + 1) != statFunc(stacks)
+        SetStatUI( panel, statName, newVal, hasChange, oldVal )
     }
+    Hud_SetHeight( popupBG, Hud_GetHeight(Hud_GetChild(itemUI, "ItemDesc") ) + ( (40 + 37 * (visibleStats + 1)) * GetScreenSize()[1] / 1080 ) )
+    file.curItemDisplay = item
+}
 
-    // CREATE RUI
-    file.flyoutRUI = RuiCreate( $"ui/weapon_flyout.rpak", file.data.topoData[0].topo, RUI_DRAW_COCKPIT, -5 )
+array<int> function ColorVectorToArray( vector v ) 
+{
+    return [ int( v.x * 255 ), int( v.y * 255 ), int( v.z * 255 ), 240 ]
+}
 
-    RuiSetGameTime( file.flyoutRUI, "startTime", Time() - 0.5 )
-	RuiSetFloat( file.flyoutRUI, "duration", 99999.9 )
+void function SetStatUI( var panel, string statName, string newVal, bool hasChange, string oldVal = "" )
+{
+    var label = Hud_GetChild(panel, "Label")
+    var oldLabel = Hud_GetChild(panel, "OldVal")
+    var newLabel = Hud_GetChild(panel, "NewVal")
+    var arrow = Hud_GetChild(panel, "Arrow")
 
-    RuiTrackFloat3( file.flyoutRUI, "pos", ent, RUI_TRACK_OVERHEAD_FOLLOW )
-
-    string postfix = ""
-    if (stacks > 0)
-        postfix = " (" + stacks + " -> " + (stacks + 1) + ")"
-    RuiSetString( file.flyoutRUI, "titleText", "`2%use% " + Roguelike_GetItemName(itemId) + postfix )
-    RuiSetString( file.flyoutRUI, "descriptionText", Roguelike_GetItemDesc(itemId) + descPostfix )
-
-    RuiSetFloat3( file.flyoutRUI, "color", Roguelike_GetRarityColor( rarity ) )
-
-    file.drawbackRUI = RuiCreate( $"ui/weapon_flyout.rpak", file.data.topoData[0].topo, RUI_DRAW_COCKPIT, -4 )
-
-    RuiSetGameTime( file.drawbackRUI, "startTime", Time() - 0.5 )
-    RuiSetFloat( file.drawbackRUI, "duration", 99999.9 )
-    
-    RuiSetFloat( file.drawbackRUI, "underlineHeight", 0.0 )
-    RuiSetFloat( file.drawbackRUI, "underlineWidth", 0.0 )
-    RuiSetFloat( file.flyoutRUI, "underlineHeight", 0.0 )
-    RuiSetFloat( file.flyoutRUI, "underlineWidth", 0.0 )
-
-    RuiTrackFloat3( file.drawbackRUI, "pos", ent, RUI_TRACK_OVERHEAD_FOLLOW )
-
-    RuiSetString( file.drawbackRUI, "titleText", "" )
-    RuiSetString( file.drawbackRUI, "descriptionText", Roguelike_GetItemDrawbackDesc(itemId) + drawbackPostfix )
-
-    RuiSetFloat3( file.drawbackRUI, "color", Roguelike_GetRarityColor( RARITY_LEGENDARY ) )
-    
+    Hud_SetVisible( oldLabel, hasChange )
+    Hud_SetVisible( arrow, hasChange )
+    if (hasChange)
+        Hud_SetText( oldLabel, oldVal )
+    Hud_SetText( newLabel, newVal )
+    Hud_SetText( label, statName )
 }
 
 void function ServerCallback_SetLoanAmount( int amount )
@@ -277,16 +281,12 @@ void function OnEntLostFocus( entity ent )
     clGlobal.levelEnt.Signal( "ChestLostFocus" )
     //if (file.curItem != ent)
     //    return
-    
-    if (file.flyoutRUI != null)
+    //Hud_SetVisible( HudElement("ItemUI"), false )
+    if (file.isArmorInFocus)
     {
-        RuiDestroyIfAlive(file.flyoutRUI)
-        file.flyoutRUI = null
-    }
-    if (file.drawbackRUI != null)
-    {
-        RuiDestroyIfAlive(file.drawbackRUI)
-        file.drawbackRUI = null
+        ArmorDropLostFocus( ent )
+        file.lastItemPickupTime = Time()
+        file.isArmorInFocus = false
     }
     file.curItem = null
 }
@@ -297,36 +297,23 @@ void function ServerCallback_ObtainedItem( int playerEHandle, int item )
     if (!IsValid(player))
         throw "????"
 
-    if (file.flyoutRUI != null)
-    {
-        RuiDestroyIfAlive(file.flyoutRUI)
-        file.flyoutRUI = null
-    }
-    if (file.drawbackRUI != null)
-    {
-        RuiDestroyIfAlive(file.drawbackRUI)
-        file.drawbackRUI = null
-    }
+    //Hud_SetVisible( HudElement("ItemUI"), false )
     Roguelike_GiveEntityItem( player, Roguelike_GetItemFromNumericId(item) )
 }
 
-void function ServerCallback_SetItemAmount( int playerEHandle, int item, int amount )
+void function ServerCallback_SetItemAmount( int item, int amount, bool isPickup )
 {
-    entity player = GetEntityFromEncodedEHandle( playerEHandle )
+    entity player = GetLocalClientPlayer()
     if (!IsValid(player))
         throw "????"
     
-    if (file.flyoutRUI != null)
-    {
-        RuiDestroyIfAlive(file.flyoutRUI)
-        file.flyoutRUI = null
-    }
-    if (file.drawbackRUI != null)
-    {
-        RuiDestroyIfAlive(file.drawbackRUI)
-        file.drawbackRUI = null
-    }
     string item = Roguelike_GetItemFromNumericId(item)
+    if (isPickup)
+    {
+        file.lastItemPickupTime = Time()
+        file.items.push(item)
+    }
+    //Hud_SetVisible( HudElement("ItemUI"), false )
     //print( "SETTING ITEM AMOUNT: " + item + " amount: " + amount )
     //print( "CURRENT ITEM " + item + " AMOUNT: " + amount )
     Roguelike_GiveEntityItem( player, item, amount - Roguelike_GetItemCount( player, item ) )
@@ -362,38 +349,8 @@ string function ReplaceWithSeries( string str, array<string> replace )
     return newStr
 }
 
-int function CountReplacements( string str, array<string> replace )
+void function Roguelike_SetPaused( bool paused )
 {
-    if (replace.len() == 0)
-        return 0
-    int replaced = 0
-    for (int i = 0; i < replace.len(); i++)
-    {
-        if (str.find("%cs") == null)
-            break
-        
-        int a = expect int( str.find("%cs") )
-
-        if (a > 0 && str[a - 1] == '%') {
-            str = str.slice( a + 3, str.len() )
-            i--
-            continue
-        }
-        replaced++
-        str = str.slice(a + 3, str.len())
-    }
-    return replaced
-}
-
-int function GetCharCount(string str, int c)
-{
-    int count = 0
-    for (int i = 0; i < str.len(); i++)
-    {
-        if (str[i] == c)
-        {
-            count++
-        }
-    }
-    return count
+    isPaused = paused
+    Hud_SetVisible( HudElement("ItemUI"), !paused )
 }

@@ -44,15 +44,12 @@ void function RegisterRemoteFunctions()
     Remote_RegisterFunction( "ServerCallback_ShowTimer" )
     Remote_RegisterFunction( "ServerCallback_UnlockAchievement" )
     Remote_RegisterFunction( "ServerCallback_SetLoanAmount")
+    Remote_RegisterFunction( "ServerCallback_SetCashAmount")
     if (!IsLobby())
     {
-        RegisterNetworkedVariable( "roguelikeCash", SNDC_PLAYER_GLOBAL, SNVT_UNSIGNED_INT )
-        RegisterNetworkedVariable( "roguelikeCashStacks", SNDC_PLAYER_GLOBAL, SNVT_UNSIGNED_INT )
-        RegisterNetworkedVariable( "roguelikeCashStacksStacks", SNDC_PLAYER_GLOBAL, SNVT_UNSIGNED_INT )
         RegisterNetworkedVariable( "difficultyStartTime", SNDC_GLOBAL, SNVT_TIME )
-        #if CLIENT
-        RegisterNetworkedVariableChangeCallback_int( "roguelikeCash", CashAmountChanged )
-        #endif
+        RegisterNetworkedVariable( "hardDamage", SNDC_PLAYER_GLOBAL, SNVT_FLOAT_RANGE_OVER_TIME, 0.0, 0.0, 100.0 )
+
     }
     getconsttable()[ "eDamageSourceId" ][ "ukulele" ] <- 4903274 // random number to avoid conflict with other mods
     RegisterWeaponDamageSourceName( "ukulele", "Ukulele" )

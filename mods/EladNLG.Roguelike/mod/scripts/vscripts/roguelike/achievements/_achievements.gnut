@@ -48,7 +48,6 @@ bool function RUpdatedAchievements( entity player, array<string> args )
         if (s == "") continue
         int offset = j * 32
         int chunkData = s.tointeger()
-        print(chunkData)
 
         for (int i = 0; i < 32; i++)
         {

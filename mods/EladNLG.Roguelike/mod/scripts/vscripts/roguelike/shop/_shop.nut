@@ -13,6 +13,8 @@ void function _Shop_Init()
     if (IsLobby()) return
     AddClientCommandCallback( "buyammo", CC_BuyAmmo )
     AddClientCommandCallback( "buyitem", CC_BuyItem )
+    if (GetDeveloperLevel() <= 0)
+        AddClientCommandCallback( "SpawnViewGrunt", ClientCommand_SpawnViewGrunt )
     AddCallback_OnNPCKilled( OnNPCKilled_AddMoney )
     AddCallback_EntitiesDidLoad( AAAAAAAAEntitiesDidLoad )
     file.items = Roguelike_GetAllItemsOfRarity( RARITY_UMBRAL )
@@ -40,12 +42,15 @@ void function AAAAAAAAEntitiesDidLoad()
     Highlight_SetNeutralHighlight( pods[0], "roguelike_chest" )
 }
 
-int function ScaleRewardWithDifficulty( int reward )
+int function ScaleRewardWithDifficulty( int reward, float multiplier )
+{
+    return int( reward * (1 + multiplier * roguelikeDifficulty))
+}
+
+float function ScaleRewardWithDifficultyExponent( int reward, float ex )
 {
     float multiplier = 1.0
-    if (GetMapName() == "sp_crashsite" && Flag( "neural_link_complete" ) && !Flag( "spawn_final_enemies" ))
-        multiplier *= 0.15
-    return int( reward * (1 + 0.15 * roguelikeDifficulty) * multiplier)
+    return reward * pow(ex, roguelikeDifficulty)
 }
 
 void function OnNPCKilled_AddMoney( entity npc, entity attacker, var damageInfo )
@@ -56,79 +61,71 @@ void function OnNPCKilled_AddMoney( entity npc, entity attacker, var damageInfo 
         {
             case "npc_drone":
             case "npc_soldier":
-                AddMoney( attacker, ScaleRewardWithDifficulty(15) );
-                AddXP( 30 )
+                if (attacker.IsTitan())
+                    AddMoney( attacker, ScaleRewardWithDifficulty(3, 0.2) );
+                else AddMoney( attacker, ScaleRewardWithDifficulty(10, 0.2) );
+                AddXP( ScaleRewardWithDifficultyExponent( 30, XP_PER_LEVEL_MULTIPLIER ) )
                 break
             //case "npc_marvin":
             case "npc_titan":
-                AddMoney( attacker, ScaleRewardWithDifficulty(35) );
-                AddXP( 100 )
+                AddMoney( attacker, ScaleRewardWithDifficulty(25, 0.2) );
+                AddXP( ScaleRewardWithDifficultyExponent( 100, XP_PER_LEVEL_MULTIPLIER) )
                 break
             case "npc_spectre":
-                AddMoney( attacker, ScaleRewardWithDifficulty(20) );
-                AddXP( 40 )
+                if (attacker.IsTitan())
+                    AddMoney( attacker, ScaleRewardWithDifficulty(5, 0.2) );
+                else AddMoney( attacker, ScaleRewardWithDifficulty(15, 0.2) );
+                AddXP( ScaleRewardWithDifficultyExponent( 40, XP_PER_LEVEL_MULTIPLIER) )
                 break
             case "npc_super_spectre":
-                AddMoney( attacker, ScaleRewardWithDifficulty(50) );
-                AddXP( 100 )
+                AddMoney( attacker, ScaleRewardWithDifficulty(20, 0.2) );
+                AddXP( ScaleRewardWithDifficultyExponent( 100, XP_PER_LEVEL_MULTIPLIER) )
                 break
             case "npc_turret_mega":
             case "npc_turret_sentry":
             case "npc_stalker":
-                AddMoney( attacker, ScaleRewardWithDifficulty(35) );
-                AddXP( 70 )
+                if (attacker.IsTitan())
+                    AddMoney( attacker, ScaleRewardWithDifficulty(6, 0.2) );
+                else AddMoney( attacker, ScaleRewardWithDifficulty(20, 0.2) );
+                AddXP( ScaleRewardWithDifficultyExponent( 70, XP_PER_LEVEL_MULTIPLIER) )
                 break
             case "npc_prowler":
-                AddMoney( attacker, ScaleRewardWithDifficulty(25) );
-                AddXP( ScaleRewardWithDifficulty(25) )
+                if (attacker.IsTitan())
+                    AddMoney( attacker, ScaleRewardWithDifficulty(8, 0.2) );
+                else AddMoney( attacker, ScaleRewardWithDifficulty(25, 0.2) );
+                AddXP( ScaleRewardWithDifficultyExponent( 25 , XP_PER_LEVEL_MULTIPLIER) )
                 break
             case "npc_frag_drone":
-                AddMoney( attacker, ScaleRewardWithDifficulty(5) );
-                AddXP( 10 )
+                AddMoney( attacker, ScaleRewardWithDifficulty(5, 0.2) );
+                AddXP( ScaleRewardWithDifficultyExponent( 10 , XP_PER_LEVEL_MULTIPLIER) )
                 break
             case "npc_marvin":
-                AddMoney( attacker, ScaleRewardWithDifficulty(5) );
-                AddXP( 75 )
+                AddMoney( attacker, ScaleRewardWithDifficulty(5, 0.2) );
+                AddXP( ScaleRewardWithDifficultyExponent( 75 , XP_PER_LEVEL_MULTIPLIER) )
         }
     }
 }
 
 void function AddMoney( entity player, int amount )
 {
-    if ( player.IsPlayer() )
-    {
-        int curMoney = GetMoney( player )
-        curMoney += amount
-        if (curMoney < 0)
-            curMoney = 0
-        int cashStacks = curMoney / 1024
-        int cashStacksStacks = cashStacks / 1024
-        cashStacks = cashStacks % 1024
-        curMoney = curMoney % 1024
-        player.SetPlayerNetInt( "roguelikeCashStacks", cashStacks )
-        player.SetPlayerNetInt( "roguelikeCashStacksStacks", int(min(cashStacksStacks, 1023)) )
-        player.SetPlayerNetInt( "roguelikeCash", curMoney );
-    }
-    if (GetMoney( player ) == 69420)
-        Roguelike_UnlockAchievement( player, "holyfuckingshit" )
+    if ( !player.IsPlayer() )
+        return
+
+    int curMoney = GetMoney( player )
+    player.s.money <- curMoney + amount
+
+    Remote_CallFunction_NonReplay( player, "ServerCallback_SetCashAmount", player.s.money )
 }
 
 void function RemoveMoney( entity player, int amount )
 {
-    if ( player.IsPlayer() )
-    {
-        int curMoney = GetMoney( player )
-        curMoney -= amount
-        if (curMoney < 0)
-            curMoney = 0
-        int cashStacks = curMoney / 1024
-        int cashStacksStacks = cashStacks / 1024
-        cashStacks = cashStacks % 1024
-        curMoney = curMoney % 1024
-        player.SetPlayerNetInt( "roguelikeCashStacks", cashStacks )
-        player.SetPlayerNetInt( "roguelikeCashStacksStacks", cashStacksStacks )
-        player.SetPlayerNetInt( "roguelikeCash", curMoney );
-    }
+    if ( !player.IsPlayer() )
+        return
+    
+    int curMoney = GetMoney( player )
+    player.s.money <- curMoney - amount
+
+    Remote_CallFunction_NonReplay( player, "ServerCallback_SetCashAmount", player.s.money )
 }
 
 bool function CC_BuyAmmo( entity player, array<string> args)
