@@ -158,7 +158,7 @@ float roguelikeRealTime = 0.0
 void function DifficultyRUI_Update()
 {
     if (IsLobby()) return
-    if (!IsNewThread()) throw "MoneyRUI_Update() must be called from a new thread."
+    if (!IsNewThread()) throw "DifficultyRUI_Update() must be called from a new thread."
 
     OnThreadEnd(
         function () : (){

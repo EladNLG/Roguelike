@@ -1,0 +1,7 @@
+{
+	"Name": "Script FPS Fix",
+	"Description": "Makes the game script_server_fps independent, so you can raise it to make the game more responsive.",
+	"LoadPriority": 6,
+	"RequiredOnClient": false,
+	"Version": "0.1.0"
+}

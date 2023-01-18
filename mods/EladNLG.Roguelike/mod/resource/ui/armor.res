@@ -107,7 +107,7 @@
 		controlSettingsFile	"resource/UI/StatBar.res"
 	}
 	
-	"Recovery"
+	"Resilience"
 	{
 		"ControlName"		"CNestedPanel"
 		xpos				00
@@ -124,24 +124,7 @@
 		controlSettingsFile	"resource/UI/StatBar.res"
 	}
 	
-	"Resilience"
-	{
-		"ControlName"		"CNestedPanel"
-		xpos				00
-		ypos				10
-		wide				480
-		tall				27
-		visible				1
-		enabled				1
-		pin_to_sibling Recovery
-		pin_corner_to_sibling TOP_LEFT
-		pin_to_sibling_corner BOTTOM_LEFT
-
-
-		controlSettingsFile	"resource/UI/StatBar.res"
-	}
-	
-	"Strength"
+	"Recovery"
 	{
 		"ControlName"		"CNestedPanel"
 		xpos				00
@@ -158,7 +141,7 @@
 		controlSettingsFile	"resource/UI/StatBar.res"
 	}
 	
-	"Discipline"
+	"Strength"
 	{
 		"ControlName"		"CNestedPanel"
 		xpos				00
@@ -167,7 +150,7 @@
 		tall				27
 		visible				1
 		enabled				1
-		pin_to_sibling 		Strength
+		pin_to_sibling Recovery
 		pin_corner_to_sibling TOP_LEFT
 		pin_to_sibling_corner BOTTOM_LEFT
 
@@ -184,7 +167,24 @@
 		tall				27
 		visible				1
 		enabled				1
-		pin_to_sibling Discipline
+		pin_to_sibling Strength
+		pin_corner_to_sibling TOP_LEFT
+		pin_to_sibling_corner BOTTOM_LEFT
+
+
+		controlSettingsFile	"resource/UI/StatBar.res"
+	}
+	
+	"Discipline"
+	{
+		"ControlName"		"CNestedPanel"
+		xpos				00
+		ypos				10
+		wide				480
+		tall				27
+		visible				1
+		enabled				1
+		pin_to_sibling 		Intelligence
 		pin_corner_to_sibling TOP_LEFT
 		pin_to_sibling_corner BOTTOM_LEFT
 
@@ -202,7 +202,7 @@
 		tall				27
 		visible				1
 		enabled				1
-		pin_to_sibling Intelligence
+		pin_to_sibling Discipline
 		pin_corner_to_sibling TOP_LEFT
 		pin_to_sibling_corner BOTTOM_LEFT
 

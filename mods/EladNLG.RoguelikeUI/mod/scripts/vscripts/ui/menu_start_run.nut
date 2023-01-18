@@ -35,7 +35,7 @@ void function InitMenu()
     Hud_DialogList_AddListItem( difficulty, "Hard", "2" )
     Hud_DialogList_AddListItem( difficulty, "Master", "3" )
     Hud_DialogList_AddListItem( difficulty, "Fucking NUTS", "10" )
-    Hud_DialogList_AddListItem( difficulty, "I'm MoDen31 (difficulty scales backwards)", "-6" )
+    //Hud_DialogList_AddListItem( difficulty, "I'm MoDen31 (difficulty scales backwards)", "-6" )
     SetButtonRuiText(difficulty, "Difficulty")
     file.difficulty = difficulty
 

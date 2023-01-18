@@ -32,6 +32,8 @@ enum eFlyoutType
 	BT_LOADOUT_PICKUP
 }
 
+float[2]& screenSize = [1920, 1080]
+
 struct
 {
 	var flyoutRUI
@@ -57,6 +59,7 @@ struct
 
 void function ClDroppedWeaponFlyout_Init()
 {
+	screenSize = GetScreenSize()
 	RegisterSignal( "PetTitanChanged" )
 	RegisterSignal( "PetTitanModeChanged" )
 
@@ -73,8 +76,8 @@ void function ClDroppedWeaponFlyout_Init()
 	AddCinematicEventFlagChangedCallback( CE_FLAG_HIDE_MAIN_HUD, WeaponPickupFlyout_UpdateVisibility )
 	AddCallback_OnSelectedWeaponChanged( OnSelectedWeaponChanged )
 
-	var topo = RuiTopology_CreatePlane( <GetScreenSize()[0] * 0.07, GetScreenSize()[1] - GetScreenSize()[1] * 0.25, 0>, <GetScreenSize()[0] * 0.3, 0, 0>, <0, GetScreenSize()[0] * 0.3 / 16.0 * 9.0, 0>, false )
-	var bgTopo = RuiTopology_CreatePlane( <GetScreenSize()[0] * 0.07, GetScreenSize()[1] - GetScreenSize()[1] * 0.25, 0>, <GetScreenSize()[0] * 0.3, 0, 0>, <0, GetScreenSize()[0] * 0.3 / 16.0 * 9.0, 0>, false )
+	var topo = RuiTopology_CreatePlane( <screenSize[0] * 0.07, screenSize[1] - screenSize[1] * 0.25, 0>, <screenSize[0] * 0.3, 0, 0>, <0, screenSize[0] * 0.3 / 16.0 * 9.0, 0>, false )
+	var bgTopo = RuiTopology_CreatePlane( <screenSize[0] * 0.07, screenSize[1] - screenSize[1] * 0.25, 0>, <screenSize[0] * 0.3, 0, 0>, <0, screenSize[0] * 0.3 / 16.0 * 9.0, 0>, false )
 
 	float horzMultiplier = 9.0 / 16.0
     var rui = RuiCreate( $"ui/basic_image.rpak", bgTopo, RUI_DRAW_HUD, -5)
@@ -313,10 +316,10 @@ void function TrackWeaponPos( var topo, var bgTopo )
 		WaitFrame()
 		if (!IsValid(file.focusedEnt) || !file.shouldShowFlyout)
 		{
-			RuiTopology_UpdatePos( topo, <GetScreenSize()[0], GetScreenSize()[1], 0>, 
-            	<GetScreenSize()[0] * 0.2, 0, 0>, <0, GetScreenSize()[0] * 0.2 / 16.0 * 9.0, 0>)
-			RuiTopology_UpdatePos( bgTopo, <GetScreenSize()[0], GetScreenSize()[1], 0>, 
-           		<GetScreenSize()[0] * 0.2, 0, 0>, <0, GetScreenSize()[0] * 0.2 / 16.0 * 9.0, 0>)
+			RuiTopology_UpdatePos( topo, <screenSize[0], screenSize[1], 0>, 
+            	<screenSize[0] * 0.2, 0, 0>, <0, screenSize[0] * 0.2 / 16.0 * 9.0, 0>)
+			RuiTopology_UpdatePos( bgTopo, <screenSize[0], screenSize[1], 0>, 
+           		<screenSize[0] * 0.2, 0, 0>, <0, screenSize[0] * 0.2 / 16.0 * 9.0, 0>)
 
 			foreach (var rui in file.modNameRuis)
 				RuiDestroy(rui)
@@ -327,19 +330,19 @@ void function TrackWeaponPos( var topo, var bgTopo )
 		}
 
 		float bgTopoSize = float(file.modCount) / 5.0
-		float vertOffset = GetScreenSize()[0] * 0.2 / 16.0 * 9.0
+		float vertOffset = screenSize[0] * 0.2 / 16.0 * 9.0
 
 		vector pos = file.focusedEnt.GetOrigin()
 		pos = WorldToScreenPos( pos )
 		//print(pos)
-		pos = ClipScreenPositionToBox( pos, 50, GetScreenSize()[0] * 0.8 - 50, vertOffset * 0.5 * bgTopoSize + vertOffset * 0.2 + 50, GetScreenSize()[1] - (vertOffset * 0.5 * bgTopoSize) - 50 )
+		pos = ClipScreenPositionToBox( pos, 50, screenSize[0] * 0.8 - 50, vertOffset * 0.5 * bgTopoSize + vertOffset * 0.2 + 50, screenSize[1] - (vertOffset * 0.5 * bgTopoSize) - 50 )
 		
 		
 		float scale = 1.2
 		RuiTopology_UpdatePos( topo, pos - <0, vertOffset * 0.5, 0> * bgTopoSize, 
-            <GetScreenSize()[0] * 0.2, 0, 0>, <0, vertOffset, 0>)
+            <screenSize[0] * 0.2, 0, 0>, <0, vertOffset, 0>)
 		RuiTopology_UpdatePos( bgTopo, pos - <0, vertOffset * 0.5 * bgTopoSize + vertOffset * 0.2, 0>, 
-            <GetScreenSize()[0] * 0.2, 0, 0>, <0, vertOffset * bgTopoSize + vertOffset * 0.2, 0> )
+            <screenSize[0] * 0.2, 0, 0>, <0, vertOffset * bgTopoSize + vertOffset * 0.2, 0> )
 	}
 }
 

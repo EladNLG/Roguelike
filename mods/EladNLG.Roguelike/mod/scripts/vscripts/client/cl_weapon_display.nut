@@ -7,6 +7,8 @@ global function ResumeDisplay
 const RUI_TEXT_LEFT = $"ui/cockpit_console_text_top_left.rpak"
 const RUI_TEXT_RIGHT = $"ui/cockpit_console_text_top_right.rpak"
 
+float[2]& screenSize = [1920, 1080]
+
 array<vector> colors = [
 	<0.3, 0.3, 0.3>,
 	<0.15, 0.75, 0.15>,
@@ -38,8 +40,9 @@ struct
 
 void function WeaponDisplay_Init()
 {
-    var topo = RuiTopology_CreatePlane( <GetScreenSize()[0] * 0.07, GetScreenSize()[1] - GetScreenSize()[1] * 0.25, 0>, <GetScreenSize()[0] * 0.3, 0, 0>, <0, GetScreenSize()[0] * 0.3 / 16.0 * 9.0, 0>, false )
-	var bgTopo = RuiTopology_CreatePlane( <GetScreenSize()[0] * 0.07, GetScreenSize()[1] - GetScreenSize()[1] * 0.25, 0>, <GetScreenSize()[0] * 0.3, 0, 0>, <0, GetScreenSize()[0] * 0.3 / 16.0 * 9.0, 0>, false )
+	screenSize = GetScreenSize()
+    var topo = RuiTopology_CreatePlane( <screenSize[0] * 0.07, screenSize[1] - screenSize[1] * 0.25, 0>, <screenSize[0] * 0.3, 0, 0>, <0, screenSize[0] * 0.3 / 16.0 * 9.0, 0>, false )
+	var bgTopo = RuiTopology_CreatePlane( <screenSize[0] * 0.07, screenSize[1] - screenSize[1] * 0.25, 0>, <screenSize[0] * 0.3, 0, 0>, <0, screenSize[0] * 0.3 / 16.0 * 9.0, 0>, false )
 
 	float horzMultiplier = 9.0 / 16.0
     var rui = RuiCreate( $"ui/basic_image.rpak", bgTopo, RUI_DRAW_HUD, -5)
@@ -117,10 +120,10 @@ void function TrackWeaponPos( var topo, var bgTopo )
 		WaitFrame()
 		if (!IsValid(file.focusedEnt) || !file.shouldShowFlyout)
 		{
-			RuiTopology_UpdatePos( topo, <GetScreenSize()[0], GetScreenSize()[1], 0>, 
-            	<GetScreenSize()[0] * 0.2, 0, 0>, <0, GetScreenSize()[0] * 0.2 / 16.0 * 9.0, 0>)
-			RuiTopology_UpdatePos( bgTopo, <GetScreenSize()[0], GetScreenSize()[1], 0>, 
-           		<GetScreenSize()[0] * 0.2, 0, 0>, <0, GetScreenSize()[0] * 0.2 / 16.0 * 9.0, 0>)
+			RuiTopology_UpdatePos( topo, <screenSize[0], screenSize[1], 0>, 
+            	<screenSize[0] * 0.2, 0, 0>, <0, screenSize[0] * 0.2 / 16.0 * 9.0, 0>)
+			RuiTopology_UpdatePos( bgTopo, <screenSize[0], screenSize[1], 0>, 
+           		<screenSize[0] * 0.2, 0, 0>, <0, screenSize[0] * 0.2 / 16.0 * 9.0, 0>)
 
 			foreach (var rui in file.modNameRuis)
 				RuiDestroy(rui)
@@ -130,14 +133,14 @@ void function TrackWeaponPos( var topo, var bgTopo )
 			continue
 		}
 		float bgTopoSize = float(file.modCount) / 5.0
-		float vertOffset = GetScreenSize()[0] * 0.2 / 16.0 * 9.0
-		vector pos = <50, GetScreenSize()[1] - 50, 0>
+		float vertOffset = screenSize[0] * 0.2 / 16.0 * 9.0
+		vector pos = <50, screenSize[1] - 50, 0>
 		
 		float scale = 1.2
 		RuiTopology_UpdatePos( topo, pos - <0, vertOffset, 0> * bgTopoSize, 
-            <GetScreenSize()[0] * 0.2, 0, 0>, <0, vertOffset, 0>)
+            <screenSize[0] * 0.2, 0, 0>, <0, vertOffset, 0>)
 		RuiTopology_UpdatePos( bgTopo, pos - <0, vertOffset * bgTopoSize + vertOffset * 0.2, 0>, 
-            <GetScreenSize()[0] * 0.2, 0, 0>, <0, vertOffset * bgTopoSize + vertOffset * 0.2, 0> )
+            <screenSize[0] * 0.2, 0, 0>, <0, vertOffset * bgTopoSize + vertOffset * 0.2, 0> )
 	}
 }
 
