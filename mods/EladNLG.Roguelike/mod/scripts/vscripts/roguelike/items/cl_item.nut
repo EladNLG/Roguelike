@@ -109,7 +109,6 @@ void function MoneyRUI_Update()
     if (IsLobby()) return
     if (!IsNewThread()) throw "MoneyRUI_Update() must be called from a new thread."
 
-    float lastTSLDC = 0
     while (true)
     {
         if (file.requiredToPay > 0)

@@ -11,6 +11,9 @@ struct
 void function _Shop_Init()
 {
     if (IsLobby()) return
+    if (IsSingleplayer())
+        SetConVarInt( "sv_quota_stringcmdspersecond", 1000 )
+    else SetConVarInt( "sv_quota_stringcmdspersecond", 60 )
     AddClientCommandCallback( "buyammo", CC_BuyAmmo )
     AddClientCommandCallback( "buyitem", CC_BuyItem )
     if (GetDeveloperLevel() <= 0)

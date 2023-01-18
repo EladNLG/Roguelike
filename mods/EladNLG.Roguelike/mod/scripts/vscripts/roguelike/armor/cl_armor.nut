@@ -15,12 +15,6 @@ array<vector> colors = [
 void function ClArmor_Init()
 {
     AddServerToClientStringCommandCallback( "UpdateArmor", UpdateArmor )
-    thread TestProgressBar()
-}
-
-void function TestProgressBar()
-{
-    wait 1
 }
 
 void function ArmorDropGainedFocus( entity ent )
@@ -65,7 +59,7 @@ void function UpdateArmor( array<string> args )
     }
     argStr = argStr.slice(0, argStr.len() - 1)
     ArmorData data = StringToArmorData( argStr )
-    print(argStr)
+    //print(argStr)
     entity player = GetLocalClientPlayer()
     Roguelike_GiveEntityArmor( player, StringToArmorData( argStr ) )
 
@@ -82,6 +76,6 @@ function UpdateAmmoChargesBarSegments( var bar, int count )
 	int width = Hud_GetHeight( bar )
     int gap = 1
     int segmentWidth = (width - ( (count - 1) * gap) ) / count
-    print(segmentWidth)
+    //print(segmentWidth)
     bar.SetBarSegmentInfo( gap, segmentWidth )
 }

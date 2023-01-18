@@ -573,7 +573,7 @@ int function GetChestSpawnAmount()
     switch (GetMapName())
     {
         case "sp_training":
-            return 100
+            return 50
         case "sp_boomtown":
             return 100
         case "mp_thaw":

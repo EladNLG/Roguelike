@@ -97,13 +97,13 @@ void function InventoryMenuInit()
             file.weaponSelected = null
         }
     })
-        
 
-    file.gridData.rows = 4
+
+    file.gridData.rows = 3
     file.gridData.columns = 4
     file.gridData.paddingVert = 8
     file.gridData.paddingHorz = 8
-    file.gridData.numElements = 12
+    file.gridData.numElements = 8
     file.gridData.tileWidth = 180
     print(file.gridData.tileWidth)
     file.gridData.tileHeight = 100
@@ -118,7 +118,7 @@ void function InventoryMenuInit()
     GridMenuInit( file.menu, file.gridData )
 
     thread UpdateTooltip( Hud_GetChild( file.menu, "ArmorUI" ) )
-}
+}   
 
 void function OnMenuOpened()
 {
@@ -144,7 +144,7 @@ void function UpdateTooltip( var button )
         WaitFrame()
         if (GetFocus() != null)
         {
-            if (IsElementParent( button, GetFocus() ))
+            if (IsElementParent( button, GetFocus() ) || !Hud_IsVisible( GetFocus() ))
             {
                 Hud_SetVisible( button, false )
                 continue
@@ -180,6 +180,7 @@ bool function OnModButtonReady( var button, int element )
 {
     RuiSetImage( Hud_GetRui( button ), "buttonImage", 
         $"r2_ui/menus/loadout_icons/primary_weapon/primary_r102" )
+    Hud_SetVisible( button, true )
     //Hud_SetSelected( button, true )
     return true
 }

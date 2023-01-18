@@ -41,22 +41,20 @@ ArmorData function Armor_Create( string name, string rarity )
     int titanPoints = 0
     int pilotPoints = 0
 
-    int highMin = int(GraphCapped( GetRarityValue(rarity), 0, 3, 2, 10 ))
-    int highMax = int(GraphCapped( GetRarityValue(rarity), 0, 3, 6, 18 ))
-    int medMin = int(GraphCapped( GetRarityValue(rarity), 0, 3, 2, 10 ))
+    int highMin = int(GraphCapped( GetRarityValue(rarity), 0, 3, 2, 24 ))
+    int highMax = int(GraphCapped( GetRarityValue(rarity), 0, 3, 6, 24 ))
+    int medMin = int(GraphCapped( GetRarityValue(rarity), 0, 3, 2, 18 ))
     int medMax = int(GraphCapped( GetRarityValue(rarity), 0, 3, 6, 18 ))
-    int lowMin = 2
+    int lowMin = 6
     int lowMax = 6
     string stat = pilotGroup.getrandom()
-    int val = RandomIntRangeOuterRange(
-        highMin, highMax, 1 + GetRarityValue(rarity)
-    ) // 10
+    int val = RandomIntRangeOuterRange(highMin, highMax, 0) // 10
     SetArmorStat(data, stat, val)
     pilotPoints += val
     pilotGroup.remove(pilotGroup.find(stat))
 
     stat = pilotGroup.getrandom()
-    val = RandomIntRangeOuterRange(medMin, medMax, GetRarityValue(rarity)) // 6
+    val = RandomIntRangeOuterRange(medMin, medMax, 0) // 6
     SetArmorStat(data, stat, val)
     pilotPoints += val
     pilotGroup.remove(pilotGroup.find(stat))
@@ -69,13 +67,13 @@ ArmorData function Armor_Create( string name, string rarity )
     /// TITAN ///
 
     stat = titanGroup.getrandom()
-    val = RandomIntRangeOuterRange(highMin, highMax, GetRarityValue(rarity)) // 10
+    val = RandomIntRangeOuterRange(highMin, highMax, 0) // 10
     SetArmorStat(data, stat, val)
     titanPoints += val
     titanGroup.remove(titanGroup.find(stat))
 
     stat = titanGroup.getrandom()
-    val = RandomIntRangeOuterRange(medMin, medMax, GetRarityValue(rarity)) // 8
+    val = RandomIntRangeOuterRange(medMin, medMax, 0) // 8
     SetArmorStat(data, stat, val)
     titanPoints += val
     titanGroup.remove(titanGroup.find(stat))

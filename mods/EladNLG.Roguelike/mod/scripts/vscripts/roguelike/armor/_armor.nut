@@ -68,7 +68,7 @@ function SpawnArmor( var chest, var player )
     
     string crarity = RARITY_LEGENDARYARMOR
     string rrarity = RARITY_EXOTIC
-    switch (levelCount)
+    switch (GetConVarInt("level_count"))
     {
         case 0:
             crarity = RARITY_COMMON
@@ -154,7 +154,7 @@ bool function CC_SpawnArmor( entity player, array<string> args )
 
     string crarity = RARITY_LEGENDARYARMOR
     string rrarity = RARITY_EXOTIC
-    switch (levelCount)
+    switch (GetConVarInt("level_count"))
     {
         case 0:
             crarity = RARITY_COMMON
@@ -177,24 +177,31 @@ bool function CC_SpawnArmor( entity player, array<string> args )
 
 void function UpdateCooldowns( entity player )
 {
+    player.SetSharedEnergyRegenRate( 100.0 + (Roguelike_GetEntityStat( player, "strength" ) +  
+        Roguelike_GetEntityStat( player, "intelligence" ) +
+        Roguelike_GetEntityStat( player, "discipline" ) ) / 3.0 )
     array<int> offhandIndices = [ OFFHAND_LEFT, OFFHAND_TITAN_CENTER, OFFHAND_RIGHT ]
     foreach ( index in offhandIndices )
 	{
 		float lastUseTime = player.p.lastPilotOffhandUseTime[ index ]
+        if (player.IsTitan())
+            lastUseTime = player.p.lastTitanOffhandUseTime[ index ]
 		float lastChargeFrac = player.p.lastPilotOffhandChargeFrac[ index ]
+        if (player.IsTitan())
+            lastChargeFrac = player.p.lastTitanOffhandChargeFrac[ index ]
 
+        //printt("OFFHAND", index, "LAST TIME", lastUseTime)
 		if ( lastUseTime >= 0.0 )
 		{
 			entity weapon = player.GetOffhandWeapon( index )
             if (!IsValid( weapon ))
-                return
+                continue
             int curAmmo = weapon.GetWeaponPrimaryClipCount()
-			if ( !IsValid( weapon ) )
-				continue
 
 			string weaponClassName = weapon.GetWeaponClassName()
 
-			switch ( GetWeaponInfoFileKeyField_Global( weaponClassName, "cooldown_type" ) )
+            string cooldownType = GetWeaponInfoFileKeyField_GlobalString( weaponClassName, "cooldown_type" )
+			switch ( cooldownType )
 			{
 				case "grapple":
 					// GetPlayerSettingsField isn't working for moddable fields? - Bug 129567
@@ -227,12 +234,15 @@ void function UpdateCooldowns( entity player )
                     switch (index)
                     {
                         case OFFHAND_LEFT:
+                            //print("LEFT")
                             stat = "intelligence"
                             break
                         case OFFHAND_RIGHT:
+                            //print("RIGHT")
                             stat = "strength"
                             break
                         case OFFHAND_TITAN_CENTER:
+                            //print("CENTER")
                             stat = "discipline"
                             break
                     }
@@ -244,7 +254,9 @@ void function UpdateCooldowns( entity player )
 
 					float regenStartTime = lastUseTime + fireDuration + regenRefillDelay
 
+                   // printt("REGEN RATE", regenRefillRate)
 					int newAmmo = weapon.GetWeaponPrimaryClipCount()
+                    //printt("CUR AMMO", newAmmo)
                     if (Time() > regenStartTime)
                     {
                         file.cooldownTimes[player][index] += 0.1
@@ -254,13 +266,16 @@ void function UpdateCooldowns( entity player )
                             newAmmo += 1
                         }
                     }
+                    //printt("NEW AMMO", newAmmo)
 
 					weapon.SetWeaponPrimaryClipCountNoRegenReset( minint( weapon.GetWeaponPrimaryClipCountMax(), newAmmo ) )
 					break
 
                 case "charged_shot":
 				case "chargeFrac":
-                    print("fuck")
+                case "vortex_drain":
+                    if (player.GetActiveWeapon() == weapon)
+                        break
 					float chargeCooldownDelay = weapon.GetWeaponSettingFloat( eWeaponVar.charge_cooldown_delay )
 					float chargeCooldownTime = weapon.GetWeaponSettingFloat( eWeaponVar.charge_cooldown_time )
 					float regenStartTime = lastUseTime + chargeCooldownDelay
@@ -269,6 +284,7 @@ void function UpdateCooldowns( entity player )
                     switch (index)
                     {
                         case OFFHAND_LEFT:
+                            //print("LEFT")
                             stat = "intelligence"
                             break
                         case OFFHAND_RIGHT:
@@ -280,7 +296,7 @@ void function UpdateCooldowns( entity player )
                     }
 					float regenRefillTime = weapon.GetWeaponChargeFraction() * chargeCooldownTime
                         * 0.01 * Roguelike_GetEntityStat( player, stat )
-                    print(regenRefillTime)
+                    //print(regenRefillTime)
 
 					float newCharge = weapon.GetWeaponChargeFraction()
                     
