@@ -6,6 +6,13 @@ global function RandomIntRangeOuterRange
 global function SetArmorStat
 global function GetArmorStat
 
+enum ArmorType
+{
+    NORMAL,
+    BALANCED,
+    GOD_ROLL
+}
+
 global struct ArmorData
 {
     string name = "Factory Issue Armor"
@@ -26,6 +33,7 @@ global struct ArmorData
     //int power = 1
 }
 
+float highestSpikeRating = 0.0
 ArmorData function Armor_Create( string name, string rarity )
 {
     if (rarity == RARITY_EXOTIC)
@@ -35,53 +43,58 @@ ArmorData function Armor_Create( string name, string rarity )
     data.rarity = rarity
     data.slot = RandomIntRange(0,4)
 
-    array<string> pilotGroup = ["resilience", "recovery", "mobility"]
-    array<string> titanGroup = ["strength", "discipline", "intelligence"]
+    array<string> pilotGroup = ["mobility", "resilience", "recovery"]
+    array<string> titanGroup = ["strength", "intelligence", "discipline"]
 
     int titanPoints = 0
     int pilotPoints = 0
 
-    int highMin = int(GraphCapped( GetRarityValue(rarity), 0, 3, 2, 24 ))
-    int highMax = int(GraphCapped( GetRarityValue(rarity), 0, 3, 6, 24 ))
-    int medMin = int(GraphCapped( GetRarityValue(rarity), 0, 3, 2, 18 ))
-    int medMax = int(GraphCapped( GetRarityValue(rarity), 0, 3, 6, 18 ))
-    int lowMin = 6
-    int lowMax = 6
-    string stat = pilotGroup.getrandom()
-    int val = RandomIntRangeOuterRange(highMin, highMax, 0) // 10
-    SetArmorStat(data, stat, val)
-    pilotPoints += val
-    pilotGroup.remove(pilotGroup.find(stat))
+    int totalMin = int(GraphCapped( GetRarityValue(rarity), 0, 3, 5, 24 ))
+    int totalMax = int(GraphCapped( GetRarityValue(rarity), 0, 3, 12, 34 ))
+    printt(totalMin, "-", totalMax)
+    int total = RandomIntRangeInclusive( totalMin, totalMax )
+    printt("TOTAL:", total)
 
-    stat = pilotGroup.getrandom()
-    val = RandomIntRangeOuterRange(medMin, medMax, 0) // 6
-    SetArmorStat(data, stat, val)
-    pilotPoints += val
-    pilotGroup.remove(pilotGroup.find(stat))
+    array<float> pilotWeights = [RandomFloatRange(0.2, 1.0), RandomFloatRange(0.2, 1.0), RandomFloatRange(0.2, 1.0)]
+    pilotWeights.sort()
+    array<float> titanWeights = [RandomFloatRange(0.2, 1.0), RandomFloatRange(0.2, 1.0), RandomFloatRange(0.2, 1.0)]
+    titanWeights.sort()
+
+    float totalWeight = pilotWeights[0] + pilotWeights[1] + pilotWeights[2]
+    for (int i = 0; i < 3; i++)
+        pilotWeights[i] /= totalWeight
+        
+    totalWeight = titanWeights[0] + titanWeights[1] + titanWeights[2]
+    for (int i = 0; i < 3; i++)
+        titanWeights[i] /= totalWeight
+     
+    float spikeRatingPilot = (pilotWeights[2] - pilotWeights[0]) / 2.0 + (pilotWeights[2] - pilotWeights[1]) / 2.0
+    float pilotMultiplier = GraphCapped( spikeRatingPilot, 0, 0.4, 1, 1.25 )
+    float spikeRatingTitan = (titanWeights[2] - titanWeights[0]) / 2.0 + (pilotWeights[2] - pilotWeights[1]) / 2.0
+    float titanMultiplier = GraphCapped( spikeRatingTitan, 0, 0.4, 1, 1.25 )
+    pilotWeights.randomize()
+    titanWeights.randomize()
+
+    foreach (int i, string stat in pilotGroup) 
+    {
+        pilotPoints += int(pilotWeights[i] * total * pilotMultiplier)
+        printt(stat, "WEIGHT:", pilotWeights[i], "TOTAL:", total, "SPIKE RATING:", spikeRatingPilot)
+        SetArmorStat(data, stat, int(pilotWeights[i] * total * pilotMultiplier))
+    }
     
-    stat = pilotGroup[0]
-    val = RandomIntRangeOuterRange(lowMin, lowMax, 0) // 2
-    SetArmorStat(data, stat, val)
-    pilotPoints += val
+    if (spikeRatingPilot > highestSpikeRating)
+        highestSpikeRating = spikeRatingPilot
+    if (spikeRatingTitan > highestSpikeRating)
+        highestSpikeRating = spikeRatingTitan
 
-    /// TITAN ///
+    foreach (int i, string stat in titanGroup)
+    {
+        titanPoints += int(titanWeights[i] * total * titanMultiplier)
+        printt(stat, "WEIGHT:", titanWeights[i], "TOTAL:", total, "SPIKE RATING:", spikeRatingTitan)
+        SetArmorStat(data, stat, int(titanWeights[i] * total * titanMultiplier))
+    }
 
-    stat = titanGroup.getrandom()
-    val = RandomIntRangeOuterRange(highMin, highMax, 0) // 10
-    SetArmorStat(data, stat, val)
-    titanPoints += val
-    titanGroup.remove(titanGroup.find(stat))
-
-    stat = titanGroup.getrandom()
-    val = RandomIntRangeOuterRange(medMin, medMax, 0) // 8
-    SetArmorStat(data, stat, val)
-    titanPoints += val
-    titanGroup.remove(titanGroup.find(stat))
-    
-    stat = titanGroup[0]
-    val = RandomIntRangeOuterRange(lowMin, lowMax, 0) // 2
-    SetArmorStat(data, stat, val)
-    titanPoints += val
+    printt("\nHIGHEST SPIKE RATING:", highestSpikeRating)
 
     data.total = titanPoints + pilotPoints
     return data
@@ -101,7 +114,7 @@ ArmorData function Armor_CreateExotic( string name )
     int pilotPoints = 0
 
     string stat = pilotGroup.getrandom()
-    int val = 65
+    int val = 35
     SetArmorStat(data, stat, val)
     pilotPoints += val
     pilotGroup.remove(pilotGroup.find(stat))
@@ -120,7 +133,7 @@ ArmorData function Armor_CreateExotic( string name )
     /// TITAN ///
 
     stat = titanGroup.getrandom()
-    val = 65 // 10
+    val = 35 // 10
     SetArmorStat(data, stat, val)
     titanPoints += val
     titanGroup.remove(titanGroup.find(stat))

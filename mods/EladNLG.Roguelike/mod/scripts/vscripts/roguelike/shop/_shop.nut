@@ -45,9 +45,9 @@ void function AAAAAAAAEntitiesDidLoad()
     Highlight_SetNeutralHighlight( pods[0], "roguelike_chest" )
 }
 
-int function ScaleRewardWithDifficulty( int reward, float multiplier )
+float function ScaleRewardWithDifficulty( int reward, float multiplier )
 {
-    return int( reward * (1 + multiplier * roguelikeDifficulty))
+    return reward * (1 + multiplier * roguelikeDifficulty)
 }
 
 float function ScaleRewardWithDifficultyExponent( int reward, float ex )
@@ -65,46 +65,46 @@ void function OnNPCKilled_AddMoney( entity npc, entity attacker, var damageInfo 
             case "npc_drone":
             case "npc_soldier":
                 if (attacker.IsTitan())
-                    AddMoney( attacker, ScaleRewardWithDifficulty(3, 0.2) );
-                else AddMoney( attacker, ScaleRewardWithDifficulty(10, 0.2) );
-                AddXP( ScaleRewardWithDifficultyExponent( 30, XP_PER_LEVEL_MULTIPLIER ) )
+                    AddMoney( attacker, int( ScaleRewardWithDifficulty(3, 0.2) ) );
+                else AddMoney( attacker, int( ScaleRewardWithDifficulty(10, 0.2) ) );
+                AddXP( ScaleRewardWithDifficulty( 30, XP_PER_LEVEL_MULTIPLIER ) )
                 break
             //case "npc_marvin":
             case "npc_titan":
-                AddMoney( attacker, ScaleRewardWithDifficulty(25, 0.2) );
-                AddXP( ScaleRewardWithDifficultyExponent( 100, XP_PER_LEVEL_MULTIPLIER) )
+                AddMoney( attacker, int( ScaleRewardWithDifficulty(25, 0.2) ) );
+                AddXP( ScaleRewardWithDifficulty( 100, XP_PER_LEVEL_MULTIPLIER ) )
                 break
             case "npc_spectre":
                 if (attacker.IsTitan())
-                    AddMoney( attacker, ScaleRewardWithDifficulty(5, 0.2) );
-                else AddMoney( attacker, ScaleRewardWithDifficulty(15, 0.2) );
-                AddXP( ScaleRewardWithDifficultyExponent( 40, XP_PER_LEVEL_MULTIPLIER) )
+                    AddMoney( attacker, int( ScaleRewardWithDifficulty(5, 0.2) ) );
+                else AddMoney( attacker, int( ScaleRewardWithDifficulty(15, 0.2) ) );
+                AddXP( ScaleRewardWithDifficulty( 40, XP_PER_LEVEL_MULTIPLIER ) )
                 break
             case "npc_super_spectre":
-                AddMoney( attacker, ScaleRewardWithDifficulty(20, 0.2) );
-                AddXP( ScaleRewardWithDifficultyExponent( 100, XP_PER_LEVEL_MULTIPLIER) )
+                AddMoney( attacker, int( ScaleRewardWithDifficulty(20, 0.2) ) );
+                AddXP( ScaleRewardWithDifficulty( 100, XP_PER_LEVEL_MULTIPLIER ) )
                 break
             case "npc_turret_mega":
             case "npc_turret_sentry":
             case "npc_stalker":
                 if (attacker.IsTitan())
-                    AddMoney( attacker, ScaleRewardWithDifficulty(6, 0.2) );
-                else AddMoney( attacker, ScaleRewardWithDifficulty(20, 0.2) );
-                AddXP( ScaleRewardWithDifficultyExponent( 70, XP_PER_LEVEL_MULTIPLIER) )
+                    AddMoney( attacker, int( ScaleRewardWithDifficulty(6, 0.2) ) );
+                else AddMoney( attacker, int( ScaleRewardWithDifficulty(20, 0.2) ) );
+                AddXP( ScaleRewardWithDifficulty( 70, XP_PER_LEVEL_MULTIPLIER ) )
                 break
             case "npc_prowler":
                 if (attacker.IsTitan())
-                    AddMoney( attacker, ScaleRewardWithDifficulty(8, 0.2) );
-                else AddMoney( attacker, ScaleRewardWithDifficulty(25, 0.2) );
-                AddXP( ScaleRewardWithDifficultyExponent( 25 , XP_PER_LEVEL_MULTIPLIER) )
+                    AddMoney( attacker, int( ScaleRewardWithDifficulty(8, 0.2) ) );
+                else AddMoney( attacker, int( ScaleRewardWithDifficulty(25, 0.2) ) );
+                AddXP( ScaleRewardWithDifficulty( 25, XP_PER_LEVEL_MULTIPLIER ) )
                 break
             case "npc_frag_drone":
-                AddMoney( attacker, ScaleRewardWithDifficulty(5, 0.2) );
-                AddXP( ScaleRewardWithDifficultyExponent( 10 , XP_PER_LEVEL_MULTIPLIER) )
+                AddMoney( attacker, int( ScaleRewardWithDifficulty(5, 0.2) ) );
+                AddXP( ScaleRewardWithDifficulty( 10, XP_PER_LEVEL_MULTIPLIER ) )
                 break
             case "npc_marvin":
-                AddMoney( attacker, ScaleRewardWithDifficulty(5, 0.2) );
-                AddXP( ScaleRewardWithDifficultyExponent( 75 , XP_PER_LEVEL_MULTIPLIER) )
+                AddMoney( attacker, int( ScaleRewardWithDifficulty(5, 0.2) ) );
+                AddXP( ScaleRewardWithDifficulty( 75, XP_PER_LEVEL_MULTIPLIER ) )
         }
     }
 }

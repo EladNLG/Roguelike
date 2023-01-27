@@ -50,7 +50,9 @@ void function PilotHealthRegenThinkSP( entity player )
 		//if ( player.GetHealth() == player.GetMaxHealth() )
 		//	continue
 
-		float healthRegenRate = 4.0 * (1.0 + Roguelike_GetItemCount( player, "heal_mod" ) * 0.25) * (1.0 + 0.3 * GetLevel())
+		float healthRegenRate = 5.0 * (1.0 + 0.3 * GetLevel())
+		healthRegenRate *= (1.0 + Roguelike_GetItemCount( player, "heal_mod" ) * 0.25)
+        healthRegenRate *= 1.0 + 0.02 * Roguelike_GetEntityStat( player, "recovery" )
 		float healthRegenStartDelay = 0.0//GraphCapped( player.GetHealth(), 0, player.GetMaxHealth(), 3.0, 0.8 )
 
 		//printt( "recentDamage " + recentDamage + " delay " + healthRegenStartDelay + " rate " + healthRegenRate )
@@ -67,8 +69,11 @@ void function PilotHealthRegenThinkSP( entity player )
 		healthToRegen -= float(healthToAdd)
 
 		player.SetHealth( min( player.GetMaxHealth() * (1.0 - (player.GetPlayerNetFloat( "hardDamage" ) / 100.0)), player.GetHealth() + healthToAdd ) )
-		if (Time() - player.p.lastDamageTime >= 4.0)
-        	player.SetPlayerNetFloatOverTime( "hardDamage", 0.0, 5.0 * (player.GetPlayerNetFloat( "hardDamage" ) / 100.0) )
+		
+		float delay = 3.5 // (1.0 + 0.01 * Roguelike_GetEntityStat( player, "recovery" ))
+		float recoverTime = 5.0 // (1.0 + 0.01 * Roguelike_GetEntityStat( player, "recovery" ))
+		if (Time() - player.p.lastDamageTime >= delay)
+        	player.SetPlayerNetFloatOverTime( "hardDamage", 0.0, recoverTime * (player.GetPlayerNetFloat( "hardDamage" ) / 100.0) )
 	}
 }
 

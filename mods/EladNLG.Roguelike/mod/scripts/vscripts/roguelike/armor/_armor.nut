@@ -14,6 +14,7 @@ void function _Armor_Init()
 {
     PrecacheModel( ARMOR_MODEL )
     AddClientCommandCallback( "SpawnArmor", CC_SpawnArmor )
+    AddClientCommandCallback( "SpawnEmptyArmor", CC_SpawnEmptyArmor )
     AddCallback_OnClientConnected( UpdateArmor )
 
     thread UpdateCooldownsThread()
@@ -26,6 +27,7 @@ void function UpdateArmor( entity player )
     {
         Roguelike_GiveEntityArmor( player, StringToArmorData(str) )
     }
+
 }
 
 void function UpdateCooldownsThread()
@@ -147,10 +149,16 @@ void function SetOutline( entity ent, vector color, float radius )
 }
 
 int a = 0
+entity lastArmor = null
 bool function CC_SpawnArmor( entity player, array<string> args )
 {
     if (!GetConVarBool("sv_cheats"))
         return false
+    
+    int mob = (args.len() > 0 ? int(args[0]) : 0)
+    int res = (args.len() > 1 ? int(args[1]) : 0)
+    int rec = (args.len() > 2 ? int(args[2]) : 25)
+    int cld = (args.len() > 3 ? int(args[3]) : 0)
 
     string crarity = RARITY_LEGENDARYARMOR
     string rrarity = RARITY_EXOTIC
@@ -162,18 +170,59 @@ bool function CC_SpawnArmor( entity player, array<string> args )
             break
         case 1:
             crarity = RARITY_UNCOMMON
-            rrarity = RARITY_RARE
+            rrarity = RARITY_UNCOMMON
             break
         case 2:
+            crarity = RARITY_UNCOMMON
+            rrarity = RARITY_RARE
+            break
+        case 3:
+            crarity = RARITY_RARE
+            rrarity = RARITY_RARE
+            break
+        case 4:
             crarity = RARITY_RARE
             rrarity = RARITY_LEGENDARYARMOR
+            break
+        case 5:
+            crarity = RARITY_LEGENDARYARMOR
+            rrarity = RARITY_LEGENDARYARMOR
+            break
     }
 
     ArmorData data = Armor_Create( "HELMET", xorshift_range_int(0, 5, GetRoguelikeSeed() + 3) == 0 ? rrarity : crarity )
-    CreateArmor( data, player.GetOrigin(), <0, player.GetAngles().y, 0> )
+    if (data.rarity != RARITY_EXOTIC && args.len() > 0)
+    {
+        data.mobility = mob
+        data.resilience = res
+        data.recovery = rec
+        data.strength = cld
+        data.intelligence = cld
+        data.discipline = cld
+    }
+    if (IsValid(lastArmor))
+        lastArmor.Destroy()
+
+    lastArmor = CreateArmor( data, player.GetOrigin(), <0, player.GetAngles().y, 0> )
     return true
 }
 
+bool function CC_SpawnEmptyArmor( entity player, array<string> args )
+{
+    if (!GetConVarBool("sv_cheats"))
+        return false
+
+    ArmorData data = Armor_Create( "Factory Issue Armor", RARITY_CONTEXTUAL_ITEM )
+    data.mobility = 0
+    data.resilience = 0
+    data.recovery = 0
+    data.strength = 0
+    data.intelligence = 0
+    data.discipline = 0
+    data.slot = RandomIntRange(0, 5)
+    CreateArmor( data, player.GetOrigin(), <0, player.GetAngles().y, 0> )
+    return true
+}
 
 void function UpdateCooldowns( entity player )
 {
@@ -200,8 +249,7 @@ void function UpdateCooldowns( entity player )
 
 			string weaponClassName = weapon.GetWeaponClassName()
 
-            string cooldownType = GetWeaponInfoFileKeyField_GlobalString( weaponClassName, "cooldown_type" )
-			switch ( cooldownType )
+			switch ( weapon.GetWeaponInfoFileKeyField( "cooldown_type" ) )
 			{
 				case "grapple":
 					// GetPlayerSettingsField isn't working for moddable fields? - Bug 129567
@@ -223,6 +271,7 @@ void function UpdateCooldowns( entity player )
 					break
 
                 
+                case null:
 				case "ammo":
 				case "ammo_instant":
 				case "ammo_deployed":
@@ -270,7 +319,7 @@ void function UpdateCooldowns( entity player )
 
 					weapon.SetWeaponPrimaryClipCountNoRegenReset( minint( weapon.GetWeaponPrimaryClipCountMax(), newAmmo ) )
 					break
-
+                
                 case "charged_shot":
 				case "chargeFrac":
                 case "vortex_drain":

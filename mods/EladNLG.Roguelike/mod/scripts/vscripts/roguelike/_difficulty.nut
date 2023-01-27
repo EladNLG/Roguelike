@@ -36,6 +36,9 @@ void function ForceDifficultyCallbacks()
 
 void function ScaleDamageWithEntityLevel( entity ent, var damageInfo )
 {
+    int damageSourceID = DamageInfo_GetDamageSourceIdentifier( damageInfo )
+    if (damageSourceID == eDamageSourceId.ukulele)
+        return
     entity attacker = DamageInfo_GetAttacker( damageInfo )
     float damage = DamageInfo_GetDamage( damageInfo )
     //print(damage)
@@ -43,13 +46,17 @@ void function ScaleDamageWithEntityLevel( entity ent, var damageInfo )
     if (DamageInfo_GetForceKill( damageInfo ))
         return
 
-    if (attacker != ent && attacker.GetClassName() != "trigger_hurt")
+    if (attacker.GetClassName() != "trigger_hurt")
     {
         int level = !attacker.IsPlayer() ? roguelikeDifficulty : GetLevel()
         float damageScale = 1 + 0.125 * max(-4, level)
         if ("divisor" in ent.s)
             damageScale /= expect float( ent.s.divisor )
         float baseDamage = DamageInfo_GetDamage( damageInfo )
+        if (attacker == ent)
+        {
+            printt("PLAYER DAMAGE:", baseDamage, "->", baseDamage * damageScale)
+        }
         //print(baseDamage * damageScale)
         //print( "MAX DAMAGE LEVEL: " + (524287 / baseDamage) )
         if (baseDamage * damageScale > 524287)
@@ -72,8 +79,9 @@ void function ScaleDamageWithEntityLevel( entity ent, var damageInfo )
 
     if (attacker.IsPlayer() && IsAlive( attacker  ) && DistanceSqr( attacker.GetOrigin(), ent.GetOrigin() ) < 150 * 150 )
     {
-        float frac = min(DamageInfo_GetDamage( damageInfo ), ent.GetHealth() )
+        float frac = DamageInfo_GetDamage( damageInfo )
         frac /= 2.0
+        frac *= 1.0 + 0.01 * Roguelike_GetEntityStat( attacker, "recovery" )
 
         printt("healing", attacker, "for", frac)
         attacker.SetHealth( min( attacker.GetMaxHealth() * (1.0 - (attacker.GetPlayerNetFloat( "hardDamage" ) / 100.0)), attacker.GetHealth() + frac ))

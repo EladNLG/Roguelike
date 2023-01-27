@@ -5,7 +5,7 @@ global function GetLevel
 global function CalculateXPForLevel
 
 const float BASE_XP_PER_LEVEL = 250
-global const float XP_PER_LEVEL_MULTIPLIER = 1.05
+global const float XP_PER_LEVEL_MULTIPLIER = 1.3
 
 float xp = 0
 int level = 0
@@ -117,7 +117,7 @@ void function ClientConnected( entity player )
 
 float function CalculateXPForLevel( int level )
 {
-    return BASE_XP_PER_LEVEL * pow(XP_PER_LEVEL_MULTIPLIER, level)
+    return BASE_XP_PER_LEVEL * (1 + XP_PER_LEVEL_MULTIPLIER * level)
 }
 
 int function GetLevel()
@@ -137,7 +137,7 @@ void function AddXP( float amount )
     }
     while ( xp < 0 )
     {
-        print("fuck2")
+        printt("fuck2", level, xp)
         level -= 1
         xp += CalculateXPForLevel( level )
     }

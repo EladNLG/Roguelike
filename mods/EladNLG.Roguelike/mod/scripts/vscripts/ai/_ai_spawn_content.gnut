@@ -175,7 +175,7 @@ function CommonNPCOnSpawned( entity npc )
 			TakeWeaponsForArray( npc, weapons )
 
 			NPCDefaultWeapon spawnoptionsweapon = expect NPCDefaultWeapon( npc.ai.mySpawnOptions_weapon )
-			npc.GiveWeapon( spawnoptionsweapon.wep, spawnoptionsweapon.mods )
+			npc.GiveWeapon( spawnoptionsweapon.wep )
 		}
 
 		entity weapon = npc.GetActiveWeapon()

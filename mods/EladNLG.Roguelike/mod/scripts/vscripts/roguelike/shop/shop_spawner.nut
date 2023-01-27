@@ -5,7 +5,7 @@ global function RandomlyPlaceShop
 global function GetShopSpawnLocation
 
 global entity s2s_mover = null
-global const float ARMOR_CHEST_MULTIPLIER = 3.0
+global const float ARMOR_CHEST_MULTIPLIER = 1.5
 // model to represent the interactable shop
 const asset SHOP_INTERACTABLE_MODEL = $"models/beacon/crane_room_monitor_console.mdl"
 const asset CHEST_INTERACTABLE_MODEL = $"models/containers/pelican_case_large.mdl" //$"models/containers/pelican_case_large.mdl"
@@ -461,7 +461,7 @@ bool function RandomlyPlaceShop(int s = 0, entity forceParent = null)
     string name = "Chest"
     bool customUseCallback = false
     float rand = xorshift_range( 0.0, 1.0, GetRoguelikeSeed() + 1 )
-    if (rand< 0.3333)
+    if (rand< 0.25)
     {
         shop.s.weights <- {
             uncommon = 10.0, 

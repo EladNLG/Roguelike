@@ -13,11 +13,12 @@ void function Roguelike_SetStatBar( var panel, string statName, int curValue, in
     Hud_SetText( stat, "+" + newValue )
 
     int min = 0
-    int max = 65
+    int max = 40
     int range = max - min
     // max 30
-    Hud_SetWidth(bar, minint( curValue, newValue ) * 250 / 80 * GetScreenSize()[0] / 1920 ) // / 30 * 250
-    Hud_SetWidth(diff, maxint( curValue, newValue ) * 250 / 80 * GetScreenSize()[0] / 1920 )
+    int maxSize = int(250 * GetScreenSize()[0] / 1920.0)
+    Hud_SetWidth(bar, minint(minint( curValue - min, newValue - min ) * maxSize / range, maxSize) ) // / 30 * 250
+    Hud_SetWidth(diff, minint(maxint( curValue - min, newValue - min ) * maxSize / range, maxSize) )
 
     if (curValue > newValue)
         diff.SetColor( 255, 65, 65, 60 )
@@ -33,12 +34,13 @@ void function Roguelike_SetTotalBar( var panel, string statName, int curValue, i
     Hud_SetText( label, statName )
     Hud_SetText( stat, newValue.tostring() )
 
-    int min = 12
-    int max = 160
+    int min = 0
+    int max = 100
     int range = max - min
     // max 30
-    Hud_SetWidth(bar, minint( curValue - min, newValue - min ) * 250 / range * GetScreenSize()[0] / 1920 ) // / 30 * 250
-    Hud_SetWidth(diff, maxint( curValue - min, newValue - min ) * 250 / range * GetScreenSize()[0] / 1920 )
+    int maxSize = int(250 * GetScreenSize()[0] / 1920.0)
+    Hud_SetWidth(bar, minint(minint( curValue - min, newValue - min ) * maxSize / range, maxSize) ) // / 30 * 250
+    Hud_SetWidth(diff, minint(maxint( curValue - min, newValue - min ) * maxSize / range, maxSize) )
 
     if (curValue > newValue)
         diff.SetColor( 255, 65, 65, 60)

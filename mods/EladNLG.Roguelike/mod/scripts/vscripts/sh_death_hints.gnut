@@ -371,7 +371,9 @@ bool function ShowDeathHintSP( entity player, var damageInfo )
 		return true
 	}
 
-	Remote_CallFunction_NonReplay( player, "ServerCallback_ShowDeathHint", hints[0] ) // push out old hints
+	if (hints.len() > 0)
+		Remote_CallFunction_NonReplay( player, "ServerCallback_ShowDeathHint", hints[0] ) // push out old hints
+	else Remote_CallFunction_NonReplay( player, "ServerCallback_ShowDeathHint", -1 )
 
 	return true
 }
@@ -826,14 +828,13 @@ int function GetHintIDFromHintGroups_WeightedByPreviousViews( entity player, arr
 #if CLIENT
 void function ServerCallback_ShowDeathHint( int hintId )
 {
-	print("\n\n\n\n\n\n\nAYO")
 	thread ShowDeathHintThread( GetHintFromId( hintId ) )
 }
 
 string function GetHintFromId( int hintId )
 {
-	foreach (index, hint in file.indexToHintString)
-		print(hint + "\nINDEX: " + index)
+	if (hintId < 0)
+		return "I couldn't find a good tip for this :("
 	return file.indexToHintString[ hintId ]
 }
 

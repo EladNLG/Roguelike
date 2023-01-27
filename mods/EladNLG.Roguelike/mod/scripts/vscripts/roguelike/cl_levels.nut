@@ -138,7 +138,7 @@ void function ServerCallback_SetXP( float newXP, int newLevel, float XP_PER_LEVE
 
 float function CalculateXPForLevel( int level )
 {
-    return BASE_XP_PER_LEVEL * pow( XP_PER_LEVEL_MULTIPLIER, level )
+    return BASE_XP_PER_LEVEL * (1 + XP_PER_LEVEL_MULTIPLIER * level)
 }
 
 const CONVERSATION_TIMEOUT	 					= 10.0
