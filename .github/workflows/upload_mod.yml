@@ -8,6 +8,7 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: Thunderstore
     steps:
       # Use checkout to publish the files in your repo
       - uses: actions/checkout@v3
