@@ -13,7 +13,8 @@ jobs:
       # Use checkout to publish the files in your repo
       - uses: actions/checkout@v3
       - uses: GreenTF/upload-thunderstore-package@v3.1
-        with:
+        with:    
+          environment: Thunderstore
           namespace: EladNLG # the thunderstore 'team' to publish under
           description: Do you like bugs? So do I.
           token: ${{ secrets.THUNDERSTORE_TOKEN }}
