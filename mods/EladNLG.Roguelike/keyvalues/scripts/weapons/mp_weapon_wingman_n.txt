@@ -1,0 +1,84 @@
+#base "_base_pistol.txt"
+WeaponData
+{
+	Mods
+	{
+		hcog
+		{
+			"ui3_enable"		"0"
+			"ui4_enable"		"0"
+			"ui5_enable"		"1"
+			"ui6_enable"		"0"
+			"viewmodel_offset_ads"							"0 -.7 -0.55" //"0 -6.7 -0.75"
+			"zoom_fov"										"35"
+			"anim_alt_idleAttack"	"1"
+			"dof_zoom_nearDepthStart"						"9.161"
+			"dof_zoom_nearDepthEnd"							"15.204"
+		}
+		redline_sight
+		{
+			"ui3_enable"		"1"
+			"ui4_enable"		"0"
+			"ui5_enable"		"0"
+			"ui6_enable"		"0"
+			"viewmodel_offset_ads"							"0 -3 -0.55" //"0 -9 -0.78"
+			"zoom_fov"										"25"
+			"dof_zoom_nearDepthStart"						"8.491"
+			"dof_zoom_nearDepthEnd"							"12.945"
+			//threat settings
+			//"threat_scope_enabled"			"1"
+			//"threat_scope_bounds_tagname1"	"SCR_TR_ACGS"
+			//"threat_scope_bounds_tagname2"	"SCR_BL_ACGS"
+		}
+		threat_scope
+		{
+			"ui3_enable"		"0"
+			"ui4_enable"		"1"
+			"ui5_enable"		"0"
+			"ui6_enable"		"0"
+			"viewmodel_offset_ads"							"0 -3 -0.58" //"0 -9 -0.78"
+			"zoom_fov"										"35"
+			"dof_zoom_nearDepthStart"						"7.491"
+			"dof_zoom_nearDepthEnd"							"12.545"
+		}
+	}
+
+	//Acog
+	"ui3_enable"		"0"
+	"ui3_draw_cloaked"	"1"
+	UiData3
+	{
+		"ui"								"ui/acgs_redline"
+		"mesh"							"models/weapons/attachments/acgs_rui_upper"
+		Args
+		{
+			vis							player_zoomfrac
+			ammo						weapon_ammo
+			clipSize						weapon_clipSize
+		}
+	}
+	//Threat
+	"ui4_enable"		"0"
+	"ui4_draw_cloaked"	"1"
+	UiData4
+	{
+		"ui"							"ui/cro_threat_front"
+		"mesh"					"models/weapons/attachments/cro_rui_upper"
+		Args
+		{
+			zoomFrac					player_zoomfrac
+		}
+	}
+	//Hcog
+	"ui5_enable"		"0"
+	"ui5_draw_cloaked"	"1"
+	UiData5
+	{
+		"ui"								"ui/vinson_sights"
+		"mesh"						"models/weapons/attachments/cqh_rui_upper"
+		Args
+		{
+			vis							player_zoomfrac
+		}
+	}
+}

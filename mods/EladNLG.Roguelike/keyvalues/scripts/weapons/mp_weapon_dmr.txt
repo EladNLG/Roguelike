@@ -11,5 +11,25 @@
 		econ
 		{
 		}
+		stabilizer
+		{
+			"zoom_fov"		"35"
+			"ui5_enable"		"1"
+			"threat_scope_enabled"		"1"
+			"threat_scope_bounds_tagname1"	"SCR_TR_ORACLE"
+			"threat_scope_bounds_tagname2"	"SCR_BL_ORACLE"
+		}
+	}
+	//Oracle/stabilizer blue dot
+	"ui5_enable"		"0"
+	"ui5_draw_cloaked"	"1"
+	UiData5
+	{
+		"ui"								"ui/volt_sights"
+		"mesh"							"models/weapons/attachments/oracle_rui_upper"
+		Args
+		{
+			vis							player_zoomfrac
+		}
 	}
 }
